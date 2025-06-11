@@ -30,7 +30,7 @@ registerBlockType(metadata, {
 							label={__('Show what event info?', 'simple-events')}
 							value={metaName}
 							options={[
-								{ label: __( 'Dates & Time', 'simple-events' ), value: 'dates' },
+								{ label: __( 'Date & Time', 'simple-events' ), value: 'dates' },
 								{ label: __( 'Location', 'simple-events' ), value: 'location' },
 								{ label: __( 'Venue', 'simple-events' ), value: 'venue' },
 								{ label: __( 'Date Only', 'simple-events' ), value: 'date' },
