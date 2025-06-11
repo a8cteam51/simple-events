@@ -746,6 +746,9 @@ class SE_Blocks {
 				case 'location':
 					$output = se_event_get_location( $post_ID );
 					break;
+				case 'venue':
+					$output = se_event_get_venue( $post_ID );
+					break;
 				case 'dates':
 					$output = se_event_get_future_dates( $post_ID );
 					break;
@@ -764,6 +767,9 @@ class SE_Blocks {
 			switch ( $attributes['metaName'] ) {
 				case 'location':
 					$output = esc_html__( 'Example Location Name', 'simple-events' );
+					break;
+				case 'venue':
+					$output = esc_html__( 'Example Venue Name', 'simple-events' );
 					break;
 				case 'dates':
 					$output = esc_html__( 'June 20, 2023 9:00 am - 10:00 am', 'simple-events' );

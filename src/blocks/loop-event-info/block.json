@@ -18,7 +18,7 @@
 			"default": 0
 		},
 		"metaName": {
-			"enum": ["location", "dates", "date", "time"],
+			"enum": ["location", "venue", "dates", "date", "time"],
 			"type": "string",
 			"default": "dates"
 		},
