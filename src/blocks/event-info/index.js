@@ -741,6 +741,7 @@ registerBlockType('simple-events/event-info', {
 							eventDates: meta?.se_event_dates,
 							eventTimezone: meta?.se_event_timezone,
 							externalLink: meta?.se_event_external_link,
+							externalLinkLabel: meta?.se_event_external_link_label,
 							addCalendarLinks: meta?.se_event_add_calendar_links,
 						}}
 					/>
@@ -794,19 +795,34 @@ registerBlockType('simple-events/event-info', {
 						type="url"
 					/>
 					{meta?.se_event_external_link && (
-						<CheckboxControl
-							label={__(
-								'Open external link from calendar',
-								'simple-events'
-							)}
-							checked={meta?.se_open_external_link ?? false}
-							onChange={(value) => {
-								setMeta({
-									...meta,
-									se_open_external_link: value,
-								});
-							}}
-						/>
+						<>
+							<TextControl
+								className="se-location-label"
+								label={__('External Link Label', 'simple-events')}
+								value={meta?.se_event_external_link_label}
+								onChange={(value) =>
+									setMeta({
+										...meta,
+										se_event_external_link_label: value,
+									})
+								}
+								type="text"
+							/>
+							<CheckboxControl
+								label={__(
+									'Open external link from calendar',
+									'simple-events'
+								)}
+								checked={meta?.se_open_external_link ?? false}
+								onChange={(value) => {
+									setMeta({
+										...meta,
+										se_open_external_link: value,
+									});
+								}}
+							/>
+						</>
+
 					)}
 
 					<Button

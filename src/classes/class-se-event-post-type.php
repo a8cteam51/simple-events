@@ -318,6 +318,18 @@ class SE_Event_Post_Type {
 
 		register_meta(
 			'post',
+			'se_event_external_link_label',
+			array(
+				'show_in_rest'   => true,
+				'single'         => true,
+				'type'           => 'string',
+				'object_subtype' => self::$post_type,
+				'default'        => esc_html__( 'Tickets', 'simple-events' ),
+			)
+		);
+
+		register_meta(
+			'post',
 			'se_open_external_link',
 			array(
 				'show_in_rest'   => true,

@@ -375,6 +375,23 @@ function se_event_get_location( $event_id ) {
 }
 
 /**
+ * Get event venue.
+ *
+ * @param integer $event_id Event id.
+ *
+ * @return mixed
+ */
+function se_event_get_venue( $event_id ) {
+	$event_venue = get_post_meta( $event_id, 'se_event_venue', true );
+
+	if ( ! empty( $event_venue ) ) {
+		return $event_venue;
+	}
+
+	return false;
+}
+
+/**
  * Whether or not an event is past its date.
  *
  * @param integer $event_id Event id.

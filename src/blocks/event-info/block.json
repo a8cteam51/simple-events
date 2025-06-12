@@ -30,6 +30,9 @@
             "type": "boolean",
             "default": true
         },
+        "externalLinkLabel": {
+            "type": "string"
+        },
         "externalLink": {
             "type": "string"
         }

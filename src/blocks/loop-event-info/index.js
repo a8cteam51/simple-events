@@ -30,10 +30,11 @@ registerBlockType(metadata, {
 							label={__('Show what event info?', 'simple-events')}
 							value={metaName}
 							options={[
-								{ label: 'Date & Time', value: 'dates' },
-								{ label: 'Location', value: 'location' },
-								{ label: 'Date Only', value: 'date' },
-								{ label: 'Time Only', value: 'time' },
+								{ label: __( 'Date & Time', 'simple-events' ), value: 'dates' },
+								{ label: __( 'Location', 'simple-events' ), value: 'location' },
+								{ label: __( 'Venue', 'simple-events' ), value: 'venue' },
+								{ label: __( 'Date Only', 'simple-events' ), value: 'date' },
+								{ label: __( 'Time Only', 'simple-events' ), value: 'time' },
 							]}
 							onChange={(value) =>
 								setAttributes({ metaName: value })
