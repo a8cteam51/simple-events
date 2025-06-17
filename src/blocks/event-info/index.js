@@ -79,13 +79,25 @@ const getStartAndEndDate = (dates) => {
 		return endDate.isAfter(now);
 	});
 
+	// If we have no filtered dates, but we had dates, before.
+	if (filteredDates.length === 0 && dates.length > 0) {
+		// Extract all start dates with the offset.
+		const allStartDates = dates.map((date) =>
+			moment.unix(date.datetime_start).utcOffset(OFFSET)
+		);
+		const allEndDates = dates.map((date) =>
+			moment.unix(date.datetime_end).utcOffset(OFFSET)
+		);
+
+		// Return the latest start date and earliest end date.
+		return {
+			datetime_start: moment.max(allStartDates).unix().toString(),
+			datetime_end: moment.max(allEndDates).unix().toString(),
+		}
+	}
+
 	let startDate = null;
 	let endDate = null;
-
-	// Do not trust the order of the dates.
-	if (filteredDates.length === 0) {
-		return { datetime_start: null, datetime_end: null };
-	}
 
 	// Loop over the dates and set the start date as the earliest and the end as the latest.
 	filteredDates.forEach((date) => {
@@ -129,6 +141,7 @@ const getStartAndEndDate = (dates) => {
 	if (!endDate) {
 		endDate = moment.unix(last(filteredDates).datetime_end).utcOffset(OFFSET);
 	}
+
 	return {
 		datetime_start: startDate.unix().toString(),
 		datetime_end: endDate.unix().toString(),

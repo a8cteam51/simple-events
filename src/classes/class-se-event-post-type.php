@@ -41,6 +41,7 @@ class SE_Event_Post_Type {
 		add_filter( 'get_the_archive_title', array( __CLASS__, 'the_archive_title' ) );
 		register_activation_hook( __FILE__, array( __CLASS__, 'flush_rewrite_rules' ) );
 		add_action( 'save_post', array( __CLASS__, 'delete_event_dates_if_no_event_info_block' ) );
+		add_filter( 'is_protected_meta', array( __CLASS__, 'is_protected_meta' ), 10, 3 );
 	}
 
 	/**
@@ -148,6 +149,26 @@ class SE_Event_Post_Type {
 	}
 
 	/**
+	 * Defines protected meta keys for the event post type.
+	 *
+	 * This method registers meta keys that are used to store event-related data.
+	 *
+	 * @param boolean $is_protected Whether the meta keys should be protected.
+	 * @param string  $meta_key     The meta key to register.
+	 * @param string  $meta_type    The type of the meta key.
+	 *
+	 * @return boolean
+	 */
+	public static function is_protected_meta( bool $is_protected, string $meta_key, string $meta_type = 'string' ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
+		$protected_keys = array( 'se_event_date_end', 'se_event_date_start' );
+
+		if ( in_array( $meta_key, $protected_keys, true ) ) {
+			return true;
+		}
+		return $is_protected;
+	}
+
+	/**
 	 * Register meta keys.
 	 *
 	 * @return void
@@ -210,6 +231,9 @@ class SE_Event_Post_Type {
 				'single'         => true,
 				'type'           => 'string',
 				'object_subtype' => self::$post_type,
+				'auth_callback'  => function () {
+					return current_user_can( 'edit_posts' );
+				},
 			)
 		);
 
@@ -221,6 +245,9 @@ class SE_Event_Post_Type {
 				'single'         => true,
 				'type'           => 'string',
 				'object_subtype' => self::$post_type,
+				'auth_callback'  => function () {
+					return current_user_can( 'edit_posts' );
+				},
 			)
 		);
 
