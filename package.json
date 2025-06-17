@@ -1,6 +1,6 @@
 {
     "name": "wpcomsp-simple-events",
-    "version": "1.0.54",
+    "version": "1.0.55",
     "description": "A simple Gutenberg-first event management plugin that integrates with WooCommerce Box Office.",
     "author": {
         "name": "WordPress.com Special Projects Team",
