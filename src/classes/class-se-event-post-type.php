@@ -211,6 +211,9 @@ class SE_Event_Post_Type {
 				'single'         => true,
 				'type'           => 'string',
 				'object_subtype' => self::$post_type,
+				'auth_callback'  => function () {
+					return current_user_can( 'edit_posts' );
+				},
 			)
 		);
 
@@ -222,6 +225,9 @@ class SE_Event_Post_Type {
 				'single'         => true,
 				'type'           => 'string',
 				'object_subtype' => self::$post_type,
+				'auth_callback'  => function () {
+					return current_user_can( 'edit_posts' );
+				},
 			)
 		);
 
