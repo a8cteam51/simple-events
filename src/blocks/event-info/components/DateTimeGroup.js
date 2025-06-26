@@ -55,13 +55,13 @@ const DateTimeGroupNew = ({
 	// Add state to track if this date has been removed
 	const [isRemoved, setIsRemoved] = useState(false);
 
-	console.log({
-		'eventDateTime': eventDateTime,
-		'currentEventDateTime': currentEventDateTime,
-		'tempEventDate': tempEventDate,
-		'tempEventTime': tempEventTime,
-		'hasMultipleDates': hasMultipleDates,
-	});
+	// console.log({
+	// 	'eventDateTime': eventDateTime,
+	// 	'currentEventDateTime': currentEventDateTime,
+	// 	'tempEventDate': tempEventDate,
+	// 	'tempEventTime': tempEventTime,
+	// 	'hasMultipleDates': hasMultipleDates,
+	// });
 
 	const eventStart = getMoment(
 		currentEventDateTime.start_date,
@@ -161,11 +161,11 @@ const DateTimeGroupNew = ({
 			moment(currentDateTime).format('YYYY-MM-DD') ===
 			moment(newDateTime).format('YYYY-MM-DD');
 
-		console.log({
-			'isDateChange': isDateChange,
-			'currentDateTime': currentDateTime,
-			'newDateTime': newDateTime,
-		});
+		// console.log({
+		// 	'isDateChange': isDateChange,
+		// 	'currentDateTime': currentDateTime,
+		// 	'newDateTime': newDateTime,
+		// });
 
 		if (isDateChange) {
 			setTempEventTime(newDateTime);
@@ -174,8 +174,8 @@ const DateTimeGroupNew = ({
 		}
 	};
 
-	console.log('eventDateTime', eventStart);
-	console.log('eventEnd', eventEnd);
+	// console.log('eventDateTime', eventStart);
+	// console.log('eventEnd', eventEnd);
 
 	return (
 		<div

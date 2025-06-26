@@ -196,18 +196,23 @@ export const createDefaultDate = (existingDates = [], currentTimezone = TIMEZONE
 
 	// Override with existing date if there is one.
 	if (existingDates.length) {
-		eventStart = getMoment(last(existingDates).datetime_start, false, currentTimezone);
-		eventEnd = getMoment(last(existingDates).datetime_end, false, currentTimezone);
+		eventStart = getMoment(last(existingDates).start_date, false, currentTimezone);
+		eventEnd = getMoment(last(existingDates).end_date, false, currentTimezone);
 	}
 
 	// Set default date to be +1 day from the last date.
 	eventStart.add(1, 'days');
 	eventEnd.add(1, 'days');
 
+	console.log('eventStart', eventStart);
+	console.log('eventEnd', eventEnd);
+
 	return {
-		datetime_start: wp.date.date('U', eventStart),
-		datetime_end: wp.date.date('U', eventEnd),
+		start_date: wp.date.date('U', eventStart),
+		end_date: wp.date.date('U', eventEnd),
 		all_day: false,
+		hide_from_calendar: false,
+		hide_from_feed: false,
 	};
 };
 

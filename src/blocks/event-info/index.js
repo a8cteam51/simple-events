@@ -172,6 +172,8 @@ registerBlockType('simple-events/event-info', {
 		const [isGettingDates, setIsGettingDates] = useState(false);
 		const [dateManagerReady, setDateManagerReady] = useState(false);
 		const [dateManagerState, setDateManagerState] = useState(null);
+		// Add refresh counter to force re-renders when dateManager state changes
+		const [refreshCounter, setRefreshCounter] = useState(0);
 
 		// Initialize date manager on component mount
 		useEffect(() => {
@@ -256,408 +258,59 @@ registerBlockType('simple-events/event-info', {
 			</BlockControls>
 		);
 
-		const DateTimeGroup = withState({
-			tempEventDate: null,
-			tempEventTime: null,
-		})(
-			({
-				eventDateTime,
-				removeDate,
-				multiDay,
-				tempEventDate,
-				tempEventTime,
-				setState,
-			}) => {
-				const eventStart = getMoment(
-					eventDateTime.datetime_start,
-					true,
-					currentTimezone
-				);
-				const eventEnd = getMoment(eventDateTime.datetime_end, true, currentTimezone);
-				const timeFormat = DATE_SETTINGS.formats.datetime;
-
-				/**
-				 * Handle the set date and time button click.
-				 *
-				 * @param {boolean} isStartChange Whether this is start or end date change.
-				 *
-				 * @return {void}
-				 */
-				const setDateTimeHandler = (isStartChange) => {
-					// Ensure we have either new date or time in state.
-					if (!tempEventDate && !tempEventTime) {
-						return;
-					}
-
-					const newDate =
-						tempEventDate ||
-						(isStartChange ? eventStart : eventEnd);
-					const newTime =
-						tempEventTime ||
-						(isStartChange ? eventStart : eventEnd);
-
-					// Combine the new date and time and convert to a timestamp.
-					const newDateTime = getTimestamp(
-						combineDateAndTime(newDate, newTime),
-						currentTimezone
-					);
-
-					const newEventDateTime = clone(eventDateTime);
-
-					if (isStartChange) {
-						newEventDateTime.datetime_start = newDateTime;
-
-						// Check if the new start time is after the cuurent end time.
-						if (
-							parseInt(newEventDateTime.datetime_start) >=
-							parseInt(newEventDateTime.datetime_end)
-						) {
-							// Set the new end time to be 1 hour after the start dateTime.
-							newEventDateTime.datetime_end = String(
-								parseInt(newEventDateTime.datetime_start) +
-								3600
-							);
-						}
-					} else {
-						newEventDateTime.datetime_end = newDateTime;
-
-						// Check if the new end time is before the current start time.
-						if (
-							parseInt(newEventDateTime.datetime_start) >=
-							parseInt(newEventDateTime.datetime_end)
-						) {
-							// Set the new start time to be 1 hour before the end dateTime.
-							newEventDateTime.datetime_start = String(
-								parseInt(newEventDateTime.datetime_end) - 3600
-							);
-						}
-					}
-
-					// Reset the temp date and time.
-					setState({
-						tempEventDate: null,
-						tempEventTime: null,
-					});
-
-
-					maybeUpdateEventDateTime(eventDateTime, newEventDateTime);
-				};
-
-				/**
-				 * Handles DateTimePicker changes.
-				 *
-				 * @param {string} currentDateTime The current dateTime.
-				 * @param {string} newDateTime     The new selected dateTime.
-				 *
-				 * @return {void}
-				 */
-				const datePickerHandler = (currentDateTime, newDateTime) => {
-					// Compare the date without time to see if the time or date was changed.
-					const isDateChange =
-						moment(currentDateTime).format('YYYY-MM-DD') ===
-						moment(newDateTime).format('YYYY-MM-DD');
-					const stateUpdate = isDateChange
-						? { tempEventTime: newDateTime }
-						: { tempEventDate: newDateTime };
-					setState(stateUpdate);
-				};
-
-				return (
-					<div className="se-datetimegroup-container">
-						<div className="se-datetimegroup-controls">
-							<BaseControl
-								label={__(
-									'Start Date/Time',
-									'simple-events'
-								)}
-							>
-								<Dropdown
-									contentClassName="se-datetime-popover se-datetime-popover__time"
-									popoverProps={{ placement: 'bottom' }}
-									renderToggle={({ isOpen, onToggle }) => (
-										<Button
-											className="se-datetime-popover__button"
-											variant="secondary"
-											onClick={() => {
-												onToggle();
-											}}
-											aria-expanded={isOpen}
-										>
-											{eventDateTime.all_day
-												? wp.date.format(
-													'F j, Y',
-													eventStart
-												)
-												: wp.date.format(
-													timeFormat,
-													eventStart
-												)}
-										</Button>
-									)}
-									renderContent={() => (
-										<Fragment>
-											<DateTimePicker
-												currentDate={eventStart}
-												is12Hour={is12HourTime()}
-												onChange={(newDateTime) =>
-													datePickerHandler(
-														eventStart,
-														newDateTime
-													)
-												}
-												__nextRemoveHelpButton
-												__nextRemoveResetButton
-											/>
-											<Button
-												className="se-datetime-popover__set-datetime"
-												onClick={() =>
-													setDateTimeHandler(true)
-												}
-												variant="secondary"
-											>
-												{__(
-													'Set time',
-													'simple-events'
-												)}
-											</Button>
-										</Fragment>
-									)}
-								/>
-							</BaseControl>
-							<BaseControl
-								label={__('End Date/Time', 'simple-events')}
-							>
-								<Dropdown
-									contentClassName="se-datetime-popover se-datetime-popover__time"
-									popoverProps={{ placement: 'bottom' }}
-									renderToggle={({ isOpen, onToggle }) => (
-										<Button
-											className="se-datetime-popover__button"
-											variant="secondary"
-											onClick={() => {
-												onToggle();
-											}}
-											aria-expanded={isOpen}
-											disabled={eventDateTime.all_day}
-										>
-											{eventDateTime.all_day
-												? '--:--'
-												: wp.date.format(
-													timeFormat,
-													eventEnd
-												)}
-										</Button>
-									)}
-									renderContent={() => (
-										<Fragment>
-											<DateTimePicker
-												currentDate={eventEnd}
-												is12Hour={is12HourTime()}
-												onChange={(newDateTime) =>
-													datePickerHandler(
-														eventEnd,
-														newDateTime
-													)
-												}
-												__nextRemoveHelpButton
-												__nextRemoveResetButton
-											/>
-											<Button
-												className="se-datetime-popover__set-datetime"
-												onClick={() =>
-													setDateTimeHandler(false)
-												}
-												variant="secondary"
-												text={__(
-													'Set time',
-													'simple-events'
-												)}
-											/>
-										</Fragment>
-									)}
-								/>
-							</BaseControl>
-							<BaseControl>
-								<CheckboxControl
-									label={__('All day', 'simple-events')}
-									className='se-all-day-checkbox'
-									checked={eventDateTime.all_day}
-									onChange={() => {
-										const newEventDateTime =
-											clone(eventDateTime);
-
-										newEventDateTime.all_day =
-											!eventDateTime.all_day;
-
-										newEventDateTime.datetime_start =
-											getMoment(
-												newEventDateTime.datetime_start
-											);
-										newEventDateTime.datetime_end =
-											getMoment(
-												newEventDateTime.datetime_end
-											);
-
-										// If all day event, set time between 00:00 and 23:59.
-										if (newEventDateTime.all_day) {
-											newEventDateTime.datetime_start.startOf(
-												'date'
-											);
-											newEventDateTime.datetime_end.endOf(
-												'date'
-											);
-										} else {
-											newEventDateTime.datetime_start
-												.hour(DEFAULT_START_HOUR)
-												.minute(0);
-											newEventDateTime.datetime_end
-												.hour(DEFAULT_END_HOUR)
-												.minute(0);
-										}
-
-										newEventDateTime.datetime_start =
-											getTimestamp(
-												newEventDateTime.datetime_start
-											);
-										newEventDateTime.datetime_end =
-											getTimestamp(
-												newEventDateTime.datetime_end
-											);
-
-										const updatedDates = sortBy(
-											meta?.se_event_dates.map((item) =>
-												item === eventDateTime
-													? newEventDateTime
-													: item
-											),
-											'datetime_start'
-										);
-
-										manager.updateDates(updatedDates);
-									}}
-								/>
-							</BaseControl>
-							{multiDay && (
-								<div className="se-datetime-control__delete">
-									<Button
-										isDestructive
-										icon="no-alt"
-										label={__(
-											'Remove date',
-											'simple-events'
-										)}
-										onClick={() =>
-											removeDate(eventDateTime)
-										}
-									/>
-								</div>
-							)}
-						</div>
-					</div>
-				);
+		// Wrapper functions to trigger re-renders when dateManager state changes
+		const handleAddDate = () => {
+			if (dateManagerState?.addDate) {
+				dateManagerState.addDate();
+				setRefreshCounter(prev => prev + 1);
 			}
-		);
-
-
-		const EventDateTime = ({ dates }) => {
-			const addNewDate = () => {
-				const existingDates =
-					!dates || 0 === dates.length ? [] : dates;
-
-				// Set default date and time.
-				let eventStart = moment().utcOffset(OFFSET);
-
-				eventStart.hour(DEFAULT_START_HOUR);
-				eventStart.minute(0);
-				eventStart.second(0);
-
-				let eventEnd = eventStart.clone();
-
-				eventEnd.hour(DEFAULT_END_HOUR);
-
-				// Override with existing date if there is one.
-				if (existingDates.length) {
-					eventStart = getMoment(
-						last(existingDates).datetime_start
-					);
-					eventEnd = getMoment(last(existingDates).datetime_end);
-				}
-
-				// Set default date to be +1 day from the last date.
-				eventStart.add(1, 'days');
-				eventEnd.add(1, 'days');
-
-				const updatedDates = sortBy(
-					[
-						...existingDates,
-						{
-							datetime_start: wp.date.date('U', eventStart),
-							datetime_end: wp.date.date('U', eventEnd),
-							all_day: false,
-						},
-					],
-					'datetime_start'
-				);
-
-				manager.updateDates(updatedDates);
-			};
-
-			const removeDate = (date) => {
-				if (!dates.length) {
-					return;
-				}
-
-				const updatedDates = pull(dates, date);
-
-				manager.updateDates(updatedDates);
-			};
-
-			// If no dates, add a date.
-			if (!dates || 0 === dates.length) {
-				addNewDate();
-			}
-
-			const datesOutput = [];
-
-			sortBy(dates, 'datetime_start').forEach((date, index) => {
-				datesOutput.push(
-					<DateTimeGroup
-						key={index}
-						eventDateTime={date}
-						removeDate={removeDate}
-						multiDay={dates.length > 1}
-					/>
-				);
-			});
-
-			return (
-				<Fragment>
-					<span className="se-datetimegroup-controls-label">
-						{__('Date & Time', 'simple-events')}
-					</span>
-					{datesOutput}
-					<div className="se-datetime-addmore">
-						<Button isLink onClick={() => addNewDate()}>
-							{__('+ Add another date', 'simple-events')}
-						</Button>
-					</div>
-				</Fragment>
-			);
 		};
 
-		const EventDateTimeNew = ({ dates }) => {
+		const handleRevertDates = () => {
+			if (dateManagerState?.revertDates) {
+				dateManagerState.revertDates();
+				setRefreshCounter(prev => prev + 1);
+			}
+		};
+
+		// Create enhanced dateManagerInstance that triggers re-renders
+		const enhancedDateManagerInstance = dateManagerState ? {
+			...dateManagerState,
+			upsertDate: (date) => {
+				const result = dateManagerState.upsertDate(date);
+				setRefreshCounter(prev => prev + 1);
+				return result;
+			},
+			removeDate: (date) => {
+				const result = dateManagerState.removeDate(date);
+				setRefreshCounter(prev => prev + 1);
+				return result;
+			},
+			addDate: () => {
+				const result = dateManagerState.addDate();
+				setRefreshCounter(prev => prev + 1);
+				return result;
+			},
+			revertDates: () => {
+				const result = dateManagerState.revertDates();
+				setRefreshCounter(prev => prev + 1);
+				return result;
+			}
+		} : null;
+
+		const EventDateTime = ({ dates, refreshCounter }) => {
 			console.log('dates ', dates);
 
 			const datesOutput = [];
 
-			sortBy(dates, 'datetime_start').forEach((date, index) => {
+			sortBy(dates, 'start_date').forEach((date, index) => {
 				datesOutput.push(
 					<DateTimeGroupNew
-						key={index}
+						key={`${index}-${refreshCounter}`}
 						eventDateTime={date}
 						removeDate={null}
 						hasMultipleDates={dates.length > 1}
-						dateManagerInstance={dateManagerState}
+						dateManagerInstance={enhancedDateManagerInstance}
 					/>
 				);
 			});
@@ -669,30 +322,6 @@ registerBlockType('simple-events/event-info', {
 					</span>
 					{datesOutput}
 
-					{/* Keep JSON for debugging */}
-					<div className="se-event-dates-json">
-						<h4>Debug JSON:</h4>
-						{dates && dates.length > 0 ? (
-							dates.map((date, index) => (
-								<div key={index} className="se-event-date-row">
-									<pre style={{
-										background: '#f0f0f0',
-										padding: '10px',
-										margin: '5px 0',
-										borderRadius: '4px',
-										fontSize: '12px',
-										overflow: 'auto'
-									}}>
-										{JSON.stringify(date, null, 2)}
-									</pre>
-								</div>
-							))
-						) : (
-							<div className="se-no-dates">
-								{__('No dates available', 'simple-events')}
-							</div>
-						)}
-					</div>
 				</Fragment>
 			);
 		};
@@ -729,6 +358,8 @@ registerBlockType('simple-events/event-info', {
 			return renderPreview();
 		}
 
+		console.log('dateManagerState', dateManagerState);
+
 		return (
 			<div {...useBlockProps()}>
 				{getBlockControls()}
@@ -738,9 +369,61 @@ registerBlockType('simple-events/event-info', {
 					isColumnLayout
 					className={props.className}
 				>
-					{console.log('dateManagerInstance', dateManagerState?.getCurrentDates())}
-					<EventDateTime dates={meta?.se_event_dates} />
-					<EventDateTimeNew dates={dateManagerState?.getCurrentDates()?.dates} />
+					{/* If the dates are dirty, show a message to unsaved changes */}
+					{dateManagerState?.getCurrentDates()?.isDirty && (
+						<div className="se-unsaved-changes-message" style={{
+							background: '#fff3cd',
+							border: '1px solid #ffeaa7',
+							borderRadius: '4px',
+							padding: '12px 16px',
+							margin: '0 0 20px 0',
+							display: 'flex',
+							alignItems: 'center',
+							gap: '8px',
+							color: '#856404',
+							width: 'fit-content'
+						}}>
+							<span className="dashicons dashicons-warning" style={{
+								fontSize: '16px',
+								color: '#f39c12'
+							}}></span>
+							<div>
+								<strong>{__('Unsaved Changes', 'simple-events')}</strong>
+								<br />
+								<span style={{ fontSize: '13px' }}>
+									{__('You have unsaved date changes. Don\'t forget to save your post to persist these changes.', 'simple-events')}
+								</span>
+							</div>
+						</div>
+					)}
+
+					<EventDateTime
+						dates={dateManagerState?.getCurrentDates()?.dates}
+						refreshCounter={refreshCounter}
+					/>
+					{/* Button container with 50/50 layout */}
+					<div style={{
+						display: 'flex',
+						gap: '12px',
+						width: '100%',
+						marginBottom: '16px'
+					}}>
+						<Button
+							className="se-add-date-button"
+							variant="primary"
+							onClick={handleAddDate}
+							text={__('Add Date', 'simple-events')}
+							style={{ flex: 1 }}
+						/>
+						<Button
+							className="se-revert-changes-button"
+							variant="secondary"
+							onClick={handleRevertDates}
+							disabled={!dateManagerState?.getCurrentDates()?.isDirty}
+							text={__('Revert Changes', 'simple-events')}
+							style={{ flex: 1 }}
+						/>
+					</div>
 					<TextControl
 						className="se-location-label"
 						label={__('Venue', 'simple-events')}

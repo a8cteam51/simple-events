@@ -87,7 +87,7 @@ export const dateManager = (initialDates = [], timezone = '') => {
 	const upsertDate = (date) => {
 		// If the date doesnt contain a hash, generate one
 		if (!date.hash) {
-			date.hash = createDateHash(date.start, date.end);
+			date.hash = createDateHash(date.start_date, date.end_date);
 		}
 
 		// Check if the hash exists in the current dates
@@ -135,12 +135,38 @@ export const dateManager = (initialDates = [], timezone = '') => {
 		return getCurrentDates();
 	}
 
+	/**
+	 * Add a new date to the dates.
+	 *
+	 * @returns {Object} Updated date management service
+	 */
+	const addDate = () => {
+		const newDate = createDefaultDate(currentDates);
+		upsertDate(newDate);
+		console.log('isDirty', isDirty);
+		return getCurrentDates();
+	}
+
+	/**
+	 * Revert the dates to the original dates.
+	 *
+	 * @returns {Object} Updated date management service
+	 */
+	const revertDates = () => {
+		currentDates = clone(originalDates);
+		isDirty = false;
+		return getCurrentDates();
+	}
+
 	// Return the public interface
 	return {
 		getCurrentDates,
 		upsertDate,
 		removeDate,
+		addDate,
+		revertDates,
 		// Add other methods as needed
 	};
+
 
 };
