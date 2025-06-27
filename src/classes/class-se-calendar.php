@@ -125,34 +125,6 @@ class SE_Calendar {
 
 
 	/**
-	 * Create a DateTime object from a timestamp, with an optional timezone.
-	 *
-	 * @param mixed       $timestamp The Unix timestamp to create the DateTime object from.
-	 * @param string|null $timezone  The timezone to be used, or null to use the site timezone.
-	 *
-	 * @return DateTime The created DateTime object.
-	 */
-	public function create_date_time_from_timestamp( $timestamp, $timezone = null ): DateTime {
-		/**
-		 * If no timezone is passed, use the site timezone
-		 */
-		if ( null === $timezone ) {
-			$timezone = wp_timezone_string();
-		}
-
-		try {
-			$date_time_object = new DateTime( 'now', new DateTimeZone( $timezone ) );
-			$date_time_object->setTimestamp( $timestamp );
-		} catch ( Exception $e ) {
-			$date_time_object = new DateTime();
-			// todo handle exception
-		}
-
-		return $date_time_object->setTimestamp( $timestamp );
-	}
-
-
-	/**
 	 * Retrieves the days of the month and related event information.
 	 *
 	 * @param mixed $date The date to retrieve month information for.
@@ -272,19 +244,44 @@ class SE_Calendar {
 		$previous_date_time->modify( 'first day of this month' );
 		$previous_date_time->settime( 0, 0, 0 );
 
-		$sql_query = $wpdb->prepare(
-			"SELECT start_meta.meta_value from {$wpdb->prefix}postmeta as start_meta WHERE start_meta.meta_key = 'se_event_date_start' AND  start_meta.meta_value < %s ORDER BY start_meta.meta_value DESC LIMIT 1;",
-			$previous_date_time->getTimestamp()
+		$args = array(
+			'post_type'  => SE_Event_Post_Type::$event_date_post_type,
+			'meta_query' => array(
+				'relation' => 'AND',
+				array(
+					'key'     => 'se_event_date_start',
+					'value'   => $previous_date_time->getTimestamp(),
+					'compare' => '<',
+				),
+				array(
+					'relation' => 'OR',
+					array(
+						'key'     => 'se_event_hide_from_calendar',
+						'compare' => 'NOT EXISTS',
+					),
+					array(
+						'key'     => 'se_event_hide_from_calendar',
+						'value'   => '1',
+						'compare' => '!=',
+					),
+				),
+			),
+			'orderby' => 'meta_value',
+			'order'   => 'DESC',
+			'limit'   => 1,
 		);
 
-		// phpcs:disable WordPress.DB.PreparedSQL.NotPrepared
-		$previous_event = $wpdb->get_row( $sql_query ); // the query is prepared above
+		$query = new WP_Query( $args );
 
-		if ( empty( $previous_event ) ) {
+		if ( $query->have_posts() ) {
+			$previous_event = $query->posts[0];
+
+			// Get the start date of the previous event.
+			$previous_event_start_date = get_post_meta( $previous_event->ID, 'se_event_date_start', true );
+			return se_create_date_time_from_timestamp( $previous_event_start_date );
+		} else {
 			return null;
 		}
-
-		return $this->create_date_time_from_timestamp( $previous_event->meta_value );
 	}
 
 	/**
@@ -295,36 +292,65 @@ class SE_Calendar {
 	 * @return DateTime|null
 	 */
 	public function get_next_month_with_events( $current_date ) {
-		global $wpdb;
 
-		$next_date_time = clone $current_date;
-		$next_date_time->modify( 'last day of this month' );
-		$next_date_time->settime( 23, 23, 59 );
+		/**
+		 * @var string $meta_key The meta key to use for the query.
+		 * @var DateTime $current_date The current date.
+		 * @return array The query arguments.
+		 */
+		$query_args = function ( string $meta_key ) use ( $current_date ) {
+			$next_date_time = clone $current_date;
+			$next_date_time->modify( 'last day of this month' );
+			$next_date_time->settime( 23, 23, 59 );
 
-		$sql_query = $wpdb->prepare(
-			"SELECT start_meta.meta_value from {$wpdb->prefix}postmeta as start_meta WHERE start_meta.meta_key = 'se_event_date_start' AND  start_meta.meta_value > %s ORDER BY start_meta.meta_value ASC LIMIT 1;",
-			$next_date_time->getTimestamp()
-		);
-
-		// phpcs:disable WordPress.DB.PreparedSQL.NotPrepared
-		$next_event = $wpdb->get_row( $sql_query ); // the query is prepared above
-
-		// If we dont have a next date, check if we have any end dates.
-		if ( empty( $next_event ) ) {
-			$sql_query = $wpdb->prepare(
-				"SELECT end_meta.meta_value from {$wpdb->prefix}postmeta as end_meta WHERE end_meta.meta_key = 'se_event_date_end' AND  end_meta.meta_value > %s ORDER BY end_meta.meta_value ASC LIMIT 1;",
-				$next_date_time->getTimestamp()
+			return array(
+				'post_type'  => SE_Event_Post_Type::$event_date_post_type,
+				'meta_query' => array(
+					'relation' => 'AND',
+					array(
+						'key'     => $meta_key,
+						'value'   => $next_date_time->getTimestamp(),
+						'compare' => '>',
+					),
+					array(
+						'relation' => 'OR',
+						array(
+							'key'     => 'se_event_hide_from_calendar',
+							'compare' => 'NOT EXISTS',
+						),
+						array(
+							'key'     => 'se_event_hide_from_calendar',
+							'value'   => '1',
+							'compare' => '!=',
+						),
+					),
+				),
+				'orderby'    => 'meta_value',
+				'order'      => 'ASC',
+				'limit'      => 1,
 			);
+		};
 
-			// phpcs:disable WordPress.DB.PreparedSQL.NotPrepared
-			$next_event = $wpdb->get_row( $sql_query ); // the query is prepared above
+		$next_event = null;
+
+		// At first try to get the next event with the start date.
+		$query = new WP_Query( $query_args( 'se_event_date_start' ) );
+		if ( $query->have_posts() ) {
+			$next_event = $query->posts[0];
+		} else {
+			// If we don't have a next event with the start date, try with the end date.
+			$query = new WP_Query( $query_args( 'se_event_date_end' ) );
+			if ( $query->have_posts() ) {
+				$next_event = $query->posts[0];
+			}
 		}
 
 		if ( empty( $next_event ) ) {
 			return null;
 		}
-
-		return $this->create_date_time_from_timestamp( $next_event->meta_value );
+		// Get the start date of the next event.
+		$next_event_start_date = get_post_meta( $next_event->ID, 'se_event_date_start', true );
+		return se_create_date_time_from_timestamp( $next_event_start_date );
 	}
 
 
@@ -340,57 +366,35 @@ class SE_Calendar {
 
 		$day_events = array();
 
-		$start_timestamp = $date->setTime( 0, 0, 0 )->getTimeStamp();
-		$end_timestamp   = $date->setTime( 23, 59, 59 )->getTimestamp();
-
-		$sql_query = $wpdb->prepare(
-			"
-SELECT * from {$wpdb->prefix}posts
-INNER JOIN {$wpdb->prefix}postmeta AS start_meta ON {$wpdb->prefix}posts.ID = start_meta.post_id AND start_meta.meta_key = 'se_event_date_start'
-INNER JOIN {$wpdb->prefix}postmeta AS end_meta ON {$wpdb->prefix}posts.ID = end_meta.post_id AND end_meta.meta_key = 'se_event_date_end'
-WHERE wp_posts.post_type = %s AND (wp_posts.post_status = 'publish') AND
-((start_meta.meta_value >= %s AND start_meta.meta_value < %s)
-OR
-(start_meta.meta_value < %s AND end_meta.meta_value > %s)
-OR
-(end_meta.meta_value <= %s AND end_meta.meta_value > %s))
-GROUP BY {$wpdb->prefix}posts.ID
-ORDER BY start_meta.meta_value ASC;",
-			'se-event',
-			$start_timestamp,
-			$end_timestamp,
-			$start_timestamp,
-			$end_timestamp,
-			$end_timestamp,
-			$start_timestamp
-		);
-
-		// phpcs:disable WordPress.DB.PreparedSQL.NotPrepared
-		$all_events = $wpdb->get_results( $sql_query ); // the query is prepared above
-		if ( $all_events ) {
-			foreach ( $all_events as $event ) {
-				$event_dates = se_event_get_dates( $event->ID );
-
-				if ( ! $event_dates ) {
+		$new_all = SE_Event_Dates::get_event_dates_for_date( $date->format( 'Y-m-d' ), true, false );
+		// If we new dates.
+		if ( ! empty( $new_all ) ) {
+			foreach ( $new_all as $index => $event ) {
+				// dump($event);
+				// Get the parent post.
+				$parent_post = get_post( $event['event_id'] );
+				if ( ! $parent_post ) {
 					continue;
 				}
 
-				foreach ( $event_dates as $event_date ) {
-					$event->event_start_date = $this->create_date_time_from_timestamp( $event_date['datetime_start'] );
-					$event->event_end_date   = $this->create_date_time_from_timestamp( $event_date['datetime_end'] );
-					$event->hide_start_time  = '1' === get_post_meta( $event->ID, 'se_event_hide_start_time', true );
-					$event->hide_end_time    = '1' === get_post_meta( $event->ID, 'se_event_hide_end_time', true );
-					if ( $event_date['datetime_start'] >= $start_timestamp && $event_date['datetime_start'] <= $end_timestamp ) {
-						$new_event                     = clone $event;
-						$new_event->event_start_date   = $this->create_date_time_from_timestamp( $event_date['datetime_start'] );
-						$new_event->event_end_date     = $this->create_date_time_from_timestamp( $event_date['datetime_end'] );
-						$new_event->open_in_new_window = (bool) get_post_meta( $event->ID, 'se_event_open_in_new_window', true );
+				$event['ID']                = $parent_post->ID;
+				$event['post_title']        = $parent_post->post_title;
+				$event['post_content']      = $parent_post->post_content;
+				$event['post_excerpt']      = $parent_post->post_excerpt;
+				$event['post_date']         = $parent_post->post_date;
+				$event['post_date_gmt']     = $parent_post->post_date_gmt;
+				$event['post_modified']     = $parent_post->post_modified;
+				// Add the meta.
+				$event['event_start_date']   = se_create_date_time_from_timestamp( $event['event_start_date'] );
+				$event['event_end_date']     = se_create_date_time_from_timestamp( $event['event_end_date'] );
+				$event['hide_start_time']    = '1' === get_post_meta( $parent_post->ID, 'se_event_hide_start_time', true );
+				$event['hide_end_time']      = '1' === get_post_meta( $parent_post->ID, 'se_event_hide_end_time', true );
+				$event['open_in_new_window'] = (bool) get_post_meta( $parent_post->ID, 'se_event_open_in_new_window', true );
 
-						$day_events[] = $new_event;
-					}
-				}
+				$day_events[] = (object) $event;
 			}
 		}
+
 		return $day_events;
 	}
 

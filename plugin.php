@@ -97,3 +97,8 @@ function simple_events_activate() {
 	}
 }
 register_activation_hook( __FILE__, 'simple_events_activate' );
+
+
+add_action( 'init', function() {
+	// dd( SE_Event_Dates::get_event_dates_for_date( '2025-06-02', true, false ) );
+} );

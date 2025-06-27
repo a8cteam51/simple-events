@@ -27,7 +27,6 @@ if ( $se_hide_start_time ) {
 if ( $se_hide_end_time ) {
 	$se_hide_css .= ' se-event-hide-end-time';
 }
-
 ?>
 
 <article class="simple-events-calendar-month__calendar-event <?php echo esc_attr( trim( $se_hide_css ) ); ?>">
@@ -51,7 +50,7 @@ if ( $se_hide_end_time ) {
 
 		<h3 class="simple-events-calendar-month__calendar-event-title">
 			<a
-				href="<?php echo esc_url( se_event_get_calendar_link( $se_event->ID ) ); ?>"
+				href="<?php echo esc_url( se_event_get_calendar_link( $se_event->ID, $se_event->event_date_id ) ); ?>"
 				title="<?php echo esc_attr( get_the_title( $se_event ) ); ?>"
 				rel="bookmark"
 				class="simple-events-calendar-month__calendar-event-title-link"

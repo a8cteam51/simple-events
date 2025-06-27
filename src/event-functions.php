@@ -415,14 +415,14 @@ function se_event_is_expired( $event_id ) {
  *
  * @return string
  */
-function se_event_get_calendar_link( $event_id ) {
+function se_event_get_calendar_link( $event_id, $event_date_id = null ) {
 	// Set the link.
 	$external_link      = esc_url( get_post_meta( $event_id, 'se_event_external_link', true ) );
 	$open_external_link = (bool) get_post_meta( $event_id, 'se_open_external_link', true );
 
 	return ( $external_link && $open_external_link )
 		? $external_link
-		: get_the_permalink( $event_id );
+		: get_the_permalink( $event_id ) . ( $event_date_id ? '#event-' . $event_date_id : '' );
 }
 
 /**
@@ -638,6 +638,33 @@ function se_event_get_event_dates( $event_id ): array {
 	);
 
 	return apply_filters( 'se_event_get_event_dates', $dates, $event_id );
+}
+
+/**
+ * Create a DateTime object from a timestamp, with an optional timezone.
+ *
+ * @param mixed       $timestamp The Unix timestamp to create the DateTime object from.
+ * @param string|null $timezone  The timezone to be used, or null to use the site timezone.
+ *
+ * @return DateTime The created DateTime object.
+ */
+function se_create_date_time_from_timestamp( $timestamp, $timezone = null ): DateTime {
+	/**
+	 * If no timezone is passed, use the site timezone
+	 */
+	if ( null === $timezone ) {
+		$timezone = wp_timezone_string();
+	}
+
+	try {
+		$date_time_object = new DateTime( 'now', new DateTimeZone( $timezone ) );
+		$date_time_object->setTimestamp( $timestamp );
+	} catch ( Exception $e ) {
+		$date_time_object = new DateTime();
+		// todo handle exception
+	}
+
+	return $date_time_object->setTimestamp( $timestamp );
 }
 
 /**

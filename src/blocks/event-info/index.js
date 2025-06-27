@@ -36,6 +36,7 @@ import {
 } from '@wordpress/block-editor';
 import { withState } from '@wordpress/compose';
 import { useEntityProp } from '@wordpress/core-data';
+import { useSelect, useDispatch } from '@wordpress/data';
 
 // Import date utilities
 import {
@@ -86,6 +87,116 @@ export const getEventDatePosts = () => {
 		return [];
 	});
 
+};
+
+/**
+ * Save the event dates to the custom rest API endpoint.
+ *
+ * @param {Array} dates - The array of event dates to save.
+ * @param {Object} dateManagerInstance - The date manager instance to refresh.
+ * @returns {Promise<Array>} A promise that resolves to the saved event dates.
+ */
+export const saveEventDates = (dates, dateManagerInstance = null) => {
+	// Get the current post id.
+	const postId = window?.wp?.data?.select('core/editor')?.getCurrentPostId();
+	if (!postId) {
+		return Promise.reject(new Error('No post ID found'));
+	}
+
+	// simple-events/event-dates/{event}
+	return apiFetch({
+		path: '/simple-events/event-dates/' + postId + '/sync',
+		method: 'POST',
+		data: {
+			dates: dates,
+			event_id: postId,
+			nonce: seSettings.syncDatesNonce
+		}
+	}).then((response) => {
+		console.log('Event dates saved successfully:', response);
+
+		// Show notification message if available
+		if (response.message) {
+			// Show success notification in bottom left
+			window.wp.data.dispatch('core/notices').createSuccessNotice(
+				response.message,
+				{
+					type: 'snackbar',
+					isDismissible: true,
+					id: 'event-dates-saved'
+				}
+			);
+		}
+
+		// Refresh dateManager with new dates if available and dateManager instance is provided
+		if (response.dates && dateManagerInstance && dateManagerInstance.refreshWithNewDates) {
+			dateManagerInstance.refreshWithNewDates(response.dates);
+		}
+
+		return response;
+	}).catch((error) => {
+		console.error('Error saving event dates:', error);
+
+		// Show error notification
+		window.wp.data.dispatch('core/notices').createErrorNotice(
+			__('Failed to save event dates. Please try again.', 'simple-events'),
+			{
+				type: 'snackbar',
+				isDismissible: true,
+				id: 'event-dates-error'
+			}
+		);
+
+		throw error;
+	});
+};
+
+/**
+ * Auto-save event dates when they change.
+ *
+ * @param {Array} dates - The array of event dates to auto-save.
+ * @param {Object} dateManagerInstance - The date manager instance to refresh.
+ * @returns {Promise<Array>} A promise that resolves to the saved event dates.
+ */
+export const autoSaveEventDates = async (dates, dateManagerInstance = null) => {
+	try {
+		// Save to REST API
+		const savedDates = await saveEventDates(dates, dateManagerInstance);
+
+		// Also update the post meta to keep it in sync
+		const postId = window?.wp?.data?.select('core/editor')?.getCurrentPostId();
+		if (postId) {
+			window.wp.data.dispatch('core/editor').editPost({
+				meta: {
+					se_event_dates: savedDates.dates || savedDates,
+				},
+			});
+		}
+
+		return savedDates;
+	} catch (error) {
+		console.error('Error auto-saving event dates:', error);
+		throw error;
+	}
+};
+
+/**
+ * Save event dates when the post is being saved.
+ *
+ * @param {Array} dates - The array of event dates to save.
+ * @param {Object} dateManagerInstance - The date manager instance to refresh.
+ * @returns {Promise<Array>} A promise that resolves to the saved event dates.
+ */
+export const saveEventDatesOnPostSave = async (dates, dateManagerInstance = null) => {
+	try {
+		// Save to REST API
+		const savedDates = await saveEventDates(dates, dateManagerInstance);
+		console.log('Event dates saved on post save:', savedDates);
+		return savedDates;
+	} catch (error) {
+		console.error('Error saving event dates on post save:', error);
+		throw error;
+	}
 };
 
 /**
@@ -174,6 +285,32 @@ registerBlockType('simple-events/event-info', {
 		const [dateManagerState, setDateManagerState] = useState(null);
 		// Add refresh counter to force re-renders when dateManager state changes
 		const [refreshCounter, setRefreshCounter] = useState(0);
+
+		// Watch for post save events
+		const { isSavingPost, isAutosavingPost } = useSelect((select) => {
+			const { isSavingPost, isAutosavingPost } = select('core/editor');
+			return {
+				isSavingPost: isSavingPost(),
+				isAutosavingPost: isAutosavingPost(),
+			};
+		}, []);
+
+		// Trigger date save when post is being saved
+		useEffect(() => {
+			const saveDatesOnPostSave = async () => {
+				if (isSavingPost && !isAutosavingPost && dateManagerState?.getCurrentDates()?.dates) {
+					console.log('Post is being saved, saving event dates...');
+					try {
+						await saveEventDatesOnPostSave(dateManagerState.getCurrentDates().dates, dateManagerState);
+						console.log('Event dates saved successfully on post save');
+					} catch (error) {
+						console.error('Failed to save event dates on post save:', error);
+					}
+				}
+			};
+
+			saveDatesOnPostSave();
+		}, [isSavingPost, isAutosavingPost, dateManagerState]);
 
 		// Initialize date manager on component mount
 		useEffect(() => {
@@ -295,6 +432,12 @@ registerBlockType('simple-events/event-info', {
 				const result = dateManagerState.revertDates();
 				setRefreshCounter(prev => prev + 1);
 				return result;
+			},
+			refreshWithNewDates: (newDates) => {
+				if (dateManagerState.refreshWithNewDates) {
+					dateManagerState.refreshWithNewDates(newDates);
+					setRefreshCounter(prev => prev + 1);
+				}
 			}
 		} : null;
 
@@ -391,7 +534,7 @@ registerBlockType('simple-events/event-info', {
 								<strong>{__('Unsaved Changes', 'simple-events')}</strong>
 								<br />
 								<span style={{ fontSize: '13px' }}>
-									{__('You have unsaved date changes. Don\'t forget to save your post to persist these changes.', 'simple-events')}
+									{__('You have unsaved date changes. Save the post to persist these changes.', 'simple-events')}
 								</span>
 							</div>
 						</div>

@@ -10,6 +10,36 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+/**
+ * Checks and get the event date id from url if set,
+ *
+ * @return integer|null The event date id or null if not set.
+ */
+function se_template_get_event_date_id() {
+	// Get the url.
+	$url = $_SERVER['REQUEST_URI'];
+
+	// The url should be a permalink wtih /#{id}
+	$url_parts = explode( '/#', $url );
+
+	// if we only have less than 2 parts, return null.
+	if ( count( $url_parts ) < 2 ) {
+		return null;
+	}
+
+	// url is first, date should be last.
+	$event_url = $url_parts[0];
+	$event_date_id = end( $url_parts );
+
+	// If the last part is not a number, return null.
+	if ( ! is_numeric( $event_date_id ) ) {
+		return null;
+	}
+
+	// If the event url is not a permalink, return null.
+	return $event_date_id;
+}
+
 if ( ! function_exists( 'se_template_content_wrapper_start' ) ) {
 
 	/**
@@ -54,6 +84,9 @@ if ( ! function_exists( 'se_template_event_single_title' ) ) {
 	 * @return void
 	 */
 	function se_template_event_single_title() {
+
+
+
 		the_title( '<h1 class="product_title entry-title">', '</h1>' );
 	}
 }

@@ -124,6 +124,7 @@ class SE_Blocks {
 		// Pass through new event data information.
 		$block_settings['eventVersion']      = SE_Event_Post_Type::$current_event_version;
 		$block_settings['eventDatePostType'] = SE_Event_Post_Type::$event_date_post_type;
+		$block_settings['syncDatesNonce']    = wp_create_nonce( 'se_event_nonce' );
 
 		wp_localize_script(
 			'wp-blocks',
@@ -331,7 +332,7 @@ class SE_Blocks {
 			$output .= se_template_calendar_links( false );
 		}
 
-		return apply_filters( 'simple_events_event_info_render', 'TODO'.$output, $event_dates, $event_timezone, $event_location, $attributes );
+		return apply_filters( 'simple_events_event_info_render', 'TODO' . $output, $event_dates, $event_timezone, $event_location, $attributes );
 	}
 
 	/**

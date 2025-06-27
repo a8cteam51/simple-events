@@ -43,6 +43,33 @@ export const dateManager = (initialDates = [], timezone = '') => {
 		'isDirty': isDirty,
 	});
 
+	/**
+	 * Refresh the date manager with new dates
+	 *
+	 * @param {Array} newDates - The new dates to set
+	 * @returns {Object} Updated date management service
+	 */
+	const refreshWithNewDates = (newDates) => {
+		// Add hash to each date if not present
+		newDates.forEach(date => {
+			if (!date.hash) {
+				date.hash = createDateHash(date.start_date, date.end_date);
+			}
+		});
+
+		// Update internal state
+		originalDates = clone(newDates);
+		currentDates = clone(newDates);
+		isDirty = false;
+
+		console.log('DateManager refreshed with new dates:', {
+			originalDates,
+			currentDates,
+			isDirty
+		});
+
+		return getCurrentDates();
+	};
 
 	/**
 	 * Get the current dates
@@ -165,7 +192,15 @@ export const dateManager = (initialDates = [], timezone = '') => {
 		removeDate,
 		addDate,
 		revertDates,
-		// Add other methods as needed
+		refreshWithNewDates,
+		// Expose internal state getters for external access
+		get originalDates() { return originalDates; },
+		get currentDates() { return currentDates; },
+		get isDirty() { return isDirty; },
+		// Expose internal state setters for external access
+		set originalDates(value) { originalDates = clone(value); },
+		set currentDates(value) { currentDates = clone(value); },
+		set isDirty(value) { isDirty = value; }
 	};
 
 
