@@ -312,6 +312,33 @@ registerBlockType('simple-events/event-info', {
 			saveDatesOnPostSave();
 		}, [isSavingPost, isAutosavingPost, dateManagerState]);
 
+		// Sync dateManagerState dates to block attributes
+		useEffect(() => {
+			if (dateManagerState?.getCurrentDates()?.dates) {
+				setAttributes({
+					eventDates: dateManagerState.getCurrentDates().dates
+				});
+			}
+		}, [dateManagerState, refreshCounter, setAttributes]);
+
+		// Check if we should be in edit mode based on missing data
+		useEffect(() => {
+			// Only check after dateManager is ready to avoid premature decisions
+			if (dateManagerReady && dateManagerState) {
+				const hasLocation = meta?.se_event_location && meta.se_event_location.length > 0;
+				const hasVenue = meta?.se_event_venue && meta.se_event_venue.length > 0;
+				const hasDates = dateManagerState?.getCurrentDates()?.dates &&
+					dateManagerState.getCurrentDates().dates.length > 0;
+
+				// Enter edit mode if we don't have either location/venue AND dates
+				const shouldBeInEditMode = (!hasLocation && !hasVenue) || !hasDates;
+
+				if (shouldBeInEditMode && !editMode) {
+					setAttributes({ editMode: true });
+				}
+			}
+		}, [dateManagerReady, dateManagerState, meta?.se_event_location, meta?.se_event_venue, editMode, setAttributes]);
+
 		// Initialize date manager on component mount
 		useEffect(() => {
 			const initManager = async () => {
@@ -478,7 +505,7 @@ registerBlockType('simple-events/event-info', {
 						attributes={{
 							eventVenue: meta?.se_event_venue,
 							eventLocation: meta?.se_event_location,
-							eventDates: meta?.se_event_dates,
+							eventDates: dateManagerState?.getCurrentDates()?.dates,
 							eventTimezone: meta?.se_event_timezone,
 							externalLink: meta?.se_event_external_link,
 							externalLinkLabel: meta?.se_event_external_link_label,
@@ -488,14 +515,6 @@ registerBlockType('simple-events/event-info', {
 				</Disabled>
 			</div>
 		);
-
-		// Show editMode if no location or date set.
-		if (
-			meta?.se_event_location.length === 0 &&
-			(!meta?.se_event_dates || !meta?.se_event_dates?.length)
-		) {
-			setAttributes({ editMode: true });
-		}
 
 		if (!editMode) {
 			return renderPreview();
@@ -724,7 +743,7 @@ registerBlockType('simple-events/event-info', {
 							onChange={(value) =>
 								setMeta({
 									...meta,
-									se_event_display_grouped: value,
+									c: value,
 								})
 							}
 						/>

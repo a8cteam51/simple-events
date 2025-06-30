@@ -198,8 +198,12 @@ function se_event_get_future_dates( $event_id, $date_only = false, $time_only = 
  */
 function se_event_get_formatted_dates( $event_id, $date_only = false, $time_only = false, $event_dates = null ) {
 
+	$date_display_formatter = new SE_Date_Display_Formatter( $event_id );
+
+
+
 	// Get required post meta.
-	$event_dates      = se_event_get_dates( $event_id, $event_dates );
+	// $event_dates      = se_event_get_dates( $event_id, $event_dates );
 	$event_timezone   = get_post_meta( $event_id, 'se_event_timezone', true );
 	$hide_end_time    = get_post_meta( $event_id, 'se_event_hide_end_time', true );
 	$hide_start_time  = get_post_meta( $event_id, 'se_event_hide_start_time', true );
@@ -208,16 +212,8 @@ function se_event_get_formatted_dates( $event_id, $date_only = false, $time_only
 	if ( ! $event_dates ) {
 		return '';
 	}
-
-	return se_event_format_dates(
-		$event_dates,
-		$event_timezone,
-		$hide_end_time,
-		$hide_start_time,
-		$display_timezone,
-		$date_only,
-		$time_only
-	);
+// dump($date_display_formatter);
+	return $date_display_formatter->format_dates( $event_dates);
 }
 
 /**
@@ -234,6 +230,10 @@ function se_event_get_formatted_dates( $event_id, $date_only = false, $time_only
  * @return string
  */
 function se_event_format_dates( $event_dates, $timezone, $hide_end_time, $hide_start_time, $display_timezone, $date_only, $time_only ) {
+	dump('CALLED se_event_format_dates REMOVE THIS CALL');
+	// Attempt to get the event date id from url.
+	$event_date_id = se_template_get_event_date_id();
+
 	$dates_count = is_array( $event_dates ) ? count( $event_dates ) : 1;
 
 	if ( ! empty( $event_timezone ) ) {
@@ -250,19 +250,20 @@ function se_event_format_dates( $event_dates, $timezone, $hide_end_time, $hide_s
 
 	// Get the start and end times from the first date.
 	// Assume all start and end times are the same until proven otherwise.
-	$event_time_start = wp_date( get_option( 'time_format' ), $event_dates[0]['datetime_start'], $timezone );
-	$event_time_end   = wp_date( get_option( 'time_format' ), $event_dates[0]['datetime_end'], $timezone );
+	$event_time_start = wp_date( get_option( 'time_format' ), $event_dates[0]['start_date'], $timezone );
+	$event_time_end   = wp_date( get_option( 'time_format' ), $event_dates[0]['end_date'], $timezone );
 	$same_times       = ( 1 < $dates_count ) ? true : false;
 
 	// Loop over each available event date.
 	foreach ( $event_dates as $date ) {
+		$opening_li = $date['id'] === $event_date_id ? '<li class="active" style="text-decoration: underline;">' : '<li>';
 
 		// Check if start and end times are on the same day.
-		$same_day = wp_date( 'Y-m-d', $date['datetime_start'], $timezone ) === wp_date( 'Y-m-d', $date['datetime_end'], $timezone );
+		$same_day = wp_date( 'Y-m-d', $date['start_date'], $timezone ) === wp_date( 'Y-m-d', $date['end_date'], $timezone );
 
 		// Get start and end times.
-		$time_start = ( $hide_start_time ) ? '' : wp_date( get_option( 'time_format' ), $date['datetime_start'], $timezone );
-		$time_end   = ( $hide_end_time ) ? '' : wp_date( get_option( 'time_format' ), $date['datetime_end'], $timezone );
+		$time_start = ( $hide_start_time ) ? '' : wp_date( get_option( 'time_format' ), $date['start_date'], $timezone );
+		$time_end   = ( $hide_end_time ) ? '' : wp_date( get_option( 'time_format' ), $date['end_date'], $timezone );
 
 		$time_separator = ( 1 === (int) $hide_start_time ) ? '' : '&ndash;';
 
@@ -275,20 +276,20 @@ function se_event_format_dates( $event_dates, $timezone, $hide_end_time, $hide_s
 		$date['all_day'] = array_key_exists( 'all_day', $date ) ? filter_var( $date['all_day'], FILTER_VALIDATE_BOOLEAN ) : false;
 
 		// Start the output string.
-		$single_date_output = wp_date( get_option( 'date_format' ), $date['datetime_start'], $timezone );
+		$single_date_output = wp_date( get_option( 'date_format' ), $date['start_date'], $timezone );
 
 		// Return early if we only want the date.
 		if ( $date_only ) {
-			$end_date         = wp_date( get_option( 'date_format' ), $date['datetime_end'], $timezone );
+			$end_date         = wp_date( get_option( 'date_format' ), $date['end_date'], $timezone );
 			$date_only_output = ( $same_day ) ? $single_date_output : $single_date_output . ' &ndash; ' . $end_date;
-			$dates_output    .= ( $dates_count > 1 ) ? '<li>' . $date_only_output . '</li>' : $date_only_output;
+			$dates_output    .= ( $dates_count > 1 ) ? $opening_li . $date_only_output . '</li>' : $date_only_output;
 			continue;
 		}
 
 		// Return early if we only want the time.
 		if ( $time_only ) {
 			$time          = sprintf( '%s %s %s', $time_start, $time_separator, $time_end );
-			$dates_output .= ( $dates_count > 1 ) ? '<li>' . $time . '</li>' : $time;
+			$dates_output .= ( $dates_count > 1 ) ? $opening_li . $time . '</li>' : $time;
 			continue;
 		}
 
@@ -298,7 +299,7 @@ function se_event_format_dates( $event_dates, $timezone, $hide_end_time, $hide_s
 			$single_date_output .= sprintf(
 				' %s &ndash; %s %s',
 				$time_start,
-				wp_date( get_option( 'date_format' ), $date['datetime_end'], $timezone ),
+				wp_date( get_option( 'date_format' ), $date['end_date'], $timezone ),
 				$time_end
 			);
 		} elseif ( false === $date['all_day'] && $time_start !== $time_end ) {
@@ -313,7 +314,7 @@ function se_event_format_dates( $event_dates, $timezone, $hide_end_time, $hide_s
 		}
 
 		// Return output for this date.
-		$dates_output .= ( $dates_count > 1 ) ? '<li>' . $single_date_output . '</li>' : $single_date_output;
+		$dates_output .= ( $dates_count > 1 ) ? $opening_li . $single_date_output . '</li>' : $single_date_output;
 	}
 
 	// Overwrite output if all start and end times are the same and "Group event dates with matching times" otpion is selected.
@@ -399,13 +400,30 @@ function se_event_get_venue( $event_id ) {
  * @return boolean
  */
 function se_event_is_expired( $event_id ) {
-	$event_end_date = get_post_meta( $event_id, 'se_event_date_end', true );
+	$event_dates = se_event_get_event_dates( $event_id );
 
-	if ( ! empty( $event_end_date ) && $event_end_date < wp_date( 'U' ) ) {
-		return true;
+	$latest_date = null;
+	foreach ( $event_dates as $date ) {
+		// Get the end date.
+		$end_date = $date['end_date'];
+
+		// If the event is all day, get the start date.
+		if ( $date['all_day'] ) {
+			$temp = se_create_date_time_from_timestamp( $date['start_date'] );
+			$end_date = $temp->setTime( 23, 59, 59 )->getTimestamp();
+		}
+
+		// If the end date is greater than the latest date, set it.
+		if ( $end_date > $latest_date ) {
+			$latest_date = $end_date;
+		}
 	}
 
-	return false;
+	if ( null === $latest_date ) {
+		return false;
+	}
+
+	return $latest_date < SE_Calendar::get_instance()->create_date_time( 'now' )->format( 'U' );
 }
 
 /**
@@ -420,9 +438,24 @@ function se_event_get_calendar_link( $event_id, $event_date_id = null ) {
 	$external_link      = esc_url( get_post_meta( $event_id, 'se_event_external_link', true ) );
 	$open_external_link = (bool) get_post_meta( $event_id, 'se_open_external_link', true );
 
+	if($external_link && $open_external_link){
+		return $external_link;
+	}
+
+	$permalink = get_the_permalink( $event_id );
+
+	// Either add ?date=7424 or append &date=7424 if permalink has ?
+	if ( $event_date_id ) {
+		$permalink .= sprintf(
+			'%sdate=%s',
+			( strpos( $permalink, '?' ) !== false ) ? '&' : '?',
+			esc_attr( $event_date_id )
+		);
+	}
+
 	return ( $external_link && $open_external_link )
 		? $external_link
-		: get_the_permalink( $event_id ) . ( $event_date_id ? '#event-' . $event_date_id : '' );
+		: get_the_permalink( $event_id ) . ( $event_date_id ? '?date' . $event_date_id : '' );
 }
 
 /**

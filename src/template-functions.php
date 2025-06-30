@@ -16,28 +16,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @return integer|null The event date id or null if not set.
  */
 function se_template_get_event_date_id() {
-	// Get the url.
-	$url = $_SERVER['REQUEST_URI'];
-
-	// The url should be a permalink wtih /#{id}
-	$url_parts = explode( '/#', $url );
-
-	// if we only have less than 2 parts, return null.
-	if ( count( $url_parts ) < 2 ) {
-		return null;
-	}
-
-	// url is first, date should be last.
-	$event_url = $url_parts[0];
-	$event_date_id = end( $url_parts );
-
-	// If the last part is not a number, return null.
-	if ( ! is_numeric( $event_date_id ) ) {
-		return null;
-	}
-
-	// If the event url is not a permalink, return null.
-	return $event_date_id;
+	$event_date_id = array_key_exists( 'date', $_GET ) ? sanitize_text_field( $_GET['date'] ) : null;
+	return is_numeric( $event_date_id ) ? absint( $event_date_id ) : null;
 }
 
 if ( ! function_exists( 'se_template_content_wrapper_start' ) ) {
@@ -121,6 +101,7 @@ if ( ! function_exists( 'se_template_event_date' ) ) {
 	 */
 	function se_template_event_date() {
 		$event_dates = se_event_get_dates( get_the_ID() );
+
 
 		if ( ! empty( $event_dates ) ) {
 			$output = false;
@@ -506,13 +487,16 @@ if ( ! function_exists( 'se_template_event_content' ) ) {
 	 */
 	function se_template_event_content() {
 		$show_on_frontend = get_post_meta( get_the_ID(), 'se_event_show_on_frontend', true );
-
 		if ( empty( $show_on_frontend ) ) {
 			return;
 		}
 
+		$date_display_formatter = new SE_Date_Display_Formatter( get_the_ID() );
+		$dates = se_event_get_event_dates( get_the_ID() );
+
 		// Output the content for archive template.
-		se_template_event_date();
+		// se_template_event_date();
+		echo $date_display_formatter->get_header_date( $dates);
 		se_template_event_location();
 		se_template_event_price();
 		se_template_event_ticket_stock();
