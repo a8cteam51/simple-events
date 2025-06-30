@@ -77,6 +77,7 @@ require_once SE_SRC_PATH . '/classes/class-se-calendar-export.php';
 require_once SE_SRC_PATH . '/classes/class-se-calendar.php';
 require_once SE_SRC_PATH . '/classes/class-se-event-query-dates.php';
 require_once SE_SRC_PATH . '/classes/class-se-event-dates.php';
+require_once SE_SRC_PATH . '/classes/class-date-display-formatter.php';
 
 require_once SE_SRC_PATH . '/calendar-functions.php';
 require_once SE_SRC_PATH . '/event-functions.php';
@@ -85,6 +86,7 @@ require_once SE_SRC_PATH . '/template-hooks.php';
 require_once SE_SRC_PATH . '/woocommerce-hooks.php';
 require_once SE_SRC_PATH . '/rest-api.php';
 require_once SE_SRC_PATH . '/back-compat.php';
+
 
 /**
  * Add a flag to leverage for flushing rewrite rules.

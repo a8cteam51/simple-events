@@ -241,29 +241,39 @@ class SE_Blocks {
 
 		$post_ID = isset( $block->context['postId'] ) ? $block->context['postId'] : get_the_ID();
 
+		$date_display_formatter = new SE_Date_Display_Formatter( $post_ID );
+
 		$output = '';
 
 		// Event time / date.
-		$event_dates = get_post_meta( $post_ID, 'se_event_dates', true );
+		$event_dates = se_event_get_event_dates( $post_ID );
 
 		// Previewing?
 		if ( ! empty( $attributes['eventDates'] ) ) {
 			$event_dates = $attributes['eventDates'];
 		}
-
 		// Set up timezone. Defaults to site settings if the post has no timezone meta.
 		$event_timezone = get_post_meta( $post_ID, 'se_event_timezone', true );
 
 		// Previewing?
 		if ( isset( $attributes['eventTimezone'] ) ) {
 			$event_timezone = $attributes['eventTimezone'];
+			$date_display_formatter->modify_timezone( $event_timezone );
 		}
 
 		$dates_output = '';
 
 		if ( ! empty( $event_dates ) ) {
+			$has_header_date = false;
 			$dates_count  = count( $event_dates );
-			$date_heading = '<h3>' . _n( 'Date', 'Dates', $dates_count, 'simple-events' ) . '</h3>';
+			$active_date = $date_display_formatter->render_active_date( $event_dates );
+			if($active_date) {
+				$dates_output .= '<div class="se-event-info-date-header se-event-info-date-header--active">' . $active_date . '</div>';
+				$has_header_date = true;
+				$date_heading = '<h3>' . _n( 'Additional Date', 'Additional Dates', $dates_count -1, 'simple-events' ) . '</h3>';
+			} else {
+				$date_heading = '<h3>' . _n( 'Date', 'Dates', $dates_count, 'simple-events' ) . '</h3>';
+			}
 
 			/**
 			 * Filter the markup used for the date heading.
@@ -272,7 +282,10 @@ class SE_Blocks {
 			 * @param int    $dates_count The number of event dates.
 			 */
 			$dates_output .= apply_filters( 'se_event_info_date_heading', $date_heading, $dates_count );
-			$dates_output .= se_event_get_formatted_dates( $post_ID, false, false, $event_dates );
+			// If we have a header date and 2 or more dates, we need to exclude the current date from the list.
+			if(($has_header_date && $dates_count > 1) || ! $has_header_date) {
+				$dates_output .= $date_display_formatter->render_date_list($event_dates, ($has_header_date && $date_display_formatter->is_treating_each_date_as_own_event()));
+			}
 		}
 
 		// Event location.
@@ -332,7 +345,8 @@ class SE_Blocks {
 			$output .= se_template_calendar_links( false );
 		}
 
-		return apply_filters( 'simple_events_event_info_render', 'TODO' . $output, $event_dates, $event_timezone, $event_location, $attributes );
+
+		return apply_filters( 'simple_events_event_info_render', $output, $event_dates, $event_timezone, $event_location, $attributes );
 	}
 
 	/**

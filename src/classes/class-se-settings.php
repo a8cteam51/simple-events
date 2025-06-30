@@ -134,6 +134,38 @@ class SE_Settings {
 			)
 		);
 
+		// Treat each date as own event for navigation.
+		add_settings_field(
+			'treat_each_date_as_own_event',
+			sprintf(
+				// translators: %s is a HTML break tag.
+				__( 'Treat each date as own event%s', 'simple-events' ),
+				wp_kses_post( '<br><small><em>When this is selected, next and previous events will treat consecutive dates as unique.</em></small>' ),
+			),
+			array( __CLASS__, 'field_cb' ),
+			'simple_events',
+			'se_section_archives',
+			array(
+				'label_for' => 'treat_each_date_as_own_event',
+			)
+		);
+
+		// Allow grouping of dates with different time.
+		add_settings_field(
+			'allow_grouping_dates_different_time',
+			sprintf(
+				// translators: %s is a HTML break tag.
+				__( 'Allow grouping of dates with different times.%s', 'simple-events' ),
+				wp_kses_post( '<br><small><em>When enabled, events with different time ranges (e.g., 9AM-5PM vs 10AM-6PM) will be grouped separately. When disabled, only events with identical times will be grouped together.</em></small>' ),
+			),
+			array( __CLASS__, 'field_cb' ),
+			'simple_events',
+			'se_section_archives',
+			array(
+				'label_for' => 'allow_grouping_dates_different_time',
+			)
+		);
+
 		// Select link for the caledar page.
 		add_settings_field(
 			'calendar_page',
