@@ -15,15 +15,13 @@ import { Fragment, useState, useEffect } from '@wordpress/element';
 import {
 	PanelRow,
 	Placeholder,
-	BaseControl,
-	Dropdown,
+
 	Button,
 	TextControl,
 	Toolbar,
 	Disabled,
 	CheckboxControl,
 	ComboboxControl,
-	DateTimePicker,
 	PanelBody,
 	ToggleControl,
 } from '@wordpress/components';
@@ -34,33 +32,21 @@ import {
 	InspectorControls,
 	useBlockProps,
 } from '@wordpress/block-editor';
-import { withState } from '@wordpress/compose';
 import { useEntityProp } from '@wordpress/core-data';
 import { useSelect, useDispatch } from '@wordpress/data';
 
 // Import date utilities
 import {
-	DEFAULT_START_HOUR,
-	DEFAULT_END_HOUR,
-	OFFSET,
+
 	TIMEZONE,
 	TIMEZONE_NAME,
 	TIMEZONES,
-	FORMAT,
-	getDstOffset,
-	getMoment,
-	getTimestamp,
-	getStartAndEndDate,
-	createDefaultDate,
-	combineDateAndTime,
-	is12HourTime,
+
 } from './dates';
 
 import apiFetch from '@wordpress/api-fetch';
 
 import { dateManager } from './date-manager';
-// Import meta utilities
-import { metaManager } from './meta-utils';
 
 // Import the new DateTimeGroup component as DateTimeGroupNew
 import DateTimeGroupNew from './components/DateTimeGroup';
@@ -199,22 +185,6 @@ export const saveEventDatesOnPostSave = async (dates, dateManagerInstance = null
 	}
 };
 
-/**
- * Initializes the block by fetching the event dates and setting them in the state.
- *
- * @returns {Promise<void>} A promise that resolves when the event dates are fetched and set.
- */
-export const initEventDates = async () => {
-	const eventDates = await getEventDatePosts();
-	if (eventDates && eventDates.length > 0) {
-		// Set the event dates in the state.
-		window.wp.data.dispatch('core/editor').editPost({
-			meta: {
-				se_event_dates: eventDates,
-			},
-		});
-	}
-}
 
 // Initialize date manager instance outside the component
 let dateManagerInstance = null;
@@ -233,7 +203,23 @@ const initializeDateManager = async () => {
 		const eventDatePosts = await getEventDatePosts();
 		console.log('eventDatePosts from getEventDatePosts:', eventDatePosts);
 		console.log('dateManager function:', dateManager);
-		dateManagerInstance = dateManager(eventDatePosts);
+
+		// Get current post meta to pass to dateManager for sync
+		const currentPostId = window?.wp?.data?.select('core/editor')?.getCurrentPostId();
+		const currentMeta = currentPostId ? window?.wp?.data?.select('core/editor')?.getEditedPostAttribute('meta') : {};
+		const currentTimezone = currentMeta?.se_event_timezone || '';
+
+		// Create meta sync object
+		const metaSync = {
+			meta: currentMeta,
+			setMeta: (updates) => {
+				window.wp.data.dispatch('core/editor').editPost({
+					meta: updates
+				});
+			}
+		};
+
+		dateManagerInstance = dateManager(eventDatePosts, currentTimezone, metaSync);
 		console.log('dateManagerInstance after creation:', dateManagerInstance);
 		return dateManagerInstance;
 	} catch (error) {
@@ -359,16 +345,6 @@ registerBlockType('simple-events/event-info', {
 			}
 		}, [dateManagerReady, isGettingDates]);
 
-		// Create meta manager instance
-		const manager = metaManager(meta, setMeta);
-
-		// Sets the default timezone for calculations.
-
-		let currentTimezone = meta?.se_event_timezone;
-		if ('' === currentTimezone) {
-			currentTimezone = TIMEZONE;
-		}
-
 		const onDone = () => {
 			setAttributes({ editMode: false });
 		};
@@ -378,19 +354,6 @@ registerBlockType('simple-events/event-info', {
 				...meta,
 				se_event_location: value,
 			});
-		};
-
-		const maybeUpdateEventDateTime = (oldDate, newDate) => {
-			if (!isEqual(oldDate, newDate)) {
-				const updatedDates = sortBy(
-					meta?.se_event_dates.map((item) =>
-						item === oldDate ? newDate : item
-					),
-					'datetime_start'
-				);
-
-				manager.updateDates(updatedDates);
-			}
 		};
 
 		const getBlockControls = () => (
@@ -465,8 +428,47 @@ registerBlockType('simple-events/event-info', {
 					dateManagerState.refreshWithNewDates(newDates);
 					setRefreshCounter(prev => prev + 1);
 				}
+			},
+			updateTimezone: (newTimezone) => {
+				const result = dateManagerState.updateTimezone(newTimezone);
+				setRefreshCounter(prev => prev + 1);
+				return result;
 			}
 		} : null;
+
+		// Unsaved Changes Warning Component
+		const UnsavedChangesWarning = () => {
+			if (!dateManagerState?.getCurrentDates()?.isDirty) {
+				return null;
+			}
+
+			return (
+				<div className="se-unsaved-changes-message" style={{
+					background: '#fff3cd',
+					border: '1px solid #ffeaa7',
+					borderRadius: '4px',
+					padding: '12px 16px',
+					margin: '0 0 20px 0',
+					display: 'flex',
+					alignItems: 'center',
+					gap: '8px',
+					color: '#856404',
+					width: 'fit-content'
+				}}>
+					<span className="dashicons dashicons-warning" style={{
+						fontSize: '16px',
+						color: '#f39c12'
+					}}></span>
+					<div>
+						<strong>{__('Unsaved Changes', 'simple-events')}</strong>
+						<br />
+						<span style={{ fontSize: '13px' }}>
+							{__('You have unsaved date and timezone changes. Save the post to persist these changes.', 'simple-events')}
+						</span>
+					</div>
+				</div>
+			);
+		};
 
 		const EventDateTime = ({ dates, refreshCounter }) => {
 			console.log('dates ', dates);
@@ -499,6 +501,7 @@ registerBlockType('simple-events/event-info', {
 		const renderPreview = () => (
 			<div {...useBlockProps()}>
 				{getBlockControls()}
+				<UnsavedChangesWarning />
 				<Disabled>
 					<ServerSideRender
 						block="simple-events/event-info"
@@ -506,7 +509,7 @@ registerBlockType('simple-events/event-info', {
 							eventVenue: meta?.se_event_venue,
 							eventLocation: meta?.se_event_location,
 							eventDates: dateManagerState?.getCurrentDates()?.dates,
-							eventTimezone: meta?.se_event_timezone,
+							eventTimezone: dateManagerState?.getCurrentDates()?.timezone ?? meta?.se_event_timezone,
 							externalLink: meta?.se_event_external_link,
 							externalLinkLabel: meta?.se_event_external_link_label,
 							addCalendarLinks: meta?.se_event_add_calendar_links,
@@ -531,33 +534,7 @@ registerBlockType('simple-events/event-info', {
 					isColumnLayout
 					className={props.className}
 				>
-					{/* If the dates are dirty, show a message to unsaved changes */}
-					{dateManagerState?.getCurrentDates()?.isDirty && (
-						<div className="se-unsaved-changes-message" style={{
-							background: '#fff3cd',
-							border: '1px solid #ffeaa7',
-							borderRadius: '4px',
-							padding: '12px 16px',
-							margin: '0 0 20px 0',
-							display: 'flex',
-							alignItems: 'center',
-							gap: '8px',
-							color: '#856404',
-							width: 'fit-content'
-						}}>
-							<span className="dashicons dashicons-warning" style={{
-								fontSize: '16px',
-								color: '#f39c12'
-							}}></span>
-							<div>
-								<strong>{__('Unsaved Changes', 'simple-events')}</strong>
-								<br />
-								<span style={{ fontSize: '13px' }}>
-									{__('You have unsaved date changes. Save the post to persist these changes.', 'simple-events')}
-								</span>
-							</div>
-						</div>
-					)}
+					<UnsavedChangesWarning />
 
 					<EventDateTime
 						dates={dateManagerState?.getCurrentDates()?.dates}
@@ -670,55 +647,13 @@ registerBlockType('simple-events/event-info', {
 								"Events default to the site's time zone as configured in the WordPress settings. If this event is happening in a different region, manually set the time zone here.",
 								'simple-events'
 							)}
-							value={meta?.se_event_timezone ?? TIMEZONE}
+							value={dateManagerState?.getCurrentDates()?.timezone ?? meta?.se_event_timezone ?? TIMEZONE}
 							options={TIMEZONES}
 							onChange={(value) => {
-								const updatedDates = clone(
-									meta?.se_event_dates ?? []
-								);
-
-								// Ensure that the value is a string.
-								value = !Boolean(value) ? '' : value;
-								currentTimezone = value;
-
-								if ('' === value) {
-									currentTimezone = TIMEZONE;
+								if (enhancedDateManagerInstance?.updateTimezone) {
+									enhancedDateManagerInstance.updateTimezone(value);
+									setRefreshCounter(prev => prev + 1);
 								}
-
-								updatedDates.forEach((eventDateTime) => {
-									[
-										'datetime_start',
-										'datetime_end',
-									].forEach((key) => {
-										const dateTime = moment
-											.unix(eventDateTime[key])
-											.utcOffset(
-												getDstOffset(
-													eventDateTime[key],
-													meta?.se_event_timezone,
-													meta?.se_event_timezone
-												)
-											);
-
-										const newOffset =
-											'' !== currentTimezone
-												? getDstOffset(
-													eventDateTime[key],
-													currentTimezone,
-													currentTimezone
-												)
-												: OFFSET;
-
-										eventDateTime[key] = String(
-											dateTime
-												.utcOffset(newOffset, true)
-												.utc()
-												.unix()
-										);
-									});
-								});
-
-								manager.updateDates(updatedDates, { timezone: value });
 							}}
 						/>
 						<ToggleControl

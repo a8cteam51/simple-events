@@ -134,8 +134,6 @@ class SE_Event_Dates {
 			$data,
 			200
 		);
-
-		adie( "Fetching dates for event ID: {$event_id}" );
 	}
 
 	/**
@@ -213,6 +211,9 @@ class SE_Event_Dates {
 			);
 		}
 
+		// Update all legacy meta values.
+		self::update_legacy_meta_values( $event_id, $dates );
+
 		// Return the response.
 		return new WP_REST_Response(
 			array(
@@ -222,6 +223,30 @@ class SE_Event_Dates {
 			),
 			200
 		);
+	}
+
+	/**
+	 * Update all legacy meta values.
+	 *
+	 * @param int $event_id The event ID.
+	 * @param array $dates The dates.
+	 *
+	 * @return void
+	 */
+	public static function update_legacy_meta_values( $event_id, $dates ): void {
+		// Create the legacy date array.
+		$legacy_dates = array_map( function( $date ) {
+			return array(
+				'start_datetime' => $date['start_datetime'],
+				'end_datetime' => $date['end_datetime'],
+				'all_day' => $date['all_day'],
+			);
+		}, $dates );
+
+		// Update the legacy meta values.
+		update_post_meta( $event_id, 'se_event_dates', $legacy_dates );
+
+		se_event_update_event_query_dates( $event_id );
 	}
 
 	/**
@@ -285,11 +310,8 @@ class SE_Event_Dates {
 			)
 		);
 
-		// dump( $query->request );
 
 		$mapped = self::map_events_dates_to_event_dates( $query->posts );
-
-		// dump(count($mapped), $start_date, $end_date);
 
 		// Remove the event dates that are hidden from the calendar or feed.
 		return array_filter( $mapped, function( $event_date ) use ( $hide_from_calendar, $hide_from_feed ) {
@@ -307,8 +329,6 @@ class SE_Event_Dates {
 	 * @return array
 	 */
 	public static function get_event_dates_for_date( $date, $hide_from_calendar = false, $hide_from_feed = false ): array {
-
-
 		// Get the start of the day for the date.
 		$date_time = new DateTime( $date );
 		$date_time->setTime( 0, 0, 0 );
@@ -319,11 +339,8 @@ class SE_Event_Dates {
 		$date_time->setTime( 23, 59, 59 );
 		$end_date = $date_time->getTimestamp();
 
-		// dump(['intial' => $date, 'start_date' => $start_date, 'end_date' => $end_date]);
-		// adump( [$start_date, $end_date] );
 		// Get the events dates.
 		$events_dates = self::find_event_dates( $start_date, $end_date, $hide_from_calendar, $hide_from_feed );
-		// adie( [$events_dates] );
 
 		// Return the events dates.
 		return $events_dates;

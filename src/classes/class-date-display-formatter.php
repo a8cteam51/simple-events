@@ -479,6 +479,10 @@ class SE_Date_Display_Formatter {
 	 */
 	private function render_date_list_ungrouped( array $event_dates, string $existing_output = '' ) {
 		foreach ( $event_dates as $date ) {
+			// If we dont have an id on date, set as null.
+			if ( ! isset( $date['id'] ) ) {
+				$date['id'] = null;
+			}
 			$item_class       = array( 'se-event-date-list-item', $date['id'] === $this->event_date_id ? 'se-event-date-list-item__active' : '' );
 			$existing_output .= sprintf( '<li id="se-event-date-list-item-%s" class="%s">%s</li>', $date['id'], implode( ' ', $item_class ), $this->render_single_date( $date ) );
 		}

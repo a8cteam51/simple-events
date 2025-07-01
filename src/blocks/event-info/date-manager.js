@@ -1,11 +1,13 @@
 import { sortBy, isEqual, clone } from 'lodash';
-import { getStartAndEndDate, createDefaultDate } from './dates';
+import { getStartAndEndDate, createDefaultDate, getDstOffset, TIMEZONE, OFFSET } from './dates';
+import moment from 'moment';
 
 /**
  * Creates a date manager service for handling event dates with change tracking
  *
  * @param {Array} initialDates Initial array of date objects
  * @param {string} timezone Current timezone for the event
+ * @param {Object} metaSync Optional meta sync object with meta and setMeta
  * @returns {Object} Date management service
  */
 
@@ -24,22 +26,28 @@ import { getStartAndEndDate, createDefaultDate } from './dates';
 		return hash;
 	}
 
-export const dateManager = (initialDates = [], timezone = '') => {
+export const dateManager = (initialDates = [], timezone = '', metaSync = null) => {
 
 	// lOOP through dates and add a hash to each date
 	initialDates.dates.forEach(date => {
 		date.hash = createDateHash(date.start_date, date.end_date);
 	});
 
-
 	// Internal state
 	let originalDates = clone(initialDates.dates || []);
 	let currentDates = clone(initialDates.dates || []);
+	let originalTimezone = timezone || TIMEZONE;
+	let currentTimezone = timezone || TIMEZONE;
 	let isDirty = false;
+
+	// Meta sync helpers
+	const { meta, setMeta } = metaSync || {};
 
 	console.log({
 		'originalDates': originalDates,
 		'currentDates': currentDates,
+		'originalTimezone': originalTimezone,
+		'currentTimezone': currentTimezone,
 		'isDirty': isDirty,
 	});
 
@@ -65,6 +73,8 @@ export const dateManager = (initialDates = [], timezone = '') => {
 		console.log('DateManager refreshed with new dates:', {
 			originalDates,
 			currentDates,
+			originalTimezone,
+			currentTimezone,
 			isDirty
 		});
 
@@ -72,15 +82,17 @@ export const dateManager = (initialDates = [], timezone = '') => {
 	};
 
 	/**
-	 * Get the current dates
+	 * Get the current dates and timezone info
 	 *
 	 * @return {Object}
 	 *
 	 */
 	const getCurrentDates = () => {
+		const timezoneChanged = currentTimezone !== originalTimezone;
 		return {
 			dates: currentDates,
-			isDirty: isDirty,
+			timezone: currentTimezone,
+			isDirty: isDirty || timezoneChanged,
 		};
 	}
 
@@ -93,6 +105,79 @@ export const dateManager = (initialDates = [], timezone = '') => {
 	const findDateByHash = (hash) => {
 		return currentDates.find(d => d.hash === hash);
 	}
+
+	/**
+	 * Update the timezone and convert all dates accordingly
+	 *
+	 * @param {string} newTimezone The new timezone to set
+	 * @returns {Object} Updated date management service
+	 */
+	const updateTimezone = (newTimezone) => {
+		const updatedDates = clone(currentDates);
+
+		// Ensure that the value is a string.
+		newTimezone = !Boolean(newTimezone) ? '' : newTimezone;
+		let targetTimezone = newTimezone;
+
+		if ('' === newTimezone) {
+			targetTimezone = TIMEZONE;
+		}
+
+		updatedDates.forEach((eventDateTime) => {
+			[
+				'datetime_start',
+				'datetime_end',
+			].forEach((key) => {
+				const dateTime = moment
+					.unix(eventDateTime[key])
+					.utcOffset(
+						getDstOffset(
+							eventDateTime[key],
+							currentTimezone,
+							currentTimezone
+						)
+					);
+
+				const newOffset =
+					'' !== targetTimezone
+						? getDstOffset(
+							eventDateTime[key],
+							targetTimezone,
+							targetTimezone
+						)
+						: OFFSET;
+
+				eventDateTime[key] = String(
+					dateTime
+						.utcOffset(newOffset, true)
+						.utc()
+						.unix()
+				);
+			});
+		});
+
+		// Update internal state
+		currentDates = updatedDates;
+		currentTimezone = newTimezone;
+		isDirty = true; // Mark as dirty since timezone changed
+
+		// Sync to meta if available
+		if (setMeta && meta) {
+			setMeta({
+				...meta,
+				se_event_timezone: newTimezone
+			});
+		}
+
+		console.log('Timezone updated:', {
+			newTimezone,
+			updatedDates,
+			currentTimezone,
+			isDirty
+		});
+
+		return getCurrentDates();
+	};
 
 	/**
 	 * Upsert a date to the dates.
@@ -168,26 +253,43 @@ export const dateManager = (initialDates = [], timezone = '') => {
 	 * @returns {Object} Updated date management service
 	 */
 	const addDate = () => {
-		const newDate = createDefaultDate(currentDates);
+		const newDate = createDefaultDate(currentDates, currentTimezone);
 		upsertDate(newDate);
 		console.log('isDirty', isDirty);
 		return getCurrentDates();
 	}
 
 	/**
-	 * Revert the dates to the original dates.
+	 * Revert the dates and timezone to the original state.
 	 *
 	 * @returns {Object} Updated date management service
 	 */
 	const revertDates = () => {
 		currentDates = clone(originalDates);
+		currentTimezone = originalTimezone;
 		isDirty = false;
+
+		// Sync timezone revert to meta if available
+		if (setMeta && meta) {
+			setMeta({
+				...meta,
+				se_event_timezone: originalTimezone
+			});
+		}
+
+		console.log('Reverted to original state:', {
+			originalDates,
+			originalTimezone,
+			isDirty
+		});
+
 		return getCurrentDates();
 	}
 
 	// Return the public interface
 	return {
 		getCurrentDates,
+		updateTimezone,
 		upsertDate,
 		removeDate,
 		addDate,
@@ -196,10 +298,14 @@ export const dateManager = (initialDates = [], timezone = '') => {
 		// Expose internal state getters for external access
 		get originalDates() { return originalDates; },
 		get currentDates() { return currentDates; },
+		get originalTimezone() { return originalTimezone; },
+		get currentTimezone() { return currentTimezone; },
 		get isDirty() { return isDirty; },
 		// Expose internal state setters for external access
 		set originalDates(value) { originalDates = clone(value); },
 		set currentDates(value) { currentDates = clone(value); },
+		set originalTimezone(value) { originalTimezone = value; },
+		set currentTimezone(value) { currentTimezone = value; },
 		set isDirty(value) { isDirty = value; }
 	};
 
