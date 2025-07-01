@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @return integer|null The event date id or null if not set.
  */
 function se_template_get_event_date_id() {
-	$event_date_id = array_key_exists( 'date', $_GET ) ? sanitize_text_field( $_GET['date'] ) : null;
+	$event_date_id = array_key_exists( 'se-date', $_GET ) ? sanitize_text_field( $_GET['se-date'] ) : null;
 	return is_numeric( $event_date_id ) ? absint( $event_date_id ) : null;
 }
 
@@ -65,8 +65,6 @@ if ( ! function_exists( 'se_template_event_single_title' ) ) {
 	 */
 	function se_template_event_single_title() {
 
-
-
 		the_title( '<h1 class="product_title entry-title">', '</h1>' );
 	}
 }
@@ -101,7 +99,6 @@ if ( ! function_exists( 'se_template_event_date' ) ) {
 	 */
 	function se_template_event_date() {
 		$event_dates = se_event_get_dates( get_the_ID() );
-
 
 		if ( ! empty( $event_dates ) ) {
 			$output = false;
@@ -313,7 +310,6 @@ if ( ! function_exists( 'se_template_event_next_previous' ) ) {
 		if ( ! se_event_show_next_previous() ) {
 			return;
 		}
-
 		// Get the link to the calendar page.
 		$calendar_page = se_event_get_calendar_page_link();
 
@@ -324,24 +320,24 @@ if ( ! function_exists( 'se_template_event_next_previous' ) ) {
 			$event_start_date = time();
 		}
 
-		$previous_event = se_event_get_previous_event( $event_start_date );
+		$previous_event = se_event_get_previous_event( get_the_ID(), se_template_get_event_date_id() );
 		$previous_link  = null === $previous_event
 			? ''
 			: sprintf(
 				// translators: %1$s is the link to the previous event, %2$s is the title of the previous event.
 				'<a href="%1$s" class="se-event-previous-link">%2$s</a>',
-				esc_url( get_permalink( $previous_event->ID ) ),
-				apply_filters( 'se_event_previous_link_text', esc_html( '<< ' . get_the_title( $previous_event->ID ) ), $previous_event )
+				esc_url( get_permalink( $previous_event->post_parent ) . '?se-date=' . $previous_event->ID ),
+				apply_filters( 'se_event_previous_link_text', esc_html( '<< ' . get_the_title( $previous_event->post_parent ) ), $previous_event )
 			);
 
-		$next_event = se_event_get_next_event( $event_start_date );
+		$next_event = se_event_get_next_event( get_the_ID(), se_template_get_event_date_id() );
 		$next_link  = null === $next_event
 			? ''
 			: sprintf(
 				// translators: %1$s is the link to the next event, %2$s is the title of the next event.
 				'<a href="%s" class="se-event-next-link">%s</a>',
-				esc_url( get_permalink( $next_event->ID ) ),
-				apply_filters( 'se_event_next_link_text', esc_html( get_the_title( $next_event->ID ) . ' >>' ), $next_event )
+				esc_url( get_permalink( $next_event->post_parent ) . '?se-date=' . $next_event->ID ),
+				apply_filters( 'se_event_next_link_text', esc_html( get_the_title( $next_event->post_parent ) . ' >>' ), $next_event )
 			);
 
 		$calendar_link = null !== $calendar_page
@@ -382,84 +378,120 @@ if ( ! function_exists( 'se_template_event_next_previous' ) ) {
 /**
  * Gets the next event based on a time stamp.
  *
- * @param integer $timestamp The timestamp to get the next event from.
+ * @param integer      $event_id      The event ID to get the next event from.
+ * @param integer|null $event_date_id The event date ID to get the next event from, if available.
  *
  * @return WP_Post|null The next event or null if none found.
  */
-function se_event_get_next_event( int $timestamp ): ?WP_Post {
-	$query = new WP_Query(
-		array(
-			'previous_events' => false,
-			'post_type'       => 'se-event',
-			'posts_per_page'  => -1,
-			'meta_query'      => array(
-				array(
-					'key'     => 'se_event_date_start',
-					'value'   => absint( $timestamp ),
-					'compare' => '>',
-					'type'    => 'NUMERIC',
-				),
-			),
-		)
-	);
+function se_event_get_next_event( int $event_id, ?int $event_date_id = null ): ?WP_Post {
+	$options        = get_option( 'se_options' );
+	$allow_grouping = isset( $options['treat_each_date_as_own_event'] ) ? 'on' === $options['treat_each_date_as_own_event'] : false;
 
+	// If we dont have an event date id, we need to get the event dates.
+	if ( ! $event_date_id ) {
+		$event_dates = se_event_get_event_dates( $event_id );
+		if ( empty( $event_dates ) ) {
+			return null;
+		}
+		$event_date_id = $event_dates[0]['id'];
+	}
+
+	// Define the query to get next events.
+	$args = array(
+		'post_type'      => SE_Event_Post_Type::$event_date_post_type,
+		'posts_per_page' => 1,
+		'orderby'        => 'meta_value_num',
+		'meta_key'       => 'se_event_date_start',
+		'order'          => 'ASC',
+		'post_status'    => 'publish',
+		'meta_query'     => array(
+			array(
+				'key'     => 'se_event_date_start',
+				'value'   => get_post_meta( $event_date_id, 'se_event_date_start', true ),
+				'compare' => '>',
+				'type'    => 'NUMERIC',
+			),
+		),
+	);
+	// If we dont allow grouping, add the event id to parent not in.
+	if ( ! $allow_grouping ) {
+		$args['parent_not_in'] = array( $event_id );
+	}
+
+	$query = new WP_Query( $args );
+
+	// If we have no posts, return null.
 	if ( ! $query->have_posts() ) {
 		return null;
 	}
 
-	$event = $query->posts[0];
-
-	// Reset the post data.
+	// Get the first next event.
+	$next_event = $query->posts[0];
 	wp_reset_postdata();
 
-	return $event;
+	return $next_event;
 }
 
 /**
  * Gets the previous event based on a time stamp.
  *
- * @param integer $timestamp The timestamp to get the previous event from.
+ * @param integer      $event_id      The event ID to get the previous event from.
+ * @param integer|null $event_date_id The event date ID to get the previous event from, if available.
  *
  * @return WP_Post|null The previous event or null if none found.
  */
-function se_event_get_previous_event( int $timestamp ): ?WP_Post {
+function se_event_get_previous_event( int $event_id, ?int $event_date_id = null ): ?WP_Post {
+	$options        = get_option( 'se_options' );
+	$allow_grouping = isset( $options['treat_each_date_as_own_event'] ) ? 'on' === $options['treat_each_date_as_own_event'] : false;
 
-		// Ensure previous events are sorted by Descending order.
-		add_action(
-			'pre_get_posts',
-			function ( $wp_query ) {
-				if ( array_key_exists( 'previous_events', $wp_query->query )
-				&& $wp_query->query['previous_events']
-				) {
-					$wp_query->set( 'order', 'DESC' );
-				}
-			}
-		);
+	// If we dont have an event date id, we need to get the event dates.
+	if ( ! $event_date_id ) {
+		$event_dates = se_event_get_event_dates( $event_id );
+		if ( empty( $event_dates ) ) {
+			return null;
+		}
+		$event_date_id = $event_dates[0]['id'];
+	}
 
-		// Get the first previous event.
-		$previous_events = new WP_Query(
+	// Define the query to get previous events.
+	$args = array(
+		'post_type'      => SE_Event_Post_Type::$event_date_post_type,
+		'posts_per_page' => 1,
+		'orderby'        => 'meta_value_num',
+		'meta_key'       => 'se_event_date_start',
+		'order'          => 'DESC',
+		'post_status'    => 'publish',
+		'meta_query'     => array(
 			array(
-				'previous_events' => true,
-				'post_type'       => 'se-event',
-				'posts_per_page'  => 1,
-				'meta_query'      => array(
-					array(
-						'key'     => 'se_event_date_start',
-						'value'   => absint( $timestamp ),
-						'compare' => '<',
-						'type'    => 'NUMERIC',
-					),
-				),
-			)
+				'key'     => 'se_event_date_start',
+				'value'   => get_post_meta( $event_date_id, 'se_event_date_start', true ),
+				'compare' => '<',
+				'type'    => 'NUMERIC',
+			),
+		),
+	);
+	// If we dont allow grouping, add the event id to parent not in.
+	if ( ! $allow_grouping ) {
+		$args['post__not_in'] = array_map(
+			function ( $post ) {
+				return $post['id'];
+			},
+			se_event_get_event_dates( $event_id )
 		);
-	if ( ! $previous_events->have_posts() ) {
+	}
+
+	$query = new WP_Query( $args );
+
+	// If we have no posts, return null.
+	if ( ! $query->have_posts() ) {
 		return null;
 	}
 
-	$event = $previous_events->posts[0];
+	// Get the first previous event.
+	$previous_event = $query->posts[0];
 	wp_reset_postdata();
 
-	return $event;
+	return $previous_event;
 }
 
 if ( ! function_exists( 'se_expired_event_notice' ) ) {
@@ -492,11 +524,10 @@ if ( ! function_exists( 'se_template_event_content' ) ) {
 		}
 
 		$date_display_formatter = new SE_Date_Display_Formatter( get_the_ID() );
-		$dates = se_event_get_event_dates( get_the_ID() );
+		$dates                  = se_event_get_event_dates( get_the_ID() );
 
 		// Output the content for archive template.
-		// se_template_event_date();
-		echo $date_display_formatter->get_header_date( $dates);
+		echo wp_kses_post( $date_display_formatter->get_header_date( $dates ) );
 		se_template_event_location();
 		se_template_event_price();
 		se_template_event_ticket_stock();

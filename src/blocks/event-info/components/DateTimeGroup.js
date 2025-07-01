@@ -20,7 +20,7 @@ import {
 	getTimestamp,
 	combineDateAndTime,
 	is12HourTime,
-} from '../dates';
+} from '../date-utils';
 
 const DATE_SETTINGS = getSettings();
 

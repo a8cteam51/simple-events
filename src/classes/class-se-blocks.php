@@ -247,7 +247,7 @@ class SE_Blocks {
 
 		// Event time / date.
 		$event_dates = se_event_get_event_dates( $post_ID );
-
+// dump($event_dates, $attributes['eventDates'] );
 		// Previewing?
 		if ( ! empty( $attributes['eventDates'] ) ) {
 			$event_dates = $attributes['eventDates'];

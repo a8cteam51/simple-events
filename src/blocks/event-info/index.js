@@ -42,11 +42,11 @@ import {
 	TIMEZONE_NAME,
 	TIMEZONES,
 
-} from './dates';
+} from './date-utils';
 
 import apiFetch from '@wordpress/api-fetch';
 
-import { dateManager } from './date-manager';
+import { dateManager } from './event-manager';
 
 // Import the new DateTimeGroup component as DateTimeGroupNew
 import DateTimeGroupNew from './components/DateTimeGroup';
@@ -178,6 +178,32 @@ export const saveEventDatesOnPostSave = async (dates, dateManagerInstance = null
 		// Save to REST API
 		const savedDates = await saveEventDates(dates, dateManagerInstance);
 		console.log('Event dates saved on post save:', savedDates);
+
+		// Update the post meta to ensure the updated dates (with IDs) are persisted
+		const postId = window?.wp?.data?.select('core/editor')?.getCurrentPostId();
+		if (postId && savedDates) {
+			window.wp.data.dispatch('core/editor').editPost({
+				meta: {
+					se_event_dates: [],
+				},
+			});
+			console.log('Post meta updated with saved dates:', savedDates.dates || savedDates);
+
+			// Also update the block attributes to ensure the updated dates (with IDs) are persisted
+			const blocks = window.wp.data.select('core/block-editor').getBlocks();
+			const eventInfoBlock = blocks.find(block => block.name === 'simple-events/event-info');
+
+			if (eventInfoBlock) {
+				window.wp.data.dispatch('core/block-editor').updateBlockAttributes(
+					eventInfoBlock.clientId,
+					{
+						eventDates: savedDates.dates || savedDates,
+					}
+				);
+				console.log('Block attributes updated with saved dates:', savedDates.dates || savedDates);
+			}
+		}
+
 		return savedDates;
 	} catch (error) {
 		console.error('Error saving event dates on post save:', error);

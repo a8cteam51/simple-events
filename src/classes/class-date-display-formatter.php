@@ -190,7 +190,7 @@ class SE_Date_Display_Formatter {
 
 		// Loop over each available event date.
 		foreach ( $event_dates as $date ) {
-			dump( $this->render_single_date( $date ) );
+			// dump( $this->render_single_date( $date ) );
 			$opening_li = $date['id'] === $event_date_id ? '<li class="active" style="text-decoration: underline;">' : '<li>';
 
 			// Check if start and end times are on the same day.

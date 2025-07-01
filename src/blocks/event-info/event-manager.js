@@ -1,5 +1,5 @@
 import { sortBy, isEqual, clone } from 'lodash';
-import { getStartAndEndDate, createDefaultDate, getDstOffset, TIMEZONE, OFFSET } from './dates';
+import { getStartAndEndDate, createDefaultDate, getDstOffset, TIMEZONE, OFFSET } from './date-utils';
 import moment from 'moment';
 
 /**

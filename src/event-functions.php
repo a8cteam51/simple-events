@@ -444,7 +444,7 @@ function se_event_get_calendar_link( $event_id, $event_date_id = null ) {
 
 	$permalink = get_the_permalink( $event_id );
 
-	// Either add ?date=7424 or append &date=7424 if permalink has ?
+	// Either add ?se-date=7424 or append &se-date=7424 if permalink has ?
 	if ( $event_date_id ) {
 		$permalink .= sprintf(
 			'%sdate=%s',
@@ -455,7 +455,7 @@ function se_event_get_calendar_link( $event_id, $event_date_id = null ) {
 
 	return ( $external_link && $open_external_link )
 		? $external_link
-		: get_the_permalink( $event_id ) . ( $event_date_id ? '?date' . $event_date_id : '' );
+		: get_the_permalink( $event_id ) . ( $event_date_id ? '?se-date' . $event_date_id : '' );
 }
 
 /**
