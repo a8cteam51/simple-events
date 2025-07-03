@@ -31,7 +31,6 @@ class SE_Migrate_Events {
 	 */
 	public static function init() {
 		add_action( 'rest_api_init', array( __CLASS__, 'register_rest_route' ) );
-		add_action( 'init', array( __CLASS__, 'register_cli_command' ) );
 		add_action( 'se_migrate_events', array( __CLASS__, 'migrate_events' ) );
 	}
 
@@ -61,39 +60,41 @@ class SE_Migrate_Events {
 	}
 
 	/**
-	 * Migrate events.
+	 * Get all events that need to be migrated.
 	 *
-	 * @param WP_REST_Request $request The request object.
-	 * @return WP_REST_Response
+	 * @return array<int, array{id: int, version: string}>
 	 */
-	public static function migrate_events( $request ) {
+	public static function get_events_to_migrate() {
+
+		$versions = array_keys( self::VERSION_UPGRADES );
+
+		// Sort the versions by order (1.2.3 > 1.2.2 > 1.2.1)
+		sort( $versions );
+
+		// Get all events.
+		return get_posts( array(
+			'post_type' => SE_Event_Post_Type::$post_type,
+			// only results that have a version lower that the max version.
+			'meta_query' => array(
+				array(
+					'key' => 'se_event_version',
+					'value' => max( $versions ),
+					// less than
+					'compare' => '<',
+				),
+			),
+			'posts_per_page' => -1,
+		) );
 	}
 
 	/**
-	 * Registesrs the CLI command.
+	 * Checks if we have any events to migrate.
 	 *
-	 * @return void
+	 * @return boolean
 	 */
-	public static function register_cli_command() {
-		if ( ! class_exists( 'WP_CLI' ) ) {
-			return;
-		}
-
-		// Register the command.
-		WP_CLI::add_command(
-			'se migrate-events',
-			array( __CLASS__, 'migrate_events_cli' )
-		);
+	public static function has_events_to_migrate() {
+		return count( self::get_events_to_migrate() ) > 0;
 	}
-
-	/**
-	 * Migrate events via CLI.
-	 *
-	 * @param array $args       The command arguments.
-	 * @param array $assoc_args The command associative arguments.
-	 * @return void
-	 */
-	public static function migrate_events_cli( $args, $assoc_args ) {}
 
 	/**
 	 * Migrate events via REST.
@@ -104,7 +105,6 @@ class SE_Migrate_Events {
 	public static function migrate_events_rest( $request ) {
 		// Check if we have events in the body (form-data).
 		$event_ids = $request->get_param( 'events' );
-
 		// If no events are provided, return an error.
 		if ( empty( $event_ids ) ) {
 			return new WP_REST_Response(
@@ -159,7 +159,7 @@ class SE_Migrate_Events {
 	 *
 	 * @param array<integer> $event_ids The event IDs to migrate.
 	 *
-	 * @return array<int, bool>
+	 * @return array<int, array{success: bool, version: string}>
 	 */
 	private static function migrate_events_by_ids( $event_ids ) {
 		// Iterate over the event IDs and update them.
@@ -173,8 +173,12 @@ class SE_Migrate_Events {
 			}
 
 			// Migrate the event.
-			$success              = self::migrate_event( $event_id );
-			$results[ $event_id ] = $success;
+			$success              =  self::migrate_event( $event_id );
+
+			$results[ $event_id ] = array(
+				'success' => $success,
+				'version' => get_post_meta( $event_id, 'se_event_version', true ) ?: '1.0.0',
+			);
 		}
 
 		return $results;

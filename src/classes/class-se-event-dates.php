@@ -210,6 +210,9 @@ class SE_Event_Dates {
 			);
 		}
 
+		// Update the event version.
+		update_post_meta( $event_id, 'se_event_version', SE_MIGRATION_VERSION );
+
 		// Update all legacy meta values.
 		self::update_legacy_meta_values( $event_id, $dates );
 
