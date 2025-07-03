@@ -272,7 +272,7 @@ function se_event_get_formatted_dates( $event_id, $event_date_id = null, $date_o
 /**
  * Formats the dates for the event.
  *
- * @param array<int, array{datetime_start: integer, datetime_end: integer, all_day:boolean}> $event_dates      Event dates.
+ * @param array<int, array{start_date: integer, end_date: integer, all_day:boolean}> $event_dates      Event dates.
  * @param string                                                                             $timezone         Timezone.
  * @param mixed                                                                              $hide_end_time    If we should hide the end time.
  * @param mixed                                                                              $hide_start_time  If we should hide the start time.
@@ -569,6 +569,8 @@ function se_event_show_links_above_content(): bool {
  * Updates an event start and end meta dates.
  * This will ensure that the start and end dates will not be in the past.
  *
+ * This is for legacy reasons only.
+ *
  * @param integer $event_id Event id.
  *
  * @return void
@@ -625,14 +627,14 @@ function se_event_update_event_query_dates( $event_id ) {
 	 * Create event date.
 	 *
 	 * @param integer                                                                                                                          $event_id    Event id.
-	 * @param array{ datetime_start: integer, datetime_end: integer, all_day: boolean, hide_from_calendar: boolean, hide_from_feed: boolean, } $event_dates Event dates.
+	 * @param array{ start_date: integer, end_date: integer, all_day: boolean, hide_from_calendar: boolean, hide_from_feed: boolean, } $event_dates Event dates.
 	 *
 	 * @return \WP_Post|null
 	 */
 function se_event_create_event_date( $event_id, $event_dates ) {
 	$default_args = array(
-		'datetime_start'     => 0,
-		'datetime_end'       => 0,
+		'start_date'     => 0,
+		'end_date'       => 0,
 		'all_day'            => false,
 		'hide_from_calendar' => false,
 		'hide_from_feed'     => false,
@@ -640,7 +642,7 @@ function se_event_create_event_date( $event_id, $event_dates ) {
 	// Merge the default args with the provided event dates.
 	$event_dates = wp_parse_args( $event_dates, $default_args );
 	// Validate the event dates, start date should be a timestamp and end date should be a timestamp.
-	if ( ! is_numeric( $event_dates['datetime_start'] ) ) {
+	if ( ! is_numeric( $event_dates['start_date'] ) ) {
 		return null;
 	}
 
@@ -665,8 +667,8 @@ function se_event_create_event_date( $event_id, $event_dates ) {
 	}
 
 	// Update the post meta for the event date.
-	update_post_meta( $event_date_id, 'se_event_date_start', esc_attr( $event_dates['datetime_start'] ) );
-	update_post_meta( $event_date_id, 'se_event_date_end', esc_attr( $event_dates['datetime_end'] ) );
+	update_post_meta( $event_date_id, 'se_event_date_start', esc_attr( $event_dates['start_date'] ) );
+	update_post_meta( $event_date_id, 'se_event_date_end', esc_attr( $event_dates['end_date'] ) );
 	update_post_meta( $event_date_id, 'se_event_all_day', boolval( $event_dates['all_day'] ) );
 	update_post_meta( $event_date_id, 'se_event_hide_from_calendar', boolval( $event_dates['hide_from_calendar'] ) );
 	update_post_meta( $event_date_id, 'se_event_hide_from_feed', boolval( $event_dates['hide_from_feed'] ) );

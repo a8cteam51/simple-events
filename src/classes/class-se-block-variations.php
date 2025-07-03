@@ -122,31 +122,33 @@ class SE_Block_Variations {
 		}
 
 		// Return back the
-		return array_map( function( $post ) {
-			$parent = get_post($post->post_parent);
+		return array_map(
+			function ( $post ) {
+				$parent = get_post( $post->post_parent );
 
-			// Get the start date from the event.
-			$start_date_ts = get_post_meta($post->ID, 'se_event_date_start', true);
+				// Get the start date from the event.
+				$start_date_ts = get_post_meta( $post->ID, 'se_event_date_start', true );
 
-			// Get the event timezone.
-			$timezone = get_post_meta($parent->ID, 'se_event_timezone', true);
-			// use the timezone or default to the site timezone.
-			$timezone = $timezone ? $timezone : get_option('timezone_string');
+				// Get the event timezone.
+				$timezone = get_post_meta( $parent->ID, 'se_event_timezone', true );
+				// use the timezone or default to the site timezone.
+				$timezone = $timezone ? $timezone : get_option( 'timezone_string' );
 
-			// Get the date im this format 2025-07-01 13:14:09
-			$start_date = wp_date('Y-m-d H:i:s', $start_date_ts, new \DateTimeZone($timezone));
-			$start_date_gmt = wp_date('Y-m-d H:i:s', $start_date_ts, new \DateTimeZone('UTC'));
+				// Get the date im this format 2025-07-01 13:14:09
+				$start_date = wp_date( 'Y-m-d H:i:s', $start_date_ts, new \DateTimeZone( $timezone ) );
+				$start_date_gmt = wp_date( 'Y-m-d H:i:s', $start_date_ts, new \DateTimeZone( 'UTC' ) );
 
-			// update the parent posts post date
-			$parent->post_date = $start_date;
-			$parent->post_date_gmt = $start_date_gmt;
-			$parent->post_modified = $start_date;
-			$parent->post_modified_gmt = $start_date_gmt;
-			$parent->event_date_id = $post->ID;
+				// update the parent posts post date
+				$parent->post_date = $start_date;
+				$parent->post_date_gmt = $start_date_gmt;
+				$parent->post_modified = $start_date;
+				$parent->post_modified_gmt = $start_date_gmt;
+				$parent->event_date_id = $post->ID;
 
-			return $parent;
-		}, $posts );
-
+				return $parent;
+			},
+			$posts
+		);
 	}
 
 	/**
@@ -177,7 +179,7 @@ class SE_Block_Variations {
 	private function set_event_query_args( $args, $feed_type, $feed_order = 'ASC' ) {
 
 		// If we are ordering by desc. we need to sort by end date, else start.
-		$args['meta_key'] = 'desc' === strtolower($feed_order) ? 'se_event_date_end' : 'se_event_date_start';
+		$args['meta_key'] = 'desc' === strtolower( $feed_order ) ? 'se_event_date_end' : 'se_event_date_start';
 		$args['orderby']  = 'meta_value';
 		$args['order']    = $feed_order;
 

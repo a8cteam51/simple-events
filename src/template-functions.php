@@ -209,8 +209,14 @@ if ( ! function_exists( 'se_template_event_more_info' ) ) {
 	 * @return void
 	 */
 	function se_template_event_more_info() {
+		global $post;
+		if ( se_event_treat_each_date_as_own_event() && isset( $post->event_date_id ) ) {
+			$permalink = get_permalink( $post->post_parent ) . '?se-date=' . $post->event_date_id;
+		} else {
+			$permalink = get_permalink();
+		}
 		?>
-	<a href="<?php the_permalink(); ?>" rel="bookmark"><?php esc_html_e( 'More information', 'simple-events' ); ?></a>
+	<a href="<?php echo esc_url( $permalink ); ?>" rel="bookmark"><?php esc_html_e( 'More information', 'simple-events' ); ?></a>
 		<?php
 	}
 }
@@ -525,6 +531,7 @@ if ( ! function_exists( 'se_template_event_content' ) ) {
 	 * @return void
 	 */
 	function se_template_event_content() {
+		global $post;
 		$show_on_frontend = get_post_meta( get_the_ID(), 'se_event_show_on_frontend', true );
 		if ( empty( $show_on_frontend ) ) {
 			return;
@@ -533,6 +540,16 @@ if ( ! function_exists( 'se_template_event_content' ) ) {
 		$date_display_formatter = new SE_Date_Display_Formatter( get_the_ID() );
 		$dates                  = se_event_get_event_dates( get_the_ID() );
 
+		// If we have an event date and we treating each date as own event, we need to get the event date id.
+		if ( se_event_treat_each_date_as_own_event() && isset( $post->event_date_id ) ) {
+			$dates = array_filter( $dates, function( $date ) use ( $post ) {
+				return $date['id'] === $post->event_date_id;
+			} );
+
+			$dates = array_values( $dates );
+		} else {
+			$date_display_formatter->set_date_only( true );
+		}
 		// Output the content for archive template.
 		echo wp_kses_post( $date_display_formatter->get_header_date( $dates ) );
 		se_template_event_location();

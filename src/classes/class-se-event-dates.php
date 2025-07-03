@@ -170,7 +170,6 @@ class SE_Event_Dates {
 				wp_delete_post( $existing_date_id, true );
 			}
 		}
-
 		// Iterate over the dates and update the event dates.
 		foreach ( $dates as $date ) {
 			// If we dont have a date ID, create a new date.
