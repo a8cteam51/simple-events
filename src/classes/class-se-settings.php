@@ -26,6 +26,7 @@ class SE_Settings {
 
 		// Ajax actions.
 		add_action( 'wp_ajax_se_mark_existing_orders_as_completed', array( __CLASS__, 'mark_existing_orders_as_completed' ), 10 );
+		add_action( 'wp_ajax_se_clear_orphaned_events', array( __CLASS__, 'clear_orphaned_events' ), 10 );
 	}
 
 	/**
@@ -287,6 +288,36 @@ class SE_Settings {
 				'label_for' => 'disable_download_calendar',
 			)
 		);
+
+		add_settings_field(
+			'clear_orphaned_events',
+			sprintf(
+				// translators: %s is a HTML break tag.
+				__( 'Clear orphaned events.%s', 'simple-events' ),
+				wp_kses_post( '<br><small><em>Removes events with missing or corrupted data.</em></small>' ),
+			),
+			array( __CLASS__, 'clear_orphaned_events_cb' ),
+			'simple_events',
+			'se_section_calendar',
+			array(
+				'action'   => 'se_clear_orphaned_events',
+				'btn_text' => __( 'Clear orphaned events', 'simple-events' ),
+			)
+		);
+
+		// Add the migrate events button, if we have events to migrate.
+		if ( SE_Migrate_Events::has_events_to_migrate() ) {
+			add_settings_field(
+				'migrate_events',
+				esc_html__( 'Migrate Events', 'simple-events' ),
+				array( __CLASS__, 'migrate_events_cb' ),
+				'simple_events',
+				'se_section_calendar',
+				array(
+					'label_for' => 'migrate_events',
+				)
+			);
+		}
 	}
 
 	/**
@@ -389,7 +420,6 @@ class SE_Settings {
 		<?php
 	}
 
-
 	/**
 	 * A function for generating a AJAX button based on the given arguments.
 	 *
@@ -410,6 +440,77 @@ class SE_Settings {
 		<div id="se_ajax_response"></div>
 		<?php
 	}
+
+	/**
+	 * A function for generating the clear orphaned events AJAX button.
+	 *
+	 * @param array $args Display arguments.
+	 *
+	 * @return void
+	 */
+	public static function clear_orphaned_events_cb( $args ) {
+		?>
+		<button
+			type="button"
+			id="se_clear_orphaned_btn"
+			class="button button-primary"
+			data-action="<?php echo esc_attr( $args['action'] ); ?>"
+		>
+			<?php echo esc_html( $args['btn_text'] ); ?>
+		</button>
+		<div id="se_clear_orphaned_response"></div>
+		<?php
+	}
+
+	/**
+	 * A function for generating a migrate events button.
+	 *
+	 * @param array $args Display arguments.
+	 *
+	 * @return void
+	 */
+	public static function migrate_events_cb( $args ) {
+		$events = SE_Migrate_Events::get_events_to_migrate();
+		?>
+		<div id="migrate_events" style="scroll-margin-top: 20px;">
+		<div id="se_migrate_events_wrapper" style="background: #f9f9f9; border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin: 15px 0; max-height: 400px; overflow-y: auto;">
+			<h4 style="margin-top: 0; margin-bottom: 15px; color: #23282d; font-size: 14px; font-weight: 600;"><?php esc_html_e( 'Events to Migrate:', 'simple-events' ); ?></h4>
+			<?php if ( empty( $events ) ) { ?>
+				<p style="color: #666; font-style: italic; text-align: center; padding: 20px; margin: 0;"><?php esc_html_e( 'No events need migration.', 'simple-events' ); ?></p>
+			<?php } else { ?>
+				<?php foreach ( $events as $event ) { ?>
+					<div class="se_migrate_event" data-event-id="<?php echo esc_attr( $event->ID ); ?>" data-status="pending" style="background: #fff; border: 1px solid #e1e1e1; border-radius: 4px; padding: 12px 15px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); transition: all 0.3s ease;">
+						<div style="display: flex; align-items: center; gap: 15px; line-height: 1.5; font-size: 13px;">
+							<div style="flex: 1; color: #23282d; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+								<strong style="color: #0073aa; font-weight: 600;">#<?php echo esc_html( $event->ID ); ?></strong> - <?php echo esc_html( $event->post_title ); ?>
+							</div>
+							<div style="flex: 0 0 auto; display: flex; align-items: center; gap: 10px;">
+								<span style="background: #f0f0f1; padding: 4px 8px; border-radius: 3px; font-family: monospace; font-size: 12px; color: #666;">
+									v<?php echo esc_html( get_post_meta( $event->ID, 'se_event_version', true ) ); ?>
+								</span>
+								<span class="se_migrate_event_status" style="background: #ffc107; color: #856404; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 500;">
+									<?php esc_html_e( 'Pending', 'simple-events' ); ?>
+								</span>
+							</div>
+						</div>
+					</div>
+				<?php } ?>
+			<?php } ?>
+		</div>
+		<button
+			type="button"
+			id="se_migrate_events_btn"
+			class="button button-primary"
+			style="background: #0073aa; border-color: #0073aa; color: #fff; padding: 8px 16px; font-size: 13px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.3s ease; margin-top: 10px;"
+			<?php echo empty( $events ) ? 'disabled' : ''; ?>
+		>
+			<?php esc_html_e( 'Migrate Events', 'simple-events' ); ?>
+		</button>
+		</div>
+
+		<?php
+	}
+
 	/**
 	 * A function for generating a text input field based on the given arguments.
 	 *
@@ -460,7 +561,6 @@ class SE_Settings {
 			</option>
 		<?php
 	}
-
 
 	/**
 	 * Renders the calendar page field.
@@ -634,6 +734,39 @@ class SE_Settings {
 
 		// translators: %d is the number of orders updated.
 		wp_send_json_success( sprintf( __( '%d orders updated successfully', 'simple-events' ), $updated_orders ) );
+	}
+
+	/**
+	 * Clear orphaned events that have missing or corrupted data.
+	 *
+	 * @return void
+	 */
+	public static function clear_orphaned_events() {
+		// Query all event dates where the parent event is missing.
+		global $wpdb;
+
+		$orphaned_events = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT child.ID, child.post_title, child.post_parent FROM {$wpdb->prefix}posts AS child
+				LEFT JOIN {$wpdb->prefix}posts AS parent ON child.post_parent = parent.ID
+				WHERE child.post_type = %s AND (child.post_parent = 0 OR parent.ID IS NULL)",
+				SE_Event_Post_Type::$event_date_post_type
+			)
+		);
+
+
+		$deleted_events = 0;
+
+		// Delete orphaned events
+		if ( ! empty( $orphaned_events ) ) {
+			foreach ( $orphaned_events as $event ) {
+				wp_delete_post( $event->ID, true ); // Force delete permanently
+				++$deleted_events;
+			}
+		}
+
+		// translators: %d is the number of orphaned events deleted.
+		wp_send_json_success( sprintf( __( '%d orphaned events deleted successfully', 'simple-events' ), $deleted_events ) );
 	}
 }
 

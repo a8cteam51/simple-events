@@ -37,6 +37,7 @@ define( 'SE_PLUGIN_DIR', untrailingslashit( plugin_dir_path( __FILE__ ) ) );
 define( 'SE_PLUGIN_URL', untrailingslashit( plugin_dir_url( __FILE__ ) ) );
 define( 'SE_SRC_PATH', untrailingslashit( SE_PLUGIN_DIR . '/src' ) );
 define( 'SE_TEMPLATE_PATH', untrailingslashit( SE_SRC_PATH . '/templates' ) );
+define( 'SE_MIGRATION_VERSION', '2.0.0' );
 
 // Load the autoloader.
 if ( ! is_file( SE_PLUGIN_DIR . '/vendor/autoload.php' ) ) {
@@ -52,20 +53,6 @@ if ( ! is_file( SE_PLUGIN_DIR . '/vendor/autoload.php' ) ) {
 }
 require_once SE_PLUGIN_DIR . '/vendor/autoload.php';
 
-// Initialize the plugin if system requirements check out.
-// $se_requirements = validate_plugin_requirements( SE_BASENAME );
-// define( 'SE_REQUIREMENTS', $se_requirements );
-
-// if ( $se_requirements instanceof WP_Error ) {
-// 	add_action(
-// 		'admin_notices',
-// 		static function () use ( $se_requirements ) {
-// 			$html_message = wp_sprintf( '<div class="error notice se">%s</div>', $se_requirements->get_error_message() );
-// 			echo wp_kses_post( $html_message );
-// 		}
-// 	);
-// 	return;
-// }
 
 require_once SE_SRC_PATH . '/classes/class-se-event-post-type.php';
 require_once SE_SRC_PATH . '/classes/class-se-blocks.php';
@@ -78,6 +65,7 @@ require_once SE_SRC_PATH . '/classes/class-se-calendar.php';
 require_once SE_SRC_PATH . '/classes/class-se-event-query-dates.php';
 require_once SE_SRC_PATH . '/classes/class-se-event-dates.php';
 require_once SE_SRC_PATH . '/classes/class-date-display-formatter.php';
+require_once SE_SRC_PATH . '/classes/class-se-migrate-events.php';
 
 require_once SE_SRC_PATH . '/calendar-functions.php';
 require_once SE_SRC_PATH . '/event-functions.php';
@@ -100,7 +88,3 @@ function simple_events_activate() {
 }
 register_activation_hook( __FILE__, 'simple_events_activate' );
 
-
-add_action( 'init', function() {
-	// dd( SE_Event_Dates::get_event_dates_for_date( '2025-06-02', true, false ) );
-} );
