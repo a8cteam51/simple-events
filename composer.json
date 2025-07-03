@@ -1,55 +1,53 @@
 {
-  "name": "a8cteam51/simple-events",
-  "type": "wordpress-plugin",
+    "name": "a8cteam51/simple-events",
+    "type": "wordpress-plugin",
 
-  "description": "A simple Gutenberg-first event management plugin that integrates with WooCommerce Box Office.",
-  "homepage": "https://github.com/a8cteam51/simple-events",
-  "license": "GPL-2.0-or-later",
-  "authors": [
-    {
-      "name": "WordPress.com Special Projects Team",
-      "homepage": "https://wpspecialprojects.wordpress.com"
+    "description": "A simple Gutenberg-first event management plugin that integrates with WooCommerce Box Office.",
+    "homepage": "https://github.com/a8cteam51/simple-events",
+    "license": "GPL-2.0-or-later",
+    "authors": [{
+            "name": "WordPress.com Special Projects Team",
+            "homepage": "https://wpspecialprojects.wordpress.com"
+        },
+        {
+            "name": "Contributors",
+            "homepage": "https://github.com/a8cteam51/simple-events/graphs/contributors"
+        }
+    ],
+
+    "repositories": [{
+        "type": "vcs",
+        "url": "https://github.com/a8cteam51/team51-configs"
+    }],
+    "require": {
+        "eluceo/ical": "^2.14.0"
     },
-    {
-      "name": "Contributors",
-      "homepage": "https://github.com/a8cteam51/simple-events/graphs/contributors"
+    "require-dev": {
+        "a8cteam51/team51-configs": "dev-trunk",
+
+        "wp-coding-standards/wpcs": "^3.0",
+        "phpcompatibility/phpcompatibility-wp": "*",
+
+        "roave/security-advisories": "dev-latest"
+    },
+
+    "scripts": {
+        "generate-autoloader": "@composer dump-autoload -o",
+
+        "format:php": "phpcbf --basepath=. . -v",
+        "lint:php": "phpcs --basepath=. . -v",
+
+        "packages-install": "@composer install --ignore-platform-reqs --no-interaction",
+        "packages-update": [
+            "@composer clear-cache",
+            "@composer update --prefer-stable --no-interaction"
+        ]
+    },
+    "config": {
+        "allow-plugins": {
+            "composer/*": true,
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "phpstan/extension-installer": true
+        }
     }
-  ],
-
-  "repositories": [
-    {
-      "type": "vcs",
-      "url": "https://github.com/a8cteam51/team51-configs"
-    }
-  ],
-  "require": {
-      "eluceo/ical": "^0.16.0"
-  },
-  "require-dev": {
-    "a8cteam51/team51-configs": "dev-trunk",
-
-    "wp-coding-standards/wpcs": "^3.0",
-    "phpcompatibility/phpcompatibility-wp": "*",
-
-    "roave/security-advisories": "dev-latest"
-  },
-
-  "scripts": {
-    "generate-autoloader": "@composer dump-autoload -o",
-
-    "format:php": "phpcbf --basepath=. . -v",
-    "lint:php": "phpcs --basepath=. . -v",
-
-    "packages-install": "@composer install --ignore-platform-reqs --no-interaction",
-    "packages-update": [
-      "@composer clear-cache",
-      "@composer update --prefer-stable --no-interaction"
-    ]
-  },
-  "config": {
-    "allow-plugins": {
-      "composer/*": true,
-      "dealerdirect/phpcodesniffer-composer-installer": true
-    }
-  }
 }

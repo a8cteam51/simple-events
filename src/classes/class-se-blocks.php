@@ -478,17 +478,19 @@ class SE_Blocks {
 	 * @param string $content    Block content.
 	 *
 	 * @return HTML Upcoming events render.
+	 *
+	 * @todo: This is a mess. We need to refactor this.
 	 */
 	public static function upcoming_events_render( $attributes = array(), $content = '' ) {
 		$events_query_args = array();
 		$events_query      = null;
 		$output            = '';
-
+dump($attributes);
 		if ( ! empty( $attributes['count'] ) ) {
 
 			// By default shows the "mixed" feed type (no meta_query).
 			$events_query_args = array(
-				'post_type'      => SE_Event_Post_Type::$post_type,
+				'post_type'      => SE_Event_Post_Type::$event_date_post_type,
 				'post_status'    => 'publish',
 				'posts_per_page' => absint( $attributes['count'] ),
 			);
@@ -541,7 +543,7 @@ class SE_Blocks {
 			}
 
 			$show_year_dividers = ! empty( $attributes['showYearDividers'] );
-
+dump($events_query_args);
 			$events_query = new \WP_Query( $events_query_args );
 
 			if ( $events_query->have_posts() ) {
@@ -750,14 +752,31 @@ class SE_Blocks {
 	 * @return string Returns the filtered post date for the current post wrapped inside "time" tags.
 	 */
 	public static function loop_event_info_render( $attributes, $content, $block ): string {
-
+		global $post;
 		$output  = '';
 		$prefix  = '';
 		$post_ID = ( isset( $attributes['thePostId'] ) && $attributes['thePostId'] > 0 ) ? $attributes['thePostId'] : $block->context['postId'];
 
+		$event_date_id = $post instanceof \WP_Post && property_exists($post, 'event_date_id') && is_numeric($post->event_date_id) && se_event_treat_each_date_as_own_event()
+			? absint( $post->event_date_id )
+			: null;
+
 		if ( isset( $attributes['metaPrefix'] ) ) {
 			$prefix = '<span class="se-loop-event-info--prefix">' . esc_html( $attributes['metaPrefix'] ) . '</span>';
 		}
+		// Based on the feed type, set the get_date_function
+		switch ( $attributes['feedType'] ?? 'default' ) {
+			case 'upcoming':
+				$get_date_function = 'se_event_get_future_dates';
+				break;
+			case 'past':
+				$get_date_function = 'se_event_get_past_dates';
+				break;
+			default:
+				$get_date_function = 'se_event_get_formatted_dates';
+				break;
+		}
+
 
 		// Generate output based on meta name.
 		if ( ! empty( $post_ID ) ) {
@@ -769,13 +788,13 @@ class SE_Blocks {
 					$output = se_event_get_venue( $post_ID );
 					break;
 				case 'dates':
-					$output = se_event_get_future_dates( $post_ID );
+					$output = $get_date_function( $post_ID, $event_date_id );
 					break;
 				case 'date':
-					$output = se_event_get_future_dates( $post_ID, true, false );
+					$output = $get_date_function( $post_ID, $event_date_id, true, false );
 					break;
 				case 'time':
-					$output = se_event_get_future_dates( $post_ID, false, true );
+					$output = $get_date_function( $post_ID, $event_date_id, false, true );
 					break;
 			}
 		}

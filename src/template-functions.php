@@ -95,9 +95,13 @@ if ( ! function_exists( 'se_template_event_date' ) ) {
 	/**
 	 * Output the event date and time.
 	 *
+	 * @deprecated 2.0.0 This has been replaced by the new date formatter class.
+	 *
 	 * @return void
 	 */
 	function se_template_event_date() {
+		__doing_it_wrong( __FUNCTION__, 'Please use the new date formatter class instead.', '2.0.0' );
+
 		$event_dates = se_event_get_dates( get_the_ID() );
 
 		if ( ! empty( $event_dates ) ) {
@@ -312,13 +316,6 @@ if ( ! function_exists( 'se_template_event_next_previous' ) ) {
 		}
 		// Get the link to the calendar page.
 		$calendar_page = se_event_get_calendar_page_link();
-
-		// Get the current event start date/time.
-		$event_start_date = get_post_meta( get_the_ID(), 'se_event_date_start', true );
-		// If we have no start date, set with today's date.
-		if ( empty( $event_start_date ) ) {
-			$event_start_date = time();
-		}
 
 		$previous_event = se_event_get_previous_event( get_the_ID(), se_template_get_event_date_id() );
 		$previous_link  = null === $previous_event

@@ -237,8 +237,8 @@ class SE_Event_Dates {
 		// Create the legacy date array.
 		$legacy_dates = array_map( function( $date ) {
 			return array(
-				'start_datetime' => $date['start_datetime'],
-				'end_datetime' => $date['end_datetime'],
+				'datetime_start' => $date['start_date'],
+				'datetime_end' => $date['end_date'],
 				'all_day' => $date['all_day'],
 			);
 		}, $dates );
@@ -383,6 +383,34 @@ class SE_Event_Dates {
 
 		// Return the compiled events.
 		return $compiled_events;
+	}
+
+	/**
+	 * Delete all event dates for a given event.
+	 *
+	 * @param int $event_id The event ID.
+	 *
+	 * @return void
+	 */
+	public static function delete_all_event_dates( $event_id ): void {
+		// Get all the event dates.
+		$event_dates = se_event_get_event_dates( $event_id );
+
+		// Iterate over the event dates and delete them.
+		foreach ( $event_dates as $event_date ) {
+			wp_delete_post( $event_date->ID, true );
+		}
+	}
+
+	/**
+	 * Delete a single event date.
+	 *
+	 * @param int $event_date_id The event date ID.
+	 *
+	 * @return void
+	 */
+	public static function delete_event_date( $event_date_id ): void {
+		wp_delete_post( $event_date_id, true );
 	}
 }
 SE_Event_Dates::init();

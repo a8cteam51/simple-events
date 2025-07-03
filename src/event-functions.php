@@ -120,9 +120,13 @@ function se_event_get_tickets_stock( $event_id ) {
  * @param integer $event_id    Event id.
  * @param array   $event_dates Event dates.
  *
+ * @deprecated 2.0.0 Please use the new se_event_get_event_dates() instead.
+ *
  * @return mixed
  */
 function se_event_get_dates( $event_id, $event_dates = null ) {
+	__doing_it_wrong( __FUNCTION__, 'Please use the new se_event_get_event_dates() instead.', '2.0.0' );
+
 	if ( is_null( $event_dates ) ) {
 		$event_dates = get_post_meta( $event_id, 'se_event_dates', true );
 	}
@@ -146,6 +150,56 @@ function se_event_get_dates( $event_id, $event_dates = null ) {
 /**
  * Gets only the future event dates in a formatted string.
  *
+ * Please note in the original function we never actually used the time_only and date_only parameters.
+ * The inner call chain was as both to null.
+ *
+ * @param integer $event_id    Event id.
+ * @param integer|null $event_date_id Event date id.
+ * @param boolean $date_only   Whether to return only the date.
+ * @param boolean $time_only   Whether to return only the time.
+ * @param array   $event_dates Event dates.
+ *
+ * @return string
+ */
+function se_event_get_future_dates( $event_id, $event_date_id = null, $date_only = false, $time_only = false, $event_dates = null ) {
+
+	$date_display_formatter = new SE_Date_Display_Formatter( $event_id );
+	$now              = SE_Calendar::get_instance()->create_date_time( 'now' )->format( 'U' );
+
+	// If dateonly is true, we need to return the date only.
+	if($date_only){
+		$date_display_formatter->set_date_only( true );
+	} elseif($time_only){
+		$date_display_formatter->set_time_only( true );
+	}
+
+	// If we dont have any dates.
+	if ( ! $event_dates ) {
+		$event_dates = se_event_get_event_dates( $event_id);
+	}
+	// Filter out only the current event date, if set.
+	if ( se_event_treat_each_date_as_own_event() && $event_date_id ) {
+		$event_dates = array_filter( $event_dates, function( $date ) use ( $event_date_id ) {
+			return $date['id'] === $event_date_id;
+		} );
+	}
+
+	// Filter out any dates that are in the past. (start and end)
+	$event_dates = array_filter( $event_dates, function( $date ) use ( $now ) {
+		return $date['start_date'] > $now && $date['end_date'] > $now;
+	} );
+
+	// If we have no dates, return an empty string.
+	if ( empty( $event_dates ) ) {
+		return '';
+	}
+
+	return $date_display_formatter->format_dates( $event_dates );
+}
+
+/**
+ * Gets only the past event dates in a formatted string.
+ *
  * @param integer $event_id    Event id.
  * @param boolean $date_only   Whether to return only the date.
  * @param boolean $time_only   Whether to return only the time.
@@ -153,39 +207,37 @@ function se_event_get_dates( $event_id, $event_dates = null ) {
  *
  * @return string
  */
-function se_event_get_future_dates( $event_id, $date_only = false, $time_only = false, $event_dates = null ) {
-	// Get required post meta.
-	$event_dates      = se_event_get_dates( $event_id, $event_dates );
-	$event_timezone   = get_post_meta( $event_id, 'se_event_timezone', true );
-	$hide_end_time    = get_post_meta( $event_id, 'se_event_hide_end_time', true );
-	$hide_start_time  = get_post_meta( $event_id, 'se_event_hide_start_time', true );
-	$display_timezone = (bool) get_post_meta( $event_id, 'se_event_display_timezone', true );
+function se_event_get_past_dates( $event_id, $event_date_id = null, $date_only = false, $time_only = false, $event_dates = null ) {
+
+	// Match the se_event_get_future_dates but for past dates
+	$date_display_formatter = new SE_Date_Display_Formatter( $event_id );
 	$now              = SE_Calendar::get_instance()->create_date_time( 'now' )->format( 'U' );
 
+	// If we dont have any dates.
 	if ( ! $event_dates ) {
-		return '';
+		$event_dates = se_event_get_event_dates( $event_id);
 	}
 
-	// Iterate over all the events and remove any where the start and end has passed.
-	foreach ( $event_dates as $key => $date ) {
-		if ( $date['datetime_start'] < $now && $date['datetime_end'] < $now ) {
-			unset( $event_dates[ $key ] );
-		}
+	// Filter out only the current event date, if set.
+	if ( se_event_treat_each_date_as_own_event() && $event_date_id ) {
+		$event_dates = array_filter( $event_dates, function( $date ) use ( $event_date_id ) {
+			return $date['id'] === $event_date_id;
+		} );
 	}
+
+	// Filter out any dates that are in the past. (start and end)
+	$event_dates = array_filter( $event_dates, function( $date ) use ( $now ) {
+		return $date['start_date'] < $now && $date['end_date'] < $now;
+	} );
+
+	// If we have no dates, return an empty string.
 	if ( empty( $event_dates ) ) {
 		return '';
 	}
 
-	return se_event_format_dates(
-		$event_dates,
-		$event_timezone,
-		$hide_end_time,
-		$hide_start_time,
-		$display_timezone,
-		false,
-		false
-	);
+	return $date_display_formatter->format_dates( $event_dates );
 }
+
 /**
  * Get the event dates in a formatted string.
  *
@@ -196,23 +248,24 @@ function se_event_get_future_dates( $event_id, $date_only = false, $time_only = 
  *
  * @return string
  */
-function se_event_get_formatted_dates( $event_id, $date_only = false, $time_only = false, $event_dates = null ) {
+function se_event_get_formatted_dates( $event_id, $event_date_id = null, $date_only = false, $time_only = false, $event_dates = null ) {
 
 	$date_display_formatter = new SE_Date_Display_Formatter( $event_id );
 
-
-
-	// Get required post meta.
-	// $event_dates      = se_event_get_dates( $event_id, $event_dates );
-	$event_timezone   = get_post_meta( $event_id, 'se_event_timezone', true );
-	$hide_end_time    = get_post_meta( $event_id, 'se_event_hide_end_time', true );
-	$hide_start_time  = get_post_meta( $event_id, 'se_event_hide_start_time', true );
-	$display_timezone = (bool) get_post_meta( $event_id, 'se_event_display_timezone', true );
+	// if we dont have any dates.
+	if ( ! $event_dates ) {
+		$event_dates = se_event_get_event_dates( $event_id);
+	}
+	// Filter out only the current event date, if set.
+	if ( se_event_treat_each_date_as_own_event() && $event_date_id ) {
+		$event_dates = array_filter( $event_dates, function( $date ) use ( $event_date_id ) {
+			return $date['id'] === $event_date_id;
+		} );
+	}
 
 	if ( ! $event_dates ) {
 		return '';
 	}
-// dump($date_display_formatter);
 	return $date_display_formatter->format_dates( $event_dates);
 }
 
@@ -228,9 +281,13 @@ function se_event_get_formatted_dates( $event_id, $date_only = false, $time_only
  * @param mixed                                                                              $time_only        If we should only show the time.
  *
  * @return string
+ *
+ * @deprecated 2.0.0
  */
 function se_event_format_dates( $event_dates, $timezone, $hide_end_time, $hide_start_time, $display_timezone, $date_only, $time_only ) {
-	dump('CALLED se_event_format_dates REMOVE THIS CALL');
+	// Add doing it wrong, suggest they use the new dateFormatter class instead.
+	__doing_it_wrong( __FUNCTION__, 'Please use the new dateFormatter class instead.', '2.0.0' );
+
 	// Attempt to get the event date id from url.
 	$event_date_id = se_template_get_event_date_id();
 
@@ -623,8 +680,8 @@ function se_event_create_event_date( $event_id, $event_dates ) {
  * @param integer $event_id Event id.
  *
  * @return array{
- *  datetime_start: integer,
- *  datetime_end: integer,
+ *  start_date: integer,
+ *  end_date: integer,
  * all_day: boolean,
  * hide_from_calendar: boolean,
  * hide_from_feed: boolean,
@@ -670,6 +727,9 @@ function se_event_get_event_dates( $event_id ): array {
 		$event_dates
 	);
 
+	// Legacy filter.
+	$dates = apply_filters( 'se_event_get_dates', $dates, $event_id );
+
 	return apply_filters( 'se_event_get_event_dates', $dates, $event_id );
 }
 
@@ -701,23 +761,11 @@ function se_create_date_time_from_timestamp( $timestamp, $timezone = null ): Dat
 }
 
 /**
- * Fires after WordPress has finished loading but before any headers are sent.
+ * Checks if the settings are defined to treat each date as an own event.
+ *
+ * @return boolean
  */
-// add_action(
-// 	'init',
-// 	function (): void {
-// 		$id    = 7379;
-// 		$dates = get_post_meta( $id, 'se_event_dates', true );
-// 		foreach ( $dates as $date ) {
-// 			$r = se_event_create_event_date( $id, $date );
-// 			dump(
-// 				array(
-// 					'created for id' => $id,
-// 					'date'           => $date,
-// 					'r'              => $r,
-// 				)
-// 			);
-// 		}
-// 		dd( array( $dates, 'se_event_dates', se_event_get_event_dates( $id ) ) );
-// 	}
-// );
+function se_event_treat_each_date_as_own_event(): bool {
+	$settings = get_option('se_options');
+	return array_key_exists('treat_each_date_as_own_event', $settings) && $settings['treat_each_date_as_own_event'] === 'on';
+}

@@ -98,7 +98,55 @@ class SE_Block_Variations {
 			}
 		}
 
+		// Change the post type.
+		$query['post_type'] = SE_Event_Post_Type::$event_date_post_type;
+
+		// Add filter to modify posts results
+		add_filter( 'the_posts', array( $this, 'modify_event_posts' ), 10, 2 );
+
 		return $this->set_event_query_args( $query, $feed_type, $feed_order );
+	}
+
+	/**
+	 * Modify event posts results.
+	 *
+	 * @param array    $posts The array of post objects.
+	 * @param WP_Query $query The WP_Query instance.
+	 *
+	 * @return array
+	 */
+	public function modify_event_posts( $posts, $query ) {
+		// Check if this is our events query
+		if ( ! isset( $query->query_vars['sub-type'] ) || self::QUERY_LOOP_EVENTS !== $query->query_vars['sub-type'] ) {
+			return $posts;
+		}
+
+		// Return back the
+		return array_map( function( $post ) {
+			$parent = get_post($post->post_parent);
+
+			// Get the start date from the event.
+			$start_date_ts = get_post_meta($post->ID, 'se_event_date_start', true);
+
+			// Get the event timezone.
+			$timezone = get_post_meta($parent->ID, 'se_event_timezone', true);
+			// use the timezone or default to the site timezone.
+			$timezone = $timezone ? $timezone : get_option('timezone_string');
+
+			// Get the date im this format 2025-07-01 13:14:09
+			$start_date = wp_date('Y-m-d H:i:s', $start_date_ts, new \DateTimeZone($timezone));
+			$start_date_gmt = wp_date('Y-m-d H:i:s', $start_date_ts, new \DateTimeZone('UTC'));
+
+			// update the parent posts post date
+			$parent->post_date = $start_date;
+			$parent->post_date_gmt = $start_date_gmt;
+			$parent->post_modified = $start_date;
+			$parent->post_modified_gmt = $start_date_gmt;
+			$parent->event_date_id = $post->ID;
+
+			return $parent;
+		}, $posts );
+
 	}
 
 	/**
@@ -128,6 +176,11 @@ class SE_Block_Variations {
 	 */
 	private function set_event_query_args( $args, $feed_type, $feed_order = 'ASC' ) {
 
+		// If we are ordering by desc. we need to sort by end date, else start.
+		$args['meta_key'] = 'desc' === strtolower($feed_order) ? 'se_event_date_end' : 'se_event_date_start';
+		$args['orderby']  = 'meta_value';
+		$args['order']    = $feed_order;
+
 		if ( 'upcoming' === $feed_type ) {
 			$args['meta_query'] = array(
 				array(
@@ -156,6 +209,13 @@ class SE_Block_Variations {
 			$args['order']    = $feed_order;
 		}
 
+		// add the arg to denote unique parents.
+		$args['unique_parents'] = true;
+		$args['feed_order'] = $feed_order; // Store feed order for use in the WHERE filter
+
+		// Ensure we only get the correct event date for each parent.
+		add_filter( 'posts_where', array( $this, 'filter_unique_parents_where' ), 10, 2 );
+
 		/**
 		 * A filter to customize the args of the event query loop.
 		 *
@@ -164,6 +224,56 @@ class SE_Block_Variations {
 		 * @param string|null    $feed_order       The feed order.
 		 */
 		return apply_filters( 'se_pre_set_event_query_loop_args', $args, $feed_type, $feed_order );
+	}
+
+	/**
+	 * Filter posts to only include the correct event date for each parent.
+	 *
+	 * @param string   $where The WHERE clause of the query.
+	 * @param WP_Query $query The WP_Query instance.
+	 *
+	 * @return string
+	 */
+	public function filter_unique_parents_where( $where, $query ) {
+		// Check if this is our events query and unique parents is enabled
+		if ( ! isset( $query->query_vars['unique_parents'] ) || ! isset( $query->query_vars['feed_order'] ) ) {
+			return $where;
+		}
+
+		// Skip if treating each date as own event
+		if ( se_event_treat_each_date_as_own_event() ) {
+			return $where;
+		}
+
+		global $wpdb;
+
+		$feed_order = $query->query_vars['feed_order'];
+		$meta_key = 'desc' === $feed_order ? 'se_event_date_end' : 'se_event_date_start';
+		$order_direction = 'desc' === $feed_order ? 'DESC' : 'ASC';
+
+		// Subquery to get the correct post ID for each parent based on sort order
+		$subquery = "
+			AND {$wpdb->posts}.ID IN (
+				SELECT p1.ID
+				FROM {$wpdb->posts} p1
+				INNER JOIN {$wpdb->postmeta} pm1 ON p1.ID = pm1.post_id AND pm1.meta_key = '{$meta_key}'
+				WHERE p1.post_type = '" . SE_Event_Post_Type::$event_date_post_type . "'
+				AND p1.post_status = 'publish'
+				AND pm1.meta_value = (
+					SELECT " . ('desc' === $feed_order ? 'MAX' : 'MIN') . "(pm2.meta_value)
+					FROM {$wpdb->posts} p2
+					INNER JOIN {$wpdb->postmeta} pm2 ON p2.ID = pm2.post_id AND pm2.meta_key = '{$meta_key}'
+					WHERE p2.post_parent = p1.post_parent
+					AND p2.post_type = '" . SE_Event_Post_Type::$event_date_post_type . "'
+					AND p2.post_status = 'publish'
+				)
+				GROUP BY p1.post_parent
+			)
+		";
+
+		$where .= $subquery;
+
+		return $where;
 	}
 }
 

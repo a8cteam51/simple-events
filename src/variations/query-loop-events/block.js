@@ -5,12 +5,41 @@
  */
 
 import { InspectorControls } from '@wordpress/block-editor';
-import { registerBlockVariation } from '@wordpress/blocks';
+import { registerBlockType, registerBlockVariation } from '@wordpress/blocks';
 import { addFilter } from '@wordpress/hooks';
 import { PanelBody, SelectControl } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
+import { useEffect } from '@wordpress/element';
+import { createReduxStore, register, dispatch, select } from '@wordpress/data';
 
 const EVENTS_VARIATION = 'se-events/query-loop-events';
+
+// Create a simple store for query loop data
+const eventsQueryStore = createReduxStore('se-events/query-data', {
+	reducer: (state = {}, action) => {
+		switch (action.type) {
+			case 'SET_QUERY_DATA':
+				return {
+					...state,
+					[action.blockId]: action.data,
+				};
+			default:
+				return state;
+		}
+	},
+	actions: {
+		setQueryData: (blockId, data) => ({
+			type: 'SET_QUERY_DATA',
+			blockId,
+			data,
+		}),
+	},
+	selectors: {
+		getQueryData: (state, blockId) => state[blockId] || {},
+	},
+});
+
+register(eventsQueryStore);
 
 registerBlockVariation('core/query', {
 	name: EVENTS_VARIATION,
@@ -43,7 +72,7 @@ registerBlockVariation('core/query', {
 		[
 			'core/post-template',
 			{},
-			[['core/post-title'], ['core/post-date']],
+			[['core/post-title'], ['simple-events/loop-event-info']],
 		],
 		['core/query-pagination'],
 		['core/query-no-results'],
@@ -53,10 +82,18 @@ registerBlockVariation('core/query', {
 	allowedControls: ['taxQuery', 'search', 'feedType'],
 });
 
-const FeedTypeControl = ({ attributes, setAttributes }) => {
+const FeedTypeControl = ({ attributes, setAttributes, clientId }) => {
 	const { query } = attributes;
 	const feedType = query.feedType || 'default';
 	const feedOrder = query.order || 'asc';
+
+	// Store the query data so child blocks can access it
+	useEffect(() => {
+		dispatch('se-events/query-data').setQueryData(clientId, {
+			feedType,
+			order: feedOrder,
+		});
+	}, [feedType, feedOrder, clientId]);
 
 	return (
 		<>
