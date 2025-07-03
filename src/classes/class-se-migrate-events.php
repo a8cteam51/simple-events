@@ -271,8 +271,8 @@ class SE_Migrate_Events {
 				$event_id,
 				array(
 					'all_day'        => $all_day,
-					'datetime_start' => $start,
-					'datetime_end'   => $end,
+					'start_date'     => $start,
+					'end_date'       => $end,
 				)
 			);
 		}

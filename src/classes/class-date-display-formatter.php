@@ -98,6 +98,20 @@ class SE_Date_Display_Formatter {
 	private $allow_grouping_dates_different_time = false;
 
 	/**
+	 * Date only.
+	 *
+	 * @var boolean
+	 */
+	private $date_only = false;
+
+	/**
+	 * Time only.
+	 *
+	 * @var boolean
+	 */
+	private $time_only = false;
+
+	/**
 	 * Create a new instance of the date display formatter.
 	 *
 	 * @param integer $event_id The event id.
@@ -123,6 +137,24 @@ class SE_Date_Display_Formatter {
 		$this->hide_start_time                     = filter_var( get_post_meta( $event_id, 'se_event_hide_start_time', true ), FILTER_VALIDATE_BOOLEAN );
 		$this->show_add_to_calendar                = filter_var( get_post_meta( $event_id, 'se_event_add_calendar_links', true ), FILTER_VALIDATE_BOOLEAN );
 		$this->open_in_new_tab                     = filter_var( get_post_meta( $event_id, 'se_event_open_in_new_window', true ), FILTER_VALIDATE_BOOLEAN );
+	}
+
+	/**
+	 * Set the date only.
+	 *
+	 * @param boolean $date_only The date only.
+	 */
+	public function set_date_only( bool $date_only ) {
+		$this->date_only = $date_only;
+	}
+
+	/**
+	 * Set the time only.
+	 *
+	 * @param boolean $time_only The time only.
+	 */
+	public function set_time_only( bool $time_only ) {
+		$this->time_only = $time_only;
 	}
 
 	/**
@@ -154,132 +186,6 @@ class SE_Date_Display_Formatter {
 		return $this->treat_each_date_as_own_event;
 	}
 
-	/**
-	 * Formats the dates for the event.
-	 *
-	 * @param array<int, array{datetime_start: integer, datetime_end: integer, all_day:boolean}> $event_dates      Event dates.
-	 * @param mixed                                                                              $hide_end_time    If we should hide the end time.
-	 * @param mixed                                                                              $hide_start_time  If we should hide the start time.
-	 * @param mixed                                                                              $display_timezone If we should display the timezone.
-	 *
-	 * @return string
-	 */
-	public function format_dates__OLD( $event_dates ) {
-		// Attempt to get the event date id from url.
-		$event_date_id = se_template_get_event_date_id();
-
-		$dates_count = is_array( $event_dates ) ? count( $event_dates ) : 1;
-
-		if ( ! empty( $this->event_timezone ) ) {
-			$timezone = new DateTimeZone( $this->event_timezone );
-		} else {
-			$timezone = wp_timezone();
-		}
-
-		$timezone_date = new DateTime( '', $timezone );
-		$timezone_abbr = $timezone_date->format( 'T' );
-
-		// Begin output as a list if the count is more than 1.
-		$dates_output = ( $dates_count > 1 ) ? '<ul>' : '';
-
-		// Get the start and end times from the first date.
-		// Assume all start and end times are the same until proven otherwise.
-		$event_time_start = wp_date( get_option( 'time_format' ), $event_dates[0]['start_date'], $timezone );
-		$event_time_end   = wp_date( get_option( 'time_format' ), $event_dates[0]['end_date'], $timezone );
-		$same_times       = ( 1 < $dates_count ) ? true : false;
-
-		// Loop over each available event date.
-		foreach ( $event_dates as $date ) {
-			// dump( $this->render_single_date( $date ) );
-			$opening_li = $date['id'] === $event_date_id ? '<li class="active" style="text-decoration: underline;">' : '<li>';
-
-			// Check if start and end times are on the same day.
-			$same_day = wp_date( 'Y-m-d', $date['start_date'], $timezone ) === wp_date( 'Y-m-d', $date['end_date'], $timezone );
-
-			// Get start and end times.
-			$time_start = ( $this->hide_start_time ) ? '' : wp_date( get_option( 'time_format' ), $date['start_date'], $timezone );
-			$time_end   = ( $this->hide_end_time ) ? '' : wp_date( get_option( 'time_format' ), $date['end_date'], $timezone );
-
-			$time_separator = ( 1 === (int) $this->hide_start_time ) ? '' : '&ndash;';
-
-			// Invalidate same times if the start or end times don't match.
-			if ( $same_times && ( $time_start !== $event_time_start || $time_end !== $event_time_end ) ) {
-				$same_times = false;
-			}
-
-			// Ensure we're working with a boolean.
-			$date['all_day'] = array_key_exists( 'all_day', $date ) ? filter_var( $date['all_day'], FILTER_VALIDATE_BOOLEAN ) : false;
-
-			// Start the output string.
-			$single_date_output = wp_date( get_option( 'date_format' ), $date['start_date'], $timezone );
-
-			// Return early if we only want the date.
-			if ( $this->date_only ) {
-				$end_date         = wp_date( get_option( 'date_format' ), $date['end_date'], $timezone );
-				$date_only_output = ( $same_day ) ? $single_date_output : $single_date_output . ' &ndash; ' . $end_date;
-				$dates_output    .= ( $dates_count > 1 ) ? $opening_li . $date_only_output . '</li>' : $date_only_output;
-				continue;
-			}
-
-			// Return early if we only want the time.
-			if ( $this->time_only ) {
-				$time          = sprintf( '%s %s %s', $time_start, $time_separator, $time_end );
-				$dates_output .= ( $dates_count > 1 ) ? $opening_li . $time . '</li>' : $time;
-				continue;
-			}
-
-			if ( ! $same_day ) {
-
-				// If the event doesn't start and finish on the same day.
-				$single_date_output .= sprintf(
-					' %s &ndash; %s %s',
-					$time_start,
-					wp_date( get_option( 'date_format' ), $date['end_date'], $timezone ),
-					$time_end
-				);
-			} elseif ( false === $date['all_day'] && $time_start !== $time_end ) {
-
-				// Else if the event isn't all day, and the start and end times are different.
-				$single_date_output .= sprintf( ' %s %s %s', $time_start, $time_separator, $time_end );
-			}
-
-			// Display timezone only after the first date.
-			if ( $this->display_timezone && $date === $event_dates[0] ) {
-				$single_date_output .= ' (' . $timezone_abbr . ')';
-			}
-
-			// Return output for this date.
-			$dates_output .= ( $dates_count > 1 ) ? $opening_li . $single_date_output . '</li>' : $single_date_output;
-		}
-
-		// Overwrite output if all start and end times are the same and "Group event dates with matching times" otpion is selected.
-
-		if ( $same_times && $this->group_dates ) {
-			$event_date_start = wp_date( get_option( 'date_format' ), $event_dates[0]['datetime_start'], $timezone );
-			$event_date_end   = wp_date( get_option( 'date_format' ), $event_dates[ $dates_count - 1 ]['datetime_start'], $timezone );
-
-			$dates_output = ( $dates_count > 1 ) ? '<ul><li>' : '';
-
-			$event_time_end = ( $this->hide_end_time ) ? '' : ' &ndash; ' . $event_time_end;
-
-			// Don't display time if it's an all day event.
-			if ( $date['all_day'] ) {
-				$dates_output .= sprintf( ' %s &ndash; %s', $event_date_start, $event_date_end );
-			} else {
-				$dates_output .= sprintf( ' %s &ndash; %s %s %s', $event_date_start, $event_date_end, $event_time_start, $event_time_end );
-			}
-
-			if ( $this->display_timezone ) {
-				$dates_output .= ' (' . $timezone_abbr . ')';
-			}
-
-			$dates_output .= ( $dates_count > 1 ) ? '</li>' : '';
-		}
-
-		$dates_output .= ( $dates_count > 1 ) ? '</ul>' : '';
-
-		return $dates_output;
-	}
 
 	/**
 	 * Get the date range for the event.
@@ -317,7 +223,7 @@ class SE_Date_Display_Formatter {
 	/**
 	 * Gets the header date for the event.
 	 *
-	 * @param array<int, array{datetime_start: integer, end_date: integer, all_day:boolean}> $event_dates Event dates.
+	 * @param array<int, array{start_date: integer, end_date: integer, all_day:boolean}> $event_dates Event dates.
 	 *
 	 * @return string
 	 */
@@ -335,7 +241,6 @@ class SE_Date_Display_Formatter {
 				return $this->render_single_date( $found_date[0] );
 			}
 		}
-
 		// If we are grouping dates, return the first date.
 		$date_range           = $this->get_date_range( $event_dates );
 		$cloned               = $event_dates[0];
@@ -348,7 +253,7 @@ class SE_Date_Display_Formatter {
 	/**
 	 * Render active date.
 	 *
-	 * @param array<int, array{datetime_start: integer, datetime_end: integer, all_day:boolean}> $event_dates Event dates.
+	 * @param array<int, array{start_date: integer, end_date: integer, all_day:boolean}> $event_dates Event dates.
 	 *
 	 * @return string|null
 	 */
@@ -382,7 +287,7 @@ class SE_Date_Display_Formatter {
 	/**
 	 * Renders a date list.
 	 *
-	 * @param array<int, array{datetime_start: integer, datetime_end: integer, all_day:boolean}> $event_dates          Event dates.
+	 * @param array<int, array{start_date: integer, end_date: integer, all_day:boolean}> $event_dates          Event dates.
 	 * @param boolean                                                                            $exclude_current_date Exclude the current date.
 	 * @param boolean                                                                            $exclude_past_dates   Exclude dates that are in the past.
 	 *
@@ -400,7 +305,7 @@ class SE_Date_Display_Formatter {
 				}
 
 				// If the date is in the past, exclude it.
-				if ( $exclude_past_dates && $date['datetime_start'] < SE_Calendar::get_instance()->create_date_time( 'now' )->format( 'U' ) ) {
+				if ( $exclude_past_dates && $date['start_date'] < SE_Calendar::get_instance()->create_date_time( 'now' )->format( 'U' ) ) {
 					return false;
 				}
 
@@ -440,7 +345,7 @@ class SE_Date_Display_Formatter {
 	/**
 	 * Checks if the dates can be grouped.
 	 *
-	 * @param array<int, array{datetime_start: integer, datetime_end: integer, all_day:boolean}> $event_dates Event dates.
+	 * @param array<int, array{start_date: integer, end_date: integer, all_day:boolean}> $event_dates Event dates.
 	 *
 	 * @return boolean
 	 */
@@ -472,7 +377,7 @@ class SE_Date_Display_Formatter {
 	/**
 	 * Renders the list of date as single items  (not grouped view)
 	 *
-	 * @param array<int, array{datetime_start: integer, datetime_end: integer, all_day:boolean}> $event_dates     Event dates.
+	 * @param array<int, array{start_date: integer, end_date: integer, all_day:boolean}> $event_dates     Event dates.
 	 * @param string                                                                             $existing_output Existing output.
 	 *
 	 * @return string
@@ -493,7 +398,7 @@ class SE_Date_Display_Formatter {
 	/**
 	 * Renders the list of date as grouped items  (grouped view)
 	 *
-	 * @param array<int, array{datetime_start: integer, datetime_end: integer, all_day:boolean}> $event_dates     Event dates.
+	 * @param array<int, array{start_date: integer, end_date: integer, all_day:boolean}> $event_dates     Event dates.
 	 * @param string                                                                             $existing_output Existing output.
 	 *
 	 * @return string
@@ -505,7 +410,6 @@ class SE_Date_Display_Formatter {
 		foreach ( $event_dates as $date ) {
 			// If this event is all day.
 			if ( true === (bool) $date['all_day'] ) {
-				// adump($date['all_day']);
 				$groups['all_day'][] = $date;
 				continue;
 			}
@@ -558,12 +462,12 @@ class SE_Date_Display_Formatter {
 				$output .= '<li><div class="se-event-date-list-item__grouped" data-se_grouped_date_label="' . $time_label . '">';
 				// Add the date.
 				$output .= '<div class="se-event-date-list-item__grouped-date">';
-				$output .= $dates_string;
+				$output .= $this->time_only ? '' : $dates_string;
 				$output .= '</div>';
 
 				// Add the time.
 				$output .= '<div class="se-event-date-list-item__grouped-time">';
-				$output .= $time_label;
+				$output .= $this->date_only ? '' : $time_label;
 				$output .= '</div>';
 
 				$output          .= '</div>';
@@ -610,14 +514,18 @@ class SE_Date_Display_Formatter {
 	/**
 	 * Formats the dates for the event.
 	 *
-	 * @param array<int, array{datetime_start: integer, datetime_end: integer, all_day:boolean}> $event_dates      Event dates.
-	 * @param mixed                                                                              $hide_end_time    If we should hide the end time.
-	 * @param mixed                                                                              $hide_start_time  If we should hide the start time.
-	 * @param mixed                                                                              $display_timezone If we should display the timezone.
+	 * @param array<int, array{start_date: integer, end_date: integer, all_day:boolean}> $event_dates      Event dates.
 	 *
 	 * @return string
 	 */
 	public function format_dates( array $event_dates ) {
+		// Reset indexes
+		$event_dates = array_values( $event_dates );
+
+		// Sort all dates by start date.
+		usort( $event_dates, function ( $a, $b ) {
+			return $a['start_date'] - $b['start_date'];
+		} );
 
 		// Get the date count.
 		$dates_count = count( $event_dates );
@@ -640,121 +548,6 @@ class SE_Date_Display_Formatter {
 		$output .= '</ul>';
 
 		return $output;
-
-		// Attempt to get the event date id from url.
-		$event_date_id = se_template_get_event_date_id();
-
-		$dates_count = is_array( $event_dates ) ? count( $event_dates ) : 1;
-
-		if ( ! empty( $this->event_timezone ) ) {
-			$timezone = new DateTimeZone( $this->event_timezone );
-		} else {
-			$timezone = wp_timezone();
-		}
-
-		$timezone_date = new DateTime( '', $timezone );
-		$timezone_abbr = $timezone_date->format( 'T' );
-
-		// Begin output as a list if the count is more than 1.
-		$dates_output = ( $dates_count > 1 ) ? '<ul>' : '';
-
-		// Get the start and end times from the first date.
-		// Assume all start and end times are the same until proven otherwise.
-		$event_time_start = wp_date( get_option( 'time_format' ), $event_dates[0]['start_date'], $timezone );
-		$event_time_end   = wp_date( get_option( 'time_format' ), $event_dates[0]['end_date'], $timezone );
-		$same_times       = ( 1 < $dates_count ) ? true : false;
-
-		// Loop over each available event date.
-		foreach ( $event_dates as $date ) {
-			// dump( $this->render_single_date( $date ) );
-			$opening_li = $date['id'] === $event_date_id ? '<li class="active" style="text-decoration: underline;">' : '<li>';
-
-			// Check if start and end times are on the same day.
-			$same_day = wp_date( 'Y-m-d', $date['start_date'], $timezone ) === wp_date( 'Y-m-d', $date['end_date'], $timezone );
-
-			// Get start and end times.
-			$time_start = ( $this->hide_start_time ) ? '' : wp_date( get_option( 'time_format' ), $date['start_date'], $timezone );
-			$time_end   = ( $this->hide_end_time ) ? '' : wp_date( get_option( 'time_format' ), $date['end_date'], $timezone );
-
-			$time_separator = ( 1 === (int) $this->hide_start_time ) ? '' : '&ndash;';
-
-			// Invalidate same times if the start or end times don't match.
-			if ( $same_times && ( $time_start !== $event_time_start || $time_end !== $event_time_end ) ) {
-				$same_times = false;
-			}
-
-			// Ensure we're working with a boolean.
-			$date['all_day'] = array_key_exists( 'all_day', $date ) ? filter_var( $date['all_day'], FILTER_VALIDATE_BOOLEAN ) : false;
-
-			// Start the output string.
-			$single_date_output = wp_date( get_option( 'date_format' ), $date['start_date'], $timezone );
-
-			// // Return early if we only want the date.
-			// if ( $this->date_only ) {
-			//  $end_date         = wp_date( get_option( 'date_format' ), $date['end_date'], $timezone );
-			//  $date_only_output = ( $same_day ) ? $single_date_output : $single_date_output . ' &ndash; ' . $end_date;
-			//  $dates_output    .= ( $dates_count > 1 ) ? $opening_li . $date_only_output . '</li>' : $date_only_output;
-			//  continue;
-			// }
-
-			// // Return early if we only want the time.
-			// if ( $this->time_only ) {
-			//  $time          = sprintf( '%s %s %s', $time_start, $time_separator, $time_end );
-			//  $dates_output .= ( $dates_count > 1 ) ? $opening_li . $time . '</li>' : $time;
-			//  continue;
-			// }
-
-			if ( ! $same_day ) {
-
-				// If the event doesn't start and finish on the same day.
-				$single_date_output .= sprintf(
-					' %s &ndash; %s %s',
-					$time_start,
-					wp_date( get_option( 'date_format' ), $date['end_date'], $timezone ),
-					$time_end
-				);
-			} elseif ( false === $date['all_day'] && $time_start !== $time_end ) {
-
-				// Else if the event isn't all day, and the start and end times are different.
-				$single_date_output .= sprintf( ' %s %s %s', $time_start, $time_separator, $time_end );
-			}
-
-			// Display timezone only after the first date.
-			if ( $this->display_timezone && $date === $event_dates[0] ) {
-				$single_date_output .= ' (' . $timezone_abbr . ')';
-			}
-
-			// Return output for this date.
-			$dates_output .= ( $dates_count > 1 ) ? $opening_li . $single_date_output . '</li>' : $single_date_output;
-		}
-
-		// Overwrite output if all start and end times are the same and "Group event dates with matching times" otpion is selected.
-
-		if ( $same_times && $this->group_dates ) {
-			$event_date_start = wp_date( get_option( 'date_format' ), $event_dates[0]['datetime_start'], $timezone );
-			$event_date_end   = wp_date( get_option( 'date_format' ), $event_dates[ $dates_count - 1 ]['datetime_start'], $timezone );
-
-			$dates_output = ( $dates_count > 1 ) ? '<ul><li>' : '';
-
-			$event_time_end = ( $this->hide_end_time ) ? '' : ' &ndash; ' . $event_time_end;
-
-			// Don't display time if it's an all day event.
-			if ( $date['all_day'] ) {
-				$dates_output .= sprintf( ' %s &ndash; %s', $event_date_start, $event_date_end );
-			} else {
-				$dates_output .= sprintf( ' %s &ndash; %s %s %s', $event_date_start, $event_date_end, $event_time_start, $event_time_end );
-			}
-
-			if ( $this->display_timezone ) {
-				$dates_output .= ' (' . $timezone_abbr . ')';
-			}
-
-			$dates_output .= ( $dates_count > 1 ) ? '</li>' : '';
-		}
-
-		$dates_output .= ( $dates_count > 1 ) ? '</ul>' : '';
-
-		return $dates_output;
 	}
 
 	/**
@@ -812,12 +605,12 @@ class SE_Date_Display_Formatter {
 		$same_day = wp_date( 'Y-m-d', $event_date['start_date'], $this->get_timezone_instance() ) === wp_date( 'Y-m-d', $event_date['end_date'], $this->get_timezone_instance() );
 
 		// Get start and end times.
-		$time_start = ( $this->hide_start_time ) ? '' : $this->format_time( $event_date['start_date'] );
-		$time_end   = ( $this->hide_end_time ) ? '' : $this->format_time( $event_date['end_date'] );
+		$time_start = ( $this->hide_start_time || $this->date_only ) ? '' : $this->format_time( $event_date['start_date'] );
+		$time_end   = ( $this->hide_end_time || $this->date_only ) ? '' : $this->format_time( $event_date['end_date'] );
 
 		// Get the start and end date.
-		$start_date = $this->format_date( $event_date['start_date'] );
-		$end_date   = $this->format_date( $event_date['end_date'] );
+		$start_date = $this->time_only ? '' : $this->format_date( $event_date['start_date'] );
+		$end_date   = $this->time_only ? '' : $this->format_date( $event_date['end_date'] );
 
 		// Check if it's an all day event.
 		$is_all_day = array_key_exists( 'all_day', $event_date ) ? filter_var( $event_date['all_day'], FILTER_VALIDATE_BOOLEAN ) : false;

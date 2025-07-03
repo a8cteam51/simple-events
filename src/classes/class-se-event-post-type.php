@@ -592,13 +592,77 @@ class SE_Event_Post_Type {
 
 		// If a custom order override exists, use it. Otherwise, stick with the existing sort order.
 		$sort_order = ! empty( $order_override ) ? $order_override : $sort_order;
+// dump($query->get( 'sub-type' ), $query->get( 'post_type' ));
+
+	// dump( $query->is_main_query() &&  is_post_type_archive( self::$post_type ));
+// dump(	is_tax( self::$post_type . '-category' ) );
+			// dump out each of the following:
+			// dump(['is_nto main_query' => ! $query->is_main_query(),
+			// 'post type' => $query->get( 'post_type' ),
+			// 'is post type' => self::$post_type === $query->get( 'post_type' ),
+			// 'is_not countdown' => ! $query->get( 'se_countdown' ),
+			// 'is sub type not loop events' => $query->get( 'sub-type' ) !== SE_Block_Variations::QUERY_LOOP_EVENTS ]);
+			// // dump( ! $query->is_main_query() && self::$post_type === $query->get( 'post_type' ) && ! $query->get( 'se_countdown' ) && $query->get( 'sub-type' ) !== SE_Block_Variations::QUERY_LOOP_EVENTS );
+
+
 
 		if (
 			( $query->is_main_query() && ( is_post_type_archive( self::$post_type )
 			|| is_tax( self::$post_type . '-category' ) ) )
-			|| ( ! $query->is_main_query() && self::$post_type === $query->get( 'post_type' ) && ! $query->get( 'se_countdown' ) && $query->get( 'sub-type' ) !== SE_Block_Variations::QUERY_LOOP_EVENTS )
+			|| ( ! $query->is_main_query() && self::$post_type === $query->get( 'post_type' ) && ! $query->get( 'se_countdown' ) && $query->get( 'sub-type' ) === SE_Block_Variations::QUERY_LOOP_EVENTS )
 		) {
-			$query->set( 'orderby', 'meta_value' );
+			// Handle taxonomy filtering by getting parent event IDs first
+			$parent_event_ids = null;
+			$tax_query = $query->get( 'tax_query' );
+
+			// Check if we have taxonomy queries for event categories
+			if ( ! empty( $tax_query ) || is_tax( self::$post_type . '-category' ) ) {
+				// Create a separate query to get parent events that match taxonomy criteria
+				$parent_query_args = array(
+					'post_type'      => self::$post_type,
+					'posts_per_page' => -1,
+					'fields'         => 'ids',
+					'post_status'    => 'publish',
+				);
+
+				// Add taxonomy query from original query
+				if ( ! empty( $tax_query ) ) {
+					$parent_query_args['tax_query'] = $tax_query;
+				}
+
+				// Handle category archive pages
+				if ( is_tax( self::$post_type . '-category' ) ) {
+					$term = get_queried_object();
+					$parent_query_args['tax_query'] = array(
+						array(
+							'taxonomy' => self::$post_type . '-category',
+							'field'    => 'term_id',
+							'terms'    => $term->term_id,
+						),
+					);
+				}
+
+				$parent_events = new WP_Query( $parent_query_args );
+				$parent_event_ids = $parent_events->posts;
+
+				// If no parent events match, set to empty array to return no results
+				if ( empty( $parent_event_ids ) ) {
+					$parent_event_ids = array( 0 );
+				}
+			}
+
+			// Change query to target event dates instead of events
+			$query->set( 'post_type', self::$event_date_post_type );
+
+			// If we have taxonomy filtering, limit to dates of matching parent events
+			if ( null !== $parent_event_ids ) {
+				$query->set( 'post_parent__in', $parent_event_ids );
+				// Remove tax_query since we're now querying date posts
+				$query->set( 'tax_query', array() );
+			}
+
+			// Order by event date start timestamp
+			$query->set( 'orderby', 'meta_value_num' );
 			$query->set( 'meta_key', 'se_event_date_start' );
 			$query->set( 'order', apply_filters( 'se_pre_get_posts_order', $sort_order, $query ) );
 
@@ -606,16 +670,20 @@ class SE_Event_Post_Type {
 			$event_options = array( 'hide_events_on_both', 'hide_events_on_feed', 'on' );
 
 			if ( isset( $options['hide_past_events'] ) && in_array( $options['hide_past_events'], $event_options, true ) ) {
-				$query->set(
-					'meta_query',
-					array(
-						array(
-							'key'     => 'se_event_date_end',
-							'value'   => wp_date( 'U' ),
-							'compare' => '>=',
-						),
-					)
+				$existing_meta_query = $query->get( 'meta_query' );
+				if ( ! is_array( $existing_meta_query ) ) {
+					$existing_meta_query = array();
+				}
+
+				$existing_meta_query[] = array(
+					'key'     => 'se_event_date_end',
+					'value'   => time(),
+					'compare' => '>=', // what is this?
+					'type'    => 'NUMERIC',
 				);
+
+				$query->set( 'meta_query', $existing_meta_query );
+
 			}
 		}
 	}
@@ -697,7 +765,8 @@ class SE_Event_Post_Type {
 		}
 
 		if ( ! $is_event_info_block_present ) {
-			delete_post_meta( $event_id, 'se_event_dates' );
+			// Delete all the event dates.
+			SE_Event_Dates::delete_all_event_dates( $event_id );
 		}
 	}
 }
