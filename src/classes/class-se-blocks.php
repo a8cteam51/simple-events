@@ -247,7 +247,7 @@ class SE_Blocks {
 
 		// Event time / date.
 		$event_dates = se_event_get_event_dates( $post_ID );
-// adump([$event_dates, $attributes['eventDates']] );
+
 		// Previewing?
 		if ( ! empty( $attributes['eventDates'] ) ) {
 			$event_dates = $attributes['eventDates'];
@@ -265,12 +265,12 @@ class SE_Blocks {
 
 		if ( ! empty( $event_dates ) ) {
 			$has_header_date = false;
-			$dates_count  = count( $event_dates );
-			$active_date = $date_display_formatter->render_active_date( $event_dates );
-			if($active_date) {
-				$dates_output .= '<div class="se-event-info-date-header se-event-info-date-header--active">' . $active_date . '</div>';
+			$dates_count     = count( $event_dates );
+			$active_date     = $date_display_formatter->render_active_date( $event_dates );
+			if ( $active_date ) {
+				$dates_output   .= '<div class="se-event-info-date-header se-event-info-date-header--active">' . $active_date . '</div>';
 				$has_header_date = true;
-				$date_heading = '<h3>' . _n( 'Additional Date', 'Additional Dates', $dates_count -1, 'simple-events' ) . '</h3>';
+				$date_heading    = '<h3>' . _n( 'Additional Date', 'Additional Dates', $dates_count - 1, 'simple-events' ) . '</h3>';
 			} else {
 				$date_heading = '<h3>' . _n( 'Date', 'Dates', $dates_count, 'simple-events' ) . '</h3>';
 			}
@@ -283,8 +283,8 @@ class SE_Blocks {
 			 */
 			$dates_output .= apply_filters( 'se_event_info_date_heading', $date_heading, $dates_count );
 			// If we have a header date and 2 or more dates, we need to exclude the current date from the list.
-			if(($has_header_date && $dates_count > 1) || ! $has_header_date) {
-				$dates_output .= $date_display_formatter->render_date_list($event_dates, ($has_header_date && $date_display_formatter->is_treating_each_date_as_own_event()));
+			if ( ( $has_header_date && $dates_count > 1 ) || ! $has_header_date ) {
+				$dates_output .= $date_display_formatter->render_date_list( $event_dates, ( $has_header_date && $date_display_formatter->is_treating_each_date_as_own_event() ) );
 			}
 		}
 
@@ -344,7 +344,6 @@ class SE_Blocks {
 		if ( $calendar_links ) {
 			$output .= se_template_calendar_links( false );
 		}
-
 
 		return apply_filters( 'simple_events_event_info_render', $output, $event_dates, $event_timezone, $event_location, $attributes );
 	}
@@ -552,7 +551,7 @@ class SE_Blocks {
 			// Add unique parents filtering if not treating each date as own event
 			if ( ! se_event_treat_each_date_as_own_event() ) {
 				$events_query_args['unique_parents'] = true;
-				$events_query_args['feed_order'] = $feed_order;
+				$events_query_args['feed_order']     = $feed_order;
 
 				// Add filter for unique parents WHERE clause
 				add_filter( 'posts_where', array( __CLASS__, 'filter_unique_parents_where' ), 10, 2 );
@@ -784,7 +783,7 @@ class SE_Blocks {
 		$prefix  = '';
 		$post_ID = ( isset( $attributes['thePostId'] ) && $attributes['thePostId'] > 0 ) ? $attributes['thePostId'] : $block->context['postId'];
 
-		$event_date_id = $post instanceof \WP_Post && property_exists($post, 'event_date_id') && is_numeric($post->event_date_id) && se_event_treat_each_date_as_own_event()
+		$event_date_id = $post instanceof \WP_Post && property_exists( $post, 'event_date_id' ) && is_numeric( $post->event_date_id ) && se_event_treat_each_date_as_own_event()
 			? absint( $post->event_date_id )
 			: null;
 
@@ -803,7 +802,6 @@ class SE_Blocks {
 				$get_date_function = 'se_event_get_formatted_dates';
 				break;
 		}
-
 
 		// Generate output based on meta name.
 		if ( ! empty( $post_ID ) ) {
@@ -981,7 +979,7 @@ class SE_Blocks {
 		global $wpdb;
 
 		$feed_order = $query->query_vars['feed_order'];
-		$meta_key = 'desc' === strtolower( $feed_order ) ? 'se_event_date_end' : 'se_event_date_start';
+		$meta_key   = 'desc' === strtolower( $feed_order ) ? 'se_event_date_end' : 'se_event_date_start';
 
 		// Subquery to get the correct post ID for each parent based on sort order
 		$subquery = "
@@ -1036,15 +1034,15 @@ class SE_Blocks {
 				$timezone = $timezone ? $timezone : get_option( 'timezone_string' );
 
 				// Get the date in this format 2025-07-01 13:14:09
-				$start_date = wp_date( 'Y-m-d H:i:s', $start_date_ts, new \DateTimeZone( $timezone ) );
+				$start_date     = wp_date( 'Y-m-d H:i:s', $start_date_ts, new \DateTimeZone( $timezone ) );
 				$start_date_gmt = wp_date( 'Y-m-d H:i:s', $start_date_ts, new \DateTimeZone( 'UTC' ) );
 
 				// update the parent posts post date
-				$parent->post_date = $start_date;
-				$parent->post_date_gmt = $start_date_gmt;
-				$parent->post_modified = $start_date;
+				$parent->post_date         = $start_date;
+				$parent->post_date_gmt     = $start_date_gmt;
+				$parent->post_modified     = $start_date;
 				$parent->post_modified_gmt = $start_date_gmt;
-				$parent->event_date_id = $post->ID;
+				$parent->event_date_id     = $post->ID;
 
 				return $parent;
 			},

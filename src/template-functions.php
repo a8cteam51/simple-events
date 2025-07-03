@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @return integer|null The event date id or null if not set.
  */
 function se_template_get_event_date_id() {
-	$event_date_id = array_key_exists( 'se-date', $_GET ) ? sanitize_text_field( $_GET['se-date'] ) : null;
+	$event_date_id = array_key_exists( 'se-date', $_GET ) ? sanitize_text_field( $_GET['se-date'] ) : null; // phpcs:ignore
 	return is_numeric( $event_date_id ) ? absint( $event_date_id ) : null;
 }
 
@@ -542,9 +542,12 @@ if ( ! function_exists( 'se_template_event_content' ) ) {
 
 		// If we have an event date and we treating each date as own event, we need to get the event date id.
 		if ( se_event_treat_each_date_as_own_event() && isset( $post->event_date_id ) ) {
-			$dates = array_filter( $dates, function( $date ) use ( $post ) {
-				return $date['id'] === $post->event_date_id;
-			} );
+			$dates = array_filter(
+				$dates,
+				function ( $date ) use ( $post ) {
+					return $date['id'] === $post->event_date_id;
+				}
+			);
 
 			$dates = array_values( $dates );
 		} else {

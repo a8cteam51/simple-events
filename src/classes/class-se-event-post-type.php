@@ -58,7 +58,7 @@ class SE_Event_Post_Type {
 		add_filter( 'get_the_archive_title', array( __CLASS__, 'the_archive_title' ) );
 		register_activation_hook( __FILE__, array( __CLASS__, 'flush_rewrite_rules' ) );
 		add_action( 'save_post', array( __CLASS__, 'delete_event_dates_if_no_event_info_block' ) );
-			add_filter( 'is_protected_meta', array( __CLASS__, 'is_protected_meta' ), 10, 3 );
+		add_filter( 'is_protected_meta', array( __CLASS__, 'is_protected_meta' ), 10, 3 );
 	}
 
 	/**
@@ -255,9 +255,9 @@ class SE_Event_Post_Type {
 			'post',
 			'se_event_dates',
 			array(
-				'single'       => true,
-				'type'         => 'array',
-				'default'      => array(),
+				'single'            => true,
+				'type'              => 'array',
+				'default'           => array(),
 				'sanitize_callback' => function ( $value ) {
 					if ( is_null( $value ) || ! is_array( $value ) ) {
 						return array();
@@ -592,19 +592,6 @@ class SE_Event_Post_Type {
 
 		// If a custom order override exists, use it. Otherwise, stick with the existing sort order.
 		$sort_order = ! empty( $order_override ) ? $order_override : $sort_order;
-// dump($query->get( 'sub-type' ), $query->get( 'post_type' ));
-
-	// dump( $query->is_main_query() &&  is_post_type_archive( self::$post_type ));
-// dump(	is_tax( self::$post_type . '-category' ) );
-			// dump out each of the following:
-			// dump(['is_nto main_query' => ! $query->is_main_query(),
-			// 'post type' => $query->get( 'post_type' ),
-			// 'is post type' => self::$post_type === $query->get( 'post_type' ),
-			// 'is_not countdown' => ! $query->get( 'se_countdown' ),
-			// 'is sub type not loop events' => $query->get( 'sub-type' ) !== SE_Block_Variations::QUERY_LOOP_EVENTS ]);
-			// // dump( ! $query->is_main_query() && self::$post_type === $query->get( 'post_type' ) && ! $query->get( 'se_countdown' ) && $query->get( 'sub-type' ) !== SE_Block_Variations::QUERY_LOOP_EVENTS );
-
-
 
 		if (
 			( $query->is_main_query() && ( is_post_type_archive( self::$post_type )
@@ -613,7 +600,7 @@ class SE_Event_Post_Type {
 		) {
 			// Handle taxonomy filtering by getting parent event IDs first
 			$parent_event_ids = null;
-			$tax_query = $query->get( 'tax_query' );
+			$tax_query        = $query->get( 'tax_query' );
 
 			// Check if we have taxonomy queries for event categories
 			if ( ! empty( $tax_query ) || is_tax( self::$post_type . '-category' ) ) {
@@ -632,7 +619,7 @@ class SE_Event_Post_Type {
 
 				// Handle category archive pages
 				if ( is_tax( self::$post_type . '-category' ) ) {
-					$term = get_queried_object();
+					$term                           = get_queried_object();
 					$parent_query_args['tax_query'] = array(
 						array(
 							'taxonomy' => self::$post_type . '-category',
@@ -642,7 +629,7 @@ class SE_Event_Post_Type {
 					);
 				}
 
-				$parent_events = new WP_Query( $parent_query_args );
+				$parent_events    = new WP_Query( $parent_query_args );
 				$parent_event_ids = $parent_events->posts;
 
 				// If no parent events match, set to empty array to return no results
@@ -683,7 +670,6 @@ class SE_Event_Post_Type {
 				);
 
 				$query->set( 'meta_query', $existing_meta_query );
-
 			}
 		}
 	}

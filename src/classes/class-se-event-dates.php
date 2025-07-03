@@ -32,8 +32,10 @@ class SE_Event_Dates {
 	 * Initialize the class.
 	 *
 	 * @since 1.0.0
+	 *
+	 * @return void
 	 */
-	public static function init() {
+	public static function init(): void {
 		$instance = new self();
 
 		add_action( 'rest_api_init', array( $instance, 'register_rest_routes' ) );
@@ -126,7 +128,7 @@ class SE_Event_Dates {
 		$data = array(
 			'event_id' => $event_id,
 			'dates'    => $dates,
-			'timezone' => get_post_meta( $event_id, 'se_event_timezone', true ) ?: wp_timezone_string(),
+			'timezone' => get_post_meta( $event_id, 'se_event_timezone', true ) ?: wp_timezone_string(), // phpcs:ignore
 		);
 
 		// Return the response.
@@ -160,13 +162,16 @@ class SE_Event_Dates {
 		}
 
 		// Get the existing dates.
-		$existing_date_ids = array_map( function( $date ) {
-			return $date['id'];
-		}, se_event_get_event_dates( $event_id ) );
+		$existing_date_ids = array_map(
+			function ( $date ) {
+				return $date['id'];
+			},
+			se_event_get_event_dates( $event_id )
+		);
 
 		// Iterate over the existing dates and delete any that are not in the new dates.
 		foreach ( $existing_date_ids as $existing_date_id ) {
-			if ( ! in_array( $existing_date_id, array_column( $dates, 'id' ) ) ) {
+			if ( ! in_array( $existing_date_id, array_column( $dates, 'id' ), true ) ) {
 				wp_delete_post( $existing_date_id, true );
 			}
 		}
@@ -230,20 +235,23 @@ class SE_Event_Dates {
 	/**
 	 * Update all legacy meta values.
 	 *
-	 * @param int $event_id The event ID.
-	 * @param array $dates The dates.
+	 * @param integer $event_id The event ID.
+	 * @param array   $dates    The dates.
 	 *
 	 * @return void
 	 */
 	public static function update_legacy_meta_values( $event_id, $dates ): void {
 		// Create the legacy date array.
-		$legacy_dates = array_map( function( $date ) {
-			return array(
-				'datetime_start' => $date['start_date'],
-				'datetime_end' => $date['end_date'],
-				'all_day' => $date['all_day'],
-			);
-		}, $dates );
+		$legacy_dates = array_map(
+			function ( $date ) {
+				return array(
+					'datetime_start' => $date['start_date'],
+					'datetime_end'   => $date['end_date'],
+					'all_day'        => $date['all_day'],
+				);
+			},
+			$dates
+		);
 
 		// Update the legacy meta values.
 		update_post_meta( $event_id, 'se_event_dates', $legacy_dates );
@@ -254,38 +262,38 @@ class SE_Event_Dates {
 	/**
 	 * Fiind event dates.
 	 *
-	 * @param string $start_date The start date as a timestamp.
-	 * @param string $end_date The end date as a timestamp.
-	 * @param bool $hide_from_calendar Whether the event is hidden from the calendar.
-	 * @param bool $hide_from_feed Whether the event is hidden from the feed.
+	 * @param string  $start_date         The start date as a timestamp.
+	 * @param string  $end_date           The end date as a timestamp.
+	 * @param boolean $hide_from_calendar Whether the event is hidden from the calendar.
+	 * @param boolean $hide_from_feed     Whether the event is hidden from the feed.
 	 *
 	 * @return array
 	 */
 	public static function find_event_dates( $start_date, $end_date, $hide_from_calendar, $hide_from_feed ): array {
 		// Create the timestamp for the start and end of the $start_date.
-		$start_date_time = se_create_date_time_from_timestamp( $start_date );
-		$start_date_range = [
+		$start_date_time  = se_create_date_time_from_timestamp( $start_date );
+		$start_date_range = array(
 			$start_date_time->setTime( 0, 0, 0 )->getTimestamp(),
 			$start_date_time->setTime( 23, 59, 59 )->getTimestamp(),
-		];
+		);
 
 		// Query the event dates.
 		$query = new WP_Query(
 			array(
-				'post_type' => SE_Event_Post_Type::$event_date_post_type,
-				'meta_query' => array(
+				'post_type'      => SE_Event_Post_Type::$event_date_post_type,
+				'meta_query'     => array(
 					'relation' => 'OR',
 					// Exact match for all conditions
 					array(
 						'relation' => 'AND',
 						array(
-							'key' => 'se_event_date_start',
-							'value' => $start_date,
+							'key'     => 'se_event_date_start',
+							'value'   => $start_date,
 							'compare' => '>=',
 						),
 						array(
-							'key' => 'se_event_date_end',
-							'value' => $end_date,
+							'key'     => 'se_event_date_end',
+							'value'   => $end_date,
 							'compare' => '<=',
 						),
 					),
@@ -293,40 +301,42 @@ class SE_Event_Dates {
 					array(
 						'relation' => 'AND',
 						array(
-							'key' => 'se_event_date_start',
-							'value' => $start_date_range,
+							'key'     => 'se_event_date_start',
+							'value'   => $start_date_range,
 							'compare' => 'BETWEEN',
 						),
 						array(
-							'key' => 'se_event_all_day',
-							'value' => '1',
+							'key'     => 'se_event_all_day',
+							'value'   => '1',
 							'compare' => '=',
 						),
 					),
 				),
 				'posts_per_page' => -1,
-				'orderby' => 'meta_value',
-				'meta_key' => 'se_event_date_start',
-				'order' => 'ASC',
-				'post_status' => 'publish',
+				'orderby'        => 'meta_value',
+				'meta_key'       => 'se_event_date_start',
+				'order'          => 'ASC',
+				'post_status'    => 'publish',
 			)
 		);
-
 
 		$mapped = self::map_events_dates_to_event_dates( $query->posts );
 
 		// Remove the event dates that are hidden from the calendar or feed.
-		return array_filter( $mapped, function( $event_date ) use ( $hide_from_calendar, $hide_from_feed ) {
-			return ! $event_date['event_hide_from_calendar'] && ! $event_date['event_hide_from_feed'];
-		} );
+		return array_filter(
+			$mapped,
+			function ( $event_date ) use ( $hide_from_calendar, $hide_from_feed ) {
+				return ! $event_date['event_hide_from_calendar'] && ! $event_date['event_hide_from_feed'];
+			}
+		);
 	}
 
 	/**
 	 * Get the events dates for a given date.
 	 *
-	 * @param string $date The date to get the events for.
-	 * @param bool $hide_from_calendar Whether the event is hidden from the calendar.
-	 * @param bool $hide_from_feed Whether the event is hidden from the feed.
+	 * @param string  $date               The date to get the events for.
+	 * @param boolean $hide_from_calendar Whether the event is hidden from the calendar.
+	 * @param boolean $hide_from_feed     Whether the event is hidden from the feed.
 	 *
 	 * @return array
 	 */
@@ -365,21 +375,21 @@ class SE_Event_Dates {
 			}
 
 			// Get the event date.
-			$start_date = get_post_meta( $event_date->ID, 'se_event_date_start', true );
-			$end_date = get_post_meta( $event_date->ID, 'se_event_date_end', true );
-			$all_day = get_post_meta( $event_date->ID, 'se_event_all_day', true );
+			$start_date         = get_post_meta( $event_date->ID, 'se_event_date_start', true );
+			$end_date           = get_post_meta( $event_date->ID, 'se_event_date_end', true );
+			$all_day            = get_post_meta( $event_date->ID, 'se_event_all_day', true );
 			$hide_from_calendar = get_post_meta( $event_date->ID, 'se_event_hide_from_calendar', true );
-			$hide_from_feed = get_post_meta( $event_date->ID, 'se_event_hide_from_feed', true );
+			$hide_from_feed     = get_post_meta( $event_date->ID, 'se_event_hide_from_feed', true );
 
 			// Add the event date to the compiled events.
 			$compiled_events[] = array(
-				'event_id' => absint( $event->ID ),
-				'event_date_id' => absint( $event_date->ID ),
-				'event_start_date' => esc_attr( $start_date ),
-				'event_end_date' => esc_attr( $end_date ),
-				'event_all_day' => boolval( $all_day ),
+				'event_id'                 => absint( $event->ID ),
+				'event_date_id'            => absint( $event_date->ID ),
+				'event_start_date'         => esc_attr( $start_date ),
+				'event_end_date'           => esc_attr( $end_date ),
+				'event_all_day'            => boolval( $all_day ),
 				'event_hide_from_calendar' => boolval( $hide_from_calendar ),
-				'event_hide_from_feed' => boolval( $hide_from_feed ),
+				'event_hide_from_feed'     => boolval( $hide_from_feed ),
 			);
 		}
 
@@ -390,7 +400,7 @@ class SE_Event_Dates {
 	/**
 	 * Delete all event dates for a given event.
 	 *
-	 * @param int $event_id The event ID.
+	 * @param integer $event_id The event ID.
 	 *
 	 * @return void
 	 */
@@ -407,7 +417,7 @@ class SE_Event_Dates {
 	/**
 	 * Delete a single event date.
 	 *
-	 * @param int $event_date_id The event date ID.
+	 * @param integer $event_date_id The event date ID.
 	 *
 	 * @return void
 	 */

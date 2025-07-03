@@ -124,7 +124,7 @@ class SE_Date_Display_Formatter {
 				'allow_grouping_dates_different_time' => false,
 			)
 		);
-		// dump($options);
+
 		$this->event_id                            = $event_id;
 		$this->treat_each_date_as_own_event        = isset( $options['treat_each_date_as_own_event'] ) && 'on' === $options['treat_each_date_as_own_event'];
 		$this->allow_grouping_dates_different_time = isset( $options['allow_grouping_dates_different_time'] ) && 'on' === $options['allow_grouping_dates_different_time'];
@@ -143,8 +143,10 @@ class SE_Date_Display_Formatter {
 	 * Set the date only.
 	 *
 	 * @param boolean $date_only The date only.
+	 *
+	 * @return void
 	 */
-	public function set_date_only( bool $date_only ) {
+	public function set_date_only( bool $date_only = true ) {
 		$this->date_only = $date_only;
 	}
 
@@ -152,8 +154,10 @@ class SE_Date_Display_Formatter {
 	 * Set the time only.
 	 *
 	 * @param boolean $time_only The time only.
+	 *
+	 * @return void
 	 */
-	public function set_time_only( bool $time_only ) {
+	public function set_time_only( bool $time_only = true ) {
 		$this->time_only = $time_only;
 	}
 
@@ -200,16 +204,16 @@ class SE_Date_Display_Formatter {
 
 		// Loop over each date.
 		foreach ( $event_dates as $date ) {
-			if ( $start === null || $date['start_date'] < $start ) {
+			if ( $start === null || $date['start_date'] < $start ) { // phpcs:ignore
 				$start = $date['start_date'];
 			}
 
-			if ( $end === null || $date['end_date'] > $end ) {
+			if ( $end === null || $date['end_date'] > $end ) { // phpcs:ignore
 				$end = $date['end_date'];
 			}
 
 			// If all day and start is after the latest end date, set the end date to the start date.
-			if ( $date['all_day'] && $date['start_date'] > $end ) {
+			if ( $date['all_day'] && $date['start_date'] > $end ) { // phpcs:ignore
 				$end = $date['start_date'];
 			}
 		}
@@ -288,8 +292,8 @@ class SE_Date_Display_Formatter {
 	 * Renders a date list.
 	 *
 	 * @param array<int, array{start_date: integer, end_date: integer, all_day:boolean}> $event_dates          Event dates.
-	 * @param boolean                                                                            $exclude_current_date Exclude the current date.
-	 * @param boolean                                                                            $exclude_past_dates   Exclude dates that are in the past.
+	 * @param boolean                                                                    $exclude_current_date Exclude the current date.
+	 * @param boolean                                                                    $exclude_past_dates   Exclude dates that are in the past.
 	 *
 	 * @return string
 	 */
@@ -314,9 +318,12 @@ class SE_Date_Display_Formatter {
 		);
 
 		// Sort by the start date.
-		usort( $event_dates, function ( $a, $b ) {
-			return $a['start_date'] - $b['start_date'];
-		} );
+		usort(
+			$event_dates,
+			function ( $a, $b ) {
+				return $a['start_date'] - $b['start_date'];
+			}
+		);
 
 		// Get the date count.
 		$dates_count = count( $event_dates );
@@ -378,7 +385,7 @@ class SE_Date_Display_Formatter {
 	 * Renders the list of date as single items  (not grouped view)
 	 *
 	 * @param array<int, array{start_date: integer, end_date: integer, all_day:boolean}> $event_dates     Event dates.
-	 * @param string                                                                             $existing_output Existing output.
+	 * @param string                                                                     $existing_output Existing output.
 	 *
 	 * @return string
 	 */
@@ -399,7 +406,7 @@ class SE_Date_Display_Formatter {
 	 * Renders the list of date as grouped items  (grouped view)
 	 *
 	 * @param array<int, array{start_date: integer, end_date: integer, all_day:boolean}> $event_dates     Event dates.
-	 * @param string                                                                             $existing_output Existing output.
+	 * @param string                                                                     $existing_output Existing output.
 	 *
 	 * @return string
 	 */
@@ -420,7 +427,6 @@ class SE_Date_Display_Formatter {
 			// Add the date to the group.
 			$groups[ $start . ' - ' . $end ][] = $date;
 		}
-		// adump($groups);
 
 		// Iterate over each group, and break them down to the starting month.
 		foreach ( $groups as $group ) {
@@ -482,7 +488,7 @@ class SE_Date_Display_Formatter {
 	/**
 	 * Join a string  with differing separators a the then
 	 *
-	 * example join_string(['a','b','c'], ',', ' and ') => 'a, b and c'
+	 * Example:  join_string(['a','b','c'], ',', ' and ') => 'a, b and c'
 	 *
 	 * @param string[] $items         The items to join.
 	 * @param string   $separator     The separator to use.
@@ -514,7 +520,7 @@ class SE_Date_Display_Formatter {
 	/**
 	 * Formats the dates for the event.
 	 *
-	 * @param array<int, array{start_date: integer, end_date: integer, all_day:boolean}> $event_dates      Event dates.
+	 * @param array<int, array{start_date: integer, end_date: integer, all_day:boolean}> $event_dates Event dates.
 	 *
 	 * @return string
 	 */
@@ -523,9 +529,12 @@ class SE_Date_Display_Formatter {
 		$event_dates = array_values( $event_dates );
 
 		// Sort all dates by start date.
-		usort( $event_dates, function ( $a, $b ) {
-			return $a['start_date'] - $b['start_date'];
-		} );
+		usort(
+			$event_dates,
+			function ( $a, $b ) {
+				return $a['start_date'] - $b['start_date'];
+			}
+		);
 
 		// Get the date count.
 		$dates_count = count( $event_dates );
@@ -556,7 +565,7 @@ class SE_Date_Display_Formatter {
 	 * @return DateTimeZone
 	 */
 	private function get_timezone_instance() {
-		return $this->event_timezone !== '' ? new DateTimeZone( $this->event_timezone ) : wp_timezone();
+		return '' !== $this->event_timezone ? new DateTimeZone( $this->event_timezone ) : wp_timezone();
 	}
 
 	/**
@@ -572,24 +581,22 @@ class SE_Date_Display_Formatter {
 	/**
 	 * Formats a date to the sites tiemzone and date format.
 	 *
-	 * @param integer     $date_timestamp The date timestamp.
-	 * @param string|null $timezone       The timezone to use.
+	 * @param integer $date_timestamp The date timestamp.
 	 *
 	 * @return string
 	 */
-	public function format_date( $date_timestamp, $timezone = null ) {
+	public function format_date( $date_timestamp ) {
 		return wp_date( get_option( 'date_format' ), $date_timestamp, $this->get_timezone_instance() );
 	}
 
 	/**
 	 * Formats a time to the sites tiemzone and time format.
 	 *
-	 * @param integer     $time_timestamp The time timestamp.
-	 * @param string|null $timezone       The timezone to use.
+	 * @param integer $time_timestamp The time timestamp.
 	 *
 	 * @return string
 	 */
-	public function format_time( $time_timestamp, $timezone = null ) {
+	public function format_time( $time_timestamp ) {
 		return wp_date( get_option( 'time_format' ), $time_timestamp, $this->get_timezone_instance() );
 	}
 

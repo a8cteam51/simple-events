@@ -11,8 +11,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 // If the post type is an event date, change post context to its parent.
 if ( get_post_type() === SE_Event_Post_Type::$event_date_post_type ) {
 	global $post;
-	$se_post_event_date = get_post( get_the_ID() );
-	$post = get_post( $se_post_event_date->post_parent ); // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
+	$se_post_event_date  = get_post( get_the_ID() );
+	$post                = get_post( $se_post_event_date->post_parent ); // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
 	$post->event_date_id = $se_post_event_date->ID;
 }
 ?>

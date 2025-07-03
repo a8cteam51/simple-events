@@ -469,7 +469,7 @@ class SE_Settings {
 	 *
 	 * @return void
 	 */
-	public static function migrate_events_cb( $args ) {
+	public static function migrate_events_cb( $args ) { // phpcs:ignore
 		$events = SE_Migrate_Events::get_events_to_migrate();
 		?>
 		<div id="migrate_events" style="scroll-margin-top: 20px;">
@@ -753,7 +753,6 @@ class SE_Settings {
 				SE_Event_Post_Type::$event_date_post_type
 			)
 		);
-
 
 		$deleted_events = 0;
 

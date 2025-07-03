@@ -52,7 +52,6 @@ class SE_Migrate_Events {
 				'methods'             => 'POST',
 				'callback'            => array( __CLASS__, 'migrate_events_rest' ),
 				'permission_callback' => function () {
-					return true;
 					return current_user_can( 'manage_options' );
 				},
 			)
@@ -72,19 +71,21 @@ class SE_Migrate_Events {
 		sort( $versions );
 
 		// Get all events.
-		return get_posts( array(
-			'post_type' => SE_Event_Post_Type::$post_type,
-			// only results that have a version lower that the max version.
-			'meta_query' => array(
-				array(
-					'key' => 'se_event_version',
-					'value' => max( $versions ),
-					// less than
-					'compare' => '<',
+		return get_posts(
+			array(
+				'post_type'      => SE_Event_Post_Type::$post_type,
+				// only results that have a version lower that the max version.
+				'meta_query'     => array(
+					array(
+						'key'     => 'se_event_version',
+						'value'   => max( $versions ),
+						// less than
+						'compare' => '<',
+					),
 				),
-			),
-			'posts_per_page' => -1,
-		) );
+				'posts_per_page' => -1,
+			)
+		);
 	}
 
 	/**
@@ -100,6 +101,7 @@ class SE_Migrate_Events {
 	 * Migrate events via REST.
 	 *
 	 * @param WP_REST_Request $request The request object.
+	 *
 	 * @return WP_REST_Response
 	 */
 	public static function migrate_events_rest( $request ) {
@@ -109,7 +111,7 @@ class SE_Migrate_Events {
 		if ( empty( $event_ids ) ) {
 			return new WP_REST_Response(
 				array(
-					'message' => __( 'No events provided for migration.', 'simple-events' ),
+					'message' => esc_html__( 'No events provided for migration.', 'simple-events' ),
 				),
 				400
 			);
@@ -122,7 +124,7 @@ class SE_Migrate_Events {
 		if ( json_last_error() !== JSON_ERROR_NONE ) {
 			return new WP_REST_Response(
 				array(
-					'message' => __( 'Invalid event IDs provided.' . json_last_error_msg(), 'simple-events' ),
+					'message' => esc_html__( 'Invalid event IDs provided : ', 'simple-events' ) . esc_html( json_last_error_msg() ),
 				),
 				400
 			);
@@ -137,8 +139,8 @@ class SE_Migrate_Events {
 		} catch ( \Throwable $th ) {
 			return new WP_REST_Response(
 				array(
-					'message' => __( 'An error occurred while migrating events.', 'simple-events' ),
-					'error'   => $th->getMessage(),
+					'message' => esc_html__( 'An error occurred while migrating events.', 'simple-events' ),
+					'error'   => esc_html( $th->getMessage() ),
 				),
 				500
 			);
@@ -147,7 +149,7 @@ class SE_Migrate_Events {
 		// Return the response.
 		return new WP_REST_Response(
 			array(
-				'message' => __( 'Events migrated successfully.', 'simple-events' ),
+				'message' => esc_html__( 'Events migrated successfully.', 'simple-events' ),
 				'data'    => $response,
 			),
 			200
@@ -173,11 +175,11 @@ class SE_Migrate_Events {
 			}
 
 			// Migrate the event.
-			$success              =  self::migrate_event( $event_id );
+			$success = self::migrate_event( $event_id );
 
 			$results[ $event_id ] = array(
 				'success' => $success,
-				'version' => get_post_meta( $event_id, 'se_event_version', true ) ?: '1.0.0',
+				'version' => get_post_meta( $event_id, 'se_event_version', true ) ?: '1.0.0', //phpcs:ignore
 			);
 		}
 
@@ -201,7 +203,7 @@ class SE_Migrate_Events {
 
 		try {
 			// Get the version of the event.
-			$migration_methods = self::get_migration_methods( get_post_meta( $event_id, 'se_event_version', true ) ?: '1.0.0' );
+			$migration_methods = self::get_migration_methods( get_post_meta( $event_id, 'se_event_version', true ) ?: '1.0.0' ); // phpcs:ignore
 			foreach ( $migration_methods as $version => $methods ) {
 				// Iterate over the methods.
 				foreach ( $methods as $method ) {
@@ -218,7 +220,6 @@ class SE_Migrate_Events {
 				update_post_meta( $event_id, 'se_event_version', $version );
 			}
 		} catch ( \Throwable $th ) {
-			adump( $th->getMessage() );
 			return false; // If any error occurs, return false.
 		}
 		return true; // If everything goes well, return true.
@@ -256,6 +257,10 @@ class SE_Migrate_Events {
 	/**
 	 * Migrate from version 1.0.0 to 2.0.0.
 	 *
+	 * This method migrates the event dates from the old format to the new format.
+	 *
+	 * @param integer $event_id The event ID to migrate.
+	 *
 	 * @return void
 	 */
 	public static function migrate_1_0_0_to_2_0_0( int $event_id ): void {
@@ -274,9 +279,9 @@ class SE_Migrate_Events {
 			se_event_create_event_date(
 				$event_id,
 				array(
-					'all_day'        => $all_day,
-					'start_date'     => $start,
-					'end_date'       => $end,
+					'all_day'    => $all_day,
+					'start_date' => $start,
+					'end_date'   => $end,
 				)
 			);
 		}

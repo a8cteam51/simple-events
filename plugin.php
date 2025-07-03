@@ -87,4 +87,3 @@ function simple_events_activate() {
 	}
 }
 register_activation_hook( __FILE__, 'simple_events_activate' );
-

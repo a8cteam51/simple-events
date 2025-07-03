@@ -266,9 +266,9 @@ class SE_Calendar {
 					),
 				),
 			),
-			'orderby' => 'meta_value',
-			'order'   => 'DESC',
-			'limit'   => 1,
+			'orderby'    => 'meta_value',
+			'order'      => 'DESC',
+			'limit'      => 1,
 		);
 
 		$query = new WP_Query( $args );
@@ -294,8 +294,11 @@ class SE_Calendar {
 	public function get_next_month_with_events( $current_date ) {
 
 		/**
+		 * Compile a shared set of query args.
+		 *
 		 * @var string $meta_key The meta key to use for the query.
 		 * @var DateTime $current_date The current date.
+		 *
 		 * @return array The query arguments.
 		 */
 		$query_args = function ( string $meta_key ) use ( $current_date ) {
@@ -377,13 +380,13 @@ class SE_Calendar {
 					continue;
 				}
 
-				$event['ID']                = $parent_post->ID;
-				$event['post_title']        = $parent_post->post_title;
-				$event['post_content']      = $parent_post->post_content;
-				$event['post_excerpt']      = $parent_post->post_excerpt;
-				$event['post_date']         = $parent_post->post_date;
-				$event['post_date_gmt']     = $parent_post->post_date_gmt;
-				$event['post_modified']     = $parent_post->post_modified;
+				$event['ID']            = $parent_post->ID;
+				$event['post_title']    = $parent_post->post_title;
+				$event['post_content']  = $parent_post->post_content;
+				$event['post_excerpt']  = $parent_post->post_excerpt;
+				$event['post_date']     = $parent_post->post_date;
+				$event['post_date_gmt'] = $parent_post->post_date_gmt;
+				$event['post_modified'] = $parent_post->post_modified;
 				// Add the meta.
 				$event['event_start_date']   = se_create_date_time_from_timestamp( $event['event_start_date'] );
 				$event['event_end_date']     = se_create_date_time_from_timestamp( $event['event_end_date'] );

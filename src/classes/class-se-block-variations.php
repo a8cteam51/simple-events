@@ -135,15 +135,15 @@ class SE_Block_Variations {
 				$timezone = $timezone ? $timezone : get_option( 'timezone_string' );
 
 				// Get the date im this format 2025-07-01 13:14:09
-				$start_date = wp_date( 'Y-m-d H:i:s', $start_date_ts, new \DateTimeZone( $timezone ) );
+				$start_date     = wp_date( 'Y-m-d H:i:s', $start_date_ts, new \DateTimeZone( $timezone ) );
 				$start_date_gmt = wp_date( 'Y-m-d H:i:s', $start_date_ts, new \DateTimeZone( 'UTC' ) );
 
 				// update the parent posts post date
-				$parent->post_date = $start_date;
-				$parent->post_date_gmt = $start_date_gmt;
-				$parent->post_modified = $start_date;
+				$parent->post_date         = $start_date;
+				$parent->post_date_gmt     = $start_date_gmt;
+				$parent->post_modified     = $start_date;
 				$parent->post_modified_gmt = $start_date_gmt;
-				$parent->event_date_id = $post->ID;
+				$parent->event_date_id     = $post->ID;
 
 				return $parent;
 			},
@@ -213,7 +213,7 @@ class SE_Block_Variations {
 
 		// add the arg to denote unique parents.
 		$args['unique_parents'] = true;
-		$args['feed_order'] = $feed_order; // Store feed order for use in the WHERE filter
+		$args['feed_order']     = $feed_order; // Store feed order for use in the WHERE filter
 
 		// Ensure we only get the correct event date for each parent.
 		add_filter( 'posts_where', array( $this, 'filter_unique_parents_where' ), 10, 2 );
@@ -249,8 +249,8 @@ class SE_Block_Variations {
 
 		global $wpdb;
 
-		$feed_order = $query->query_vars['feed_order'];
-		$meta_key = 'desc' === $feed_order ? 'se_event_date_end' : 'se_event_date_start';
+		$feed_order      = $query->query_vars['feed_order'];
+		$meta_key        = 'desc' === $feed_order ? 'se_event_date_end' : 'se_event_date_start';
 		$order_direction = 'desc' === $feed_order ? 'DESC' : 'ASC';
 
 		// Subquery to get the correct post ID for each parent based on sort order
@@ -262,7 +262,7 @@ class SE_Block_Variations {
 				WHERE p1.post_type = '" . SE_Event_Post_Type::$event_date_post_type . "'
 				AND p1.post_status = 'publish'
 				AND pm1.meta_value = (
-					SELECT " . ('desc' === $feed_order ? 'MAX' : 'MIN') . "(pm2.meta_value)
+					SELECT " . ( 'desc' === $feed_order ? 'MAX' : 'MIN' ) . "(pm2.meta_value)
 					FROM {$wpdb->posts} p2
 					INNER JOIN {$wpdb->postmeta} pm2 ON p2.ID = pm2.post_id AND pm2.meta_key = '{$meta_key}'
 					WHERE p2.post_parent = p1.post_parent

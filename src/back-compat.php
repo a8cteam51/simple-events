@@ -29,6 +29,8 @@ add_filter( 'admin_body_class', 'se_pre_gutenberg_14_3_0_compat' );
 
 /**
  * Adds an admin notice to say we have events that need to be migrated.
+ *
+ * @return void
  */
 function se_admin_notice_events_to_migrate() {
 	if ( ! current_user_can( 'manage_options' ) ) {
@@ -49,8 +51,8 @@ function se_admin_notice_events_to_migrate() {
 			</p>
 			<p style="margin: 20px 0 0 0;">
 				<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=' . SE_Event_Post_Type::$post_type . '&page=settings#migrate_events' ) ); ?>"
-				   class="button button-primary button-large"
-				   style="background: #dc3232; border-color: #dc3232; color: #fff; font-size: 16px; padding: 10px 20px; text-decoration: none;">
+					class="button button-primary button-large"
+					style="background: #dc3232; border-color: #dc3232; color: #fff; font-size: 16px; padding: 10px 20px; text-decoration: none;">
 					<?php esc_html_e( 'Go to Settings & Migrate Events', 'simple-events' ); ?>
 				</a>
 			</p>
