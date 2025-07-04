@@ -5,8 +5,6 @@
  */
 
 jQuery( document ).ready( function( $ ) {
-	console.log( 'ready' );
-
 	// Handle Migrate Events.
 	$( '#se_migrate_events_btn' ).on( 'click', function() {
 		startMigrationProcess();
@@ -110,7 +108,6 @@ jQuery( document ).ready( function( $ ) {
 				events: JSON.stringify( eventIds.get() )
 			},
 			success: function( response ) {
-				console.log( 'Migration response:', response );
 				// Update the status of processed events
 				if ( response.data ) {
 					Object.keys( response.data ).forEach( function( eventId ) {

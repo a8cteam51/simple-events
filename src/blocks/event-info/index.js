@@ -133,6 +133,8 @@ export const saveEventDates = (dates, dateManagerInstance = null) => {
 			dateManagerInstance.refreshWithNewDates(response.dates);
 		}
 
+
+
 		return response;
 	}).catch((error) => {
 		console.error('Error saving event dates:', error);
@@ -392,6 +394,13 @@ registerBlockType('simple-events/event-info', {
 		 */
 		const onDone = () => {
 			setAttributes({ editMode: false });
+
+			// Update the date attriutes from dateManagerState
+			if (dateManagerState?.getCurrentDates()?.dates) {
+				setAttributes({
+					eventDates: dateManagerState.getCurrentDates().dates,
+				});
+			}
 		};
 
 		/**

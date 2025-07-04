@@ -373,7 +373,7 @@ class SE_Calendar {
 		// If we new dates.
 		if ( ! empty( $new_all ) ) {
 			foreach ( $new_all as $index => $event ) {
-				// dump($event);
+
 				// Get the parent post.
 				$parent_post = get_post( $event['event_id'] );
 				if ( ! $parent_post ) {

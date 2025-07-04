@@ -298,7 +298,6 @@ class SE_Date_Display_Formatter {
 	 * @return string
 	 */
 	public function render_date_list( array $event_dates, bool $exclude_current_date = false, bool $exclude_past_dates = false ) {
-
 		// Filter the event dates.
 		$event_dates = array_filter(
 			$event_dates,
@@ -336,7 +335,6 @@ class SE_Date_Display_Formatter {
 		// Start building the output.
 		$wrapper_class = array( 'se-event-date-list', $this->group_dates ? 'se-event-date-list__grouped' : '', $this->event_date_id ? 'se-event-date-list__active' : '' );
 		$output        = sprintf( '<ul id="se-event-date-list" class="%s">', implode( ' ', $wrapper_class ) );
-
 		// Base if we are grouped, or not.
 		if ( $this->can_group_dates( $event_dates ) ) {
 			$output .= $this->render_date_list_grouped( $event_dates );
@@ -415,6 +413,11 @@ class SE_Date_Display_Formatter {
 
 		// iterate over the dates and group them by the start and end times.
 		foreach ( $event_dates as $date ) {
+			// If the dates all_day is a string, convert 'true' to true.
+			if ( is_string( $date['all_day'] ) ) {
+				$date['all_day'] = 'true' === $date['all_day'] ? true : false;
+			}
+
 			// If this event is all day.
 			if ( true === (bool) $date['all_day'] ) {
 				$groups['all_day'][] = $date;

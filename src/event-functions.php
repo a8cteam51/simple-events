@@ -296,7 +296,6 @@ function se_event_get_formatted_dates( $event_id, $event_date_id = null, $date_o
 		$date_display_formatter->set_time_only( true );
 	}
 
-
 	return $date_display_formatter->format_dates( $event_dates );
 }
 
@@ -544,7 +543,7 @@ function se_event_get_calendar_link( $event_id, $event_date_id = null ) {
 
 	return ( $external_link && $open_external_link )
 		? $external_link
-		: get_the_permalink( $event_id ) . ( $event_date_id ? '?se-date' . $event_date_id : '' );
+		: get_the_permalink( $event_id ) . ( $event_date_id ? '?se-date=' . $event_date_id : '' );
 }
 
 /**

@@ -218,8 +218,6 @@ class SE_Event_Dates {
 			);
 		}
 
-
-
 		// Update all legacy meta values.
 		self::update_legacy_meta_values( $event_id, $dates );
 
