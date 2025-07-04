@@ -124,7 +124,6 @@ class SE_Date_Display_Formatter {
 				'allow_grouping_dates_different_time' => false,
 			)
 		);
-
 		$this->event_id                            = $event_id;
 		$this->treat_each_date_as_own_event        = isset( $options['treat_each_date_as_own_event'] ) && 'on' === $options['treat_each_date_as_own_event'];
 		$this->allow_grouping_dates_different_time = isset( $options['allow_grouping_dates_different_time'] ) && 'on' === $options['allow_grouping_dates_different_time'];
@@ -430,11 +429,10 @@ class SE_Date_Display_Formatter {
 			// Add the date to the group.
 			$groups[ $start . ' - ' . $end ][] = $date;
 		}
-
 		// Iterate over each group, and break them down to the starting month.
 		foreach ( $groups as $group ) {
 			// Create the time label.
-			$time_label = $group[0]['all_day'] ? 'All Day' : null;
+			$time_label = $group[0]['all_day'] ? SE_Settings::get_all_day_message() : null;
 			if ( ! $time_label ) {
 				$time_start = ( $this->hide_start_time ) ? '' : $this->format_time( $group[0]['start_date'] );
 				$time_end   = ( $this->hide_end_time ) ? '' : $this->format_time( $group[0]['end_date'] );
@@ -630,9 +628,12 @@ class SE_Date_Display_Formatter {
 
 		// Handle different cases based on whether it's same day, all day, etc.
 		if ( $is_all_day ) {
+
 			// For all day events, just show the date (or date range if different days).
 			if ( ! $same_day ) {
-				$output .= ' &ndash; ' . $end_date;
+				$output .= ' &ndash; ' . $end_date . ' ' . SE_Settings::get_all_day_message();
+			} else{
+				$output .= ' ' . SE_Settings::get_all_day_message();
 			}
 		} elseif ( $same_day ) {
 			// Same day event with times.

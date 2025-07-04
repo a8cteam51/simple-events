@@ -92,6 +92,25 @@ class SE_Settings {
 			'se_section_archives',
 			array(
 				'label_for' => 'past_event_notice',
+				'required'  => true,
+			)
+		);
+
+		// Add a settings to define the all day message
+		add_settings_field(
+			'all_day_message',
+			sprintf(
+				// translators: %s is a HTML break tag.
+				__( 'All Day Message%s', 'simple-events' ),
+				wp_kses_post( '<br><small><em>This message will be displayed for all day events.</em></small>' ),
+			),
+			array( __CLASS__, 'text_cb' ),
+			'simple_events',
+			'se_section_archives',
+			array(
+				'label_for' => 'all_day_message',
+				'value'     => '',
+				'required'  => false,
 			)
 		);
 
@@ -520,14 +539,21 @@ class SE_Settings {
 	 */
 	public static function text_cb( $args ) {
 		$options = get_option( 'se_options' );
-		$value   = isset( $options[ $args['label_for'] ] ) ? $options[ $args['label_for'] ] : esc_html__( 'Event has passed', 'simple-events' );
+		if ( isset( $options[ $args['label_for'] ] ) ) {
+			$value = $options[ $args['label_for'] ];
+		} elseif ( isset( $args['value'] ) ) {
+			$value = $args['value'];
+		} else {
+			$value = '';
+		}
+
 		?>
 		<input
 			type="text"
 			id="<?php echo esc_attr( $args['label_for'] ); ?>"
 			name="se_options[<?php echo esc_attr( $args['label_for'] ); ?>]"
 			value="<?php echo esc_attr( $value ); ?>"
-			required
+			<?php echo isset( $args['required'] ) && $args['required'] ? 'required' : ''; ?>
 		>
 		<?php
 	}
@@ -766,6 +792,20 @@ class SE_Settings {
 
 		// translators: %d is the number of orphaned events deleted.
 		wp_send_json_success( sprintf( __( '%d orphaned events deleted successfully', 'simple-events' ), $deleted_events ) );
+	}
+
+	/**
+	 * Gets the all day message.
+	 *
+	 * @return string
+	 */
+	public static function get_all_day_message() {
+		$options = get_option( 'se_options' );
+		if ( isset( $options['all_day_message'] ) && ! empty( $options['all_day_message'] ) ) {
+			return esc_html( $options['all_day_message'] );
+		}
+
+		return '';
 	}
 }
 

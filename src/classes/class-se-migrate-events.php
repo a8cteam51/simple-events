@@ -76,11 +76,22 @@ class SE_Migrate_Events {
 				'post_type'      => SE_Event_Post_Type::$post_type,
 				// only results that have a version lower that the max version.
 				'meta_query'     => array(
+					'relation' => 'OR',
 					array(
 						'key'     => 'se_event_version',
 						'value'   => max( $versions ),
-						// less than
 						'compare' => '<',
+					),
+					// or does not exist.
+					array(
+						'key'     => 'se_event_version',
+						'compare' => 'NOT EXISTS',
+					),
+					// or is empty.
+					array(
+						'key'     => 'se_event_version',
+						'value'   => '',
+						'compare' => '=',
 					),
 				),
 				'posts_per_page' => -1,
