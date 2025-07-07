@@ -3,6 +3,8 @@
  * Handles the functionality to update event dates in the database.
  */
 
+use function Crontrol\Event\get;
+
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -30,8 +32,15 @@ class SE_Migrate_Events {
 	 * @return void
 	 */
 	public static function init() {
+
 		add_action( 'rest_api_init', array( __CLASS__, 'register_rest_route' ) );
 		add_action( 'se_migrate_events', array( __CLASS__, 'migrate_events' ) );
+	}
+
+	/**
+	 * Fires after WordPress has finished loading but before any headers are sent.
+	 */
+	public function action_init(): void {
 	}
 
 
@@ -66,10 +75,48 @@ class SE_Migrate_Events {
 	public static function get_events_to_migrate() {
 
 		$versions = array_keys( self::VERSION_UPGRADES );
+		//      $all      = get_posts(
+		//          array(
+		//              'post_type'      => SE_Event_Post_Type::$post_type,
+		//              'posts_per_page' => -1,
 
-		// Sort the versions by order (1.2.3 > 1.2.2 > 1.2.1)
-		sort( $versions );
+		//          )
+		//      );
 
+		//      var_dump( $versions, array_map(function($e){
+		//          return get_post_meta( $e->ID, 'se_event_version', true );
+		//      }, $all) );
+		//      // Sort the versions by order (1.2.3 > 1.2.2 > 1.2.1)
+		//      sort( $versions );
+
+		// var_dump(get_posts(
+		//          array(
+		//              'post_type'      => SE_Event_Post_Type::$post_type,
+		//              // only results that have a version lower that the max version.
+		//              'meta_query'     => array(
+		//                  'relation' => 'OR',
+		//                  array(
+		//                      'key'     => 'se_event_version',
+		//                      'value'   => max( $versions ),
+		//                      // less than
+		//                      'compare' => '<',
+		//                  ),
+		//                  // or does not exist.
+		//                  array(
+		//                      'key'     => 'se_event_version',
+		//                      'compare' => 'NOT EXISTS',
+		//                  ),
+		//                  // or is empty.
+		//                  array(
+		//                      'key'     => 'se_event_version',
+		//                      'value'   => '',
+		//                      'compare' => '=',
+		//                  ),
+		//              ),
+		//              'posts_per_page' => -1,
+		//          )
+		//      ));
+		//      die();
 		// Get all events.
 		return get_posts(
 			array(
@@ -188,9 +235,11 @@ class SE_Migrate_Events {
 			// Migrate the event.
 			$success = self::migrate_event( $event_id );
 
+			$new_version = get_post_meta( $event_id, 'se_event_version', true ); //phpcs:ignore
+
 			$results[ $event_id ] = array(
 				'success' => $success,
-				'version' => get_post_meta( $event_id, 'se_event_version', true ) ?: '1.0.0', //phpcs:ignore
+				'version' => ! $new_version || '' === $new_version ? '1.0.0' : $new_version, // Default to 1.0.0 if no version is set.
 			);
 		}
 
