@@ -117,7 +117,7 @@ class SE_Date_Display_Formatter {
 	 * @param integer $event_id The event id.
 		*/
 	public function __construct( int $event_id ) {
-		$options = get_option(
+		$options                                   = get_option(
 			'se_options',
 			array(
 				'treat_each_date_as_own_event'        => false,
@@ -131,7 +131,7 @@ class SE_Date_Display_Formatter {
 		$this->is_single_view                      = is_single();
 		$this->event_timezone                      = get_post_meta( $event_id, 'se_event_timezone', true );
 		$this->event_date_id                       = se_template_get_event_date_id();
-		$this->display_timezone                    = filter_var( get_post_meta( $event_id, 'se_event_timezone', true ), FILTER_VALIDATE_BOOLEAN );
+		$this->display_timezone                    = filter_var( get_post_meta( $event_id, 'se_event_display_timezone', true ), FILTER_VALIDATE_BOOLEAN );
 		$this->hide_end_time                       = filter_var( get_post_meta( $event_id, 'se_event_hide_end_time', true ), FILTER_VALIDATE_BOOLEAN );
 		$this->hide_start_time                     = filter_var( get_post_meta( $event_id, 'se_event_hide_start_time', true ), FILTER_VALIDATE_BOOLEAN );
 		$this->show_add_to_calendar                = filter_var( get_post_meta( $event_id, 'se_event_add_calendar_links', true ), FILTER_VALIDATE_BOOLEAN );
@@ -165,10 +165,12 @@ class SE_Date_Display_Formatter {
 	 *
 	 * @param string $timezone The timezone.
 	 *
-	 * @return string
+	 * @return void
 	 */
-	public function modify_timezone( $timezone ) {
-		return $timezone;
+	public function modify_timezone( $timezone ): void {
+		if ( ! empty( $timezone ) ) {
+			$this->event_timezone = $timezone;
+		}
 	}
 
 	/**
@@ -632,7 +634,7 @@ class SE_Date_Display_Formatter {
 			// For all day events, just show the date (or date range if different days).
 			if ( ! $same_day ) {
 				$output .= ' &ndash; ' . $end_date . ' ' . SE_Settings::get_all_day_message();
-			} else{
+			} else {
 				$output .= ' ' . SE_Settings::get_all_day_message();
 			}
 		} elseif ( $same_day ) {

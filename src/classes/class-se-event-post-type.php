@@ -482,7 +482,7 @@ class SE_Event_Post_Type {
 		// is all day (bool)
 		register_meta(
 			'post',
-			'se_event_date_all_day',
+			'se_event_all_day',
 			array(
 				'show_in_rest'   => true,
 				'single'         => true,
@@ -494,7 +494,7 @@ class SE_Event_Post_Type {
 		// hide from calendar (bool)
 		register_meta(
 			'post',
-			'se_event_date_hide_from_calendar',
+			'se_event_hide_from_calendar',
 			array(
 				'show_in_rest'   => true,
 				'single'         => true,
@@ -507,7 +507,7 @@ class SE_Event_Post_Type {
 		// hide from feed (bool)
 		register_meta(
 			'post',
-			'se_event_date_hide_from_feed',
+			'se_event_hide_from_feed',
 			array(
 				'show_in_rest'   => true,
 				'single'         => true,

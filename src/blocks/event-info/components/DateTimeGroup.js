@@ -139,10 +139,7 @@ const DateTimeGroupNew = ({
 		setCurrentEventDateTime(newEventDateTime);
 
 		// Close the appropriate dropdown
-			onClose();
-
-		if (isStartChange) {
-		}
+		onClose();
 	};
 
 	/**

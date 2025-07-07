@@ -251,7 +251,6 @@ class SE_Block_Variations {
 
 		$feed_order      = $query->query_vars['feed_order'];
 		$meta_key        = 'desc' === $feed_order ? 'se_event_date_end' : 'se_event_date_start';
-		$order_direction = 'desc' === $feed_order ? 'DESC' : 'ASC';
 
 		// Subquery to get the correct post ID for each parent based on sort order
 		$subquery = "

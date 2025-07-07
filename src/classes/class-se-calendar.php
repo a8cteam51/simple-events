@@ -304,7 +304,7 @@ class SE_Calendar {
 		$query_args = function ( string $meta_key ) use ( $current_date ) {
 			$next_date_time = clone $current_date;
 			$next_date_time->modify( 'last day of this month' );
-			$next_date_time->settime( 23, 23, 59 );
+			$next_date_time->settime( 23, 29, 59 );
 
 			return array(
 				'post_type'  => SE_Event_Post_Type::$event_date_post_type,
@@ -372,7 +372,7 @@ class SE_Calendar {
 		$new_all = SE_Event_Dates::get_event_dates_for_date( $date->format( 'Y-m-d' ), true, false );
 		// If we new dates.
 		if ( ! empty( $new_all ) ) {
-			foreach ( $new_all as $index => $event ) {
+			foreach ( $new_all as $event ) {
 
 				// Get the parent post.
 				$parent_post = get_post( $event['event_id'] );

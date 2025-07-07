@@ -406,11 +406,16 @@ class SE_Event_Dates {
 	 */
 	public static function delete_all_event_dates( $event_id ): void {
 		// Get all the event dates.
-		$event_dates = se_event_get_event_dates( $event_id );
+		try {
+			$event_dates = se_event_get_event_dates( $event_id );
+		} catch ( \Exception $e ) {
+			// If we can't get the dates, there's nothing to delete
+			return;
+		}
 
 		// Iterate over the event dates and delete them.
 		foreach ( $event_dates as $event_date ) {
-			wp_delete_post( $event_date->ID, true );
+			wp_delete_post( $event_date['id'], true );
 		}
 	}
 

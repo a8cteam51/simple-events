@@ -535,7 +535,7 @@ function se_event_get_calendar_link( $event_id, $event_date_id = null ) {
 	// Either add ?se-date=7424 or append &se-date=7424 if permalink has ?
 	if ( $event_date_id ) {
 		$permalink .= sprintf(
-			'%sdate=%s',
+			'%sse-date=%s',
 			( strpos( $permalink, '?' ) !== false ) ? '&' : '?',
 			esc_attr( $event_date_id )
 		);
@@ -675,6 +675,11 @@ function se_event_create_event_date( $event_id, $event_dates ) {
 		return null;
 	}
 
+	// Validate parent event exists
+	if ( ! get_post( $event_id ) ) {
+		return null;
+	}
+
 	// Create the event date post.
 	$event_date_post = array(
 		'post_title'   => sprintf(
@@ -782,7 +787,6 @@ function se_create_date_time_from_timestamp( $timestamp, $timezone = null ): Dat
 
 	try {
 		$date_time_object = new DateTime( 'now', new DateTimeZone( $timezone ) );
-		$date_time_object->setTimestamp( $timestamp );
 	} catch ( Exception $e ) {
 		$date_time_object = new DateTime();
 		// todo handle exception
@@ -798,6 +802,7 @@ function se_create_date_time_from_timestamp( $timestamp, $timezone = null ): Dat
  */
 function se_event_treat_each_date_as_own_event(): bool {
 	$settings = get_option( 'se_options' );
-	return array_key_exists( 'treat_each_date_as_own_event', $settings )
-	&& 'on' === $settings['treat_each_date_as_own_event'];
+	return is_array( $settings )
+		&& array_key_exists( 'treat_each_date_as_own_event', $settings )
+		&& 'on' === $settings['treat_each_date_as_own_event'];
 }
