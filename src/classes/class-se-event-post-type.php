@@ -459,31 +459,6 @@ class SE_Event_Post_Type {
 			)
 		);
 
-		// Register event date meta.
-		// start time (timestamp)
-		register_meta(
-			'post',
-			'se_event_date_start_timestamp',
-			array(
-				'show_in_rest'   => true,
-				'single'         => true,
-				'type'           => 'integer',
-				'object_subtype' => self::$event_date_post_type,
-			)
-		);
-
-		// end time (timestamp)
-		register_meta(
-			'post',
-			'se_event_date_end_timestamp',
-			array(
-				'show_in_rest'   => true,
-				'single'         => true,
-				'type'           => 'integer',
-				'object_subtype' => self::$event_date_post_type,
-			)
-		);
-
 		// is all day (bool)
 		register_meta(
 			'post',
