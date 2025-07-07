@@ -1,7 +1,6 @@
 {
     "name": "a8cteam51/simple-events",
     "type": "wordpress-plugin",
-    "version": "2.0.0",
     "description": "A simple Gutenberg-first event management plugin that integrates with WooCommerce Box Office.",
     "homepage": "https://github.com/a8cteam51/simple-events",
     "license": "GPL-2.0-or-later",
