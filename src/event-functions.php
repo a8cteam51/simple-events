@@ -632,15 +632,13 @@ function se_event_update_event_query_dates( $event_id ) {
 	// If we have no start date, but we have dates, set to the earliest.
 	if ( null === $start_date && ! empty( $event_dates ) ) {
 		$all_start_dates = wp_list_pluck( $event_dates, 'datetime_start' );
-		rsort( $all_start_dates );
-		$start_date = $all_start_dates[0];
+		$start_date      = max( $all_start_dates );
 	}
 	// If we have no end date, but we have dates, set to the latest.
 	if ( null === $end_date && ! empty( $event_dates ) ) {
 		// Get the latest end date.
 		$all_end_dates = wp_list_pluck( $event_dates, 'datetime_end' );
-		rsort( $all_end_dates );
-		$end_date = $all_end_dates[0];
+		$end_date      = max( $all_end_dates ); // latest end
 	}
 
 	// If we have a start date, set it.

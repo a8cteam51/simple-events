@@ -224,6 +224,26 @@ class SE_Event_Post_Type {
 	}
 
 	/**
+	 * Defines protected meta keys for the event post type.
+	 *
+	 * This method registers meta keys that are used to store event-related data.
+	 *
+	 * @param boolean $is_protected Whether the meta keys should be protected.
+	 * @param string  $meta_key     The meta key to register.
+	 * @param string  $meta_type    The type of the meta key.
+	 *
+	 * @return boolean
+	 */
+	public static function is_protected_meta( bool $is_protected, string $meta_key, string $meta_type = 'string' ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
+		$protected_keys = array( 'se_event_date_end', 'se_event_date_start' );
+
+		if ( in_array( $meta_key, $protected_keys, true ) ) {
+			return true;
+		}
+		return $is_protected;
+	}
+
+	/**
 	 * Register meta keys.
 	 *
 	 * @return void
@@ -459,31 +479,6 @@ class SE_Event_Post_Type {
 			)
 		);
 
-		// Register event date meta.
-		// start time (timestamp)
-		register_meta(
-			'post',
-			'se_event_date_start_timestamp',
-			array(
-				'show_in_rest'   => true,
-				'single'         => true,
-				'type'           => 'integer',
-				'object_subtype' => self::$event_date_post_type,
-			)
-		);
-
-		// end time (timestamp)
-		register_meta(
-			'post',
-			'se_event_date_end_timestamp',
-			array(
-				'show_in_rest'   => true,
-				'single'         => true,
-				'type'           => 'integer',
-				'object_subtype' => self::$event_date_post_type,
-			)
-		);
-
 		// is all day (bool)
 		register_meta(
 			'post',
@@ -521,26 +516,6 @@ class SE_Event_Post_Type {
 				'default'        => false,
 			)
 		);
-	}
-
-	/**
-	 * Defines protected meta keys for the event post type.
-	 *
-	 * This method registers meta keys that are used to store event-related data.
-	 *
-	 * @param boolean $is_protected Whether the meta keys should be protected.
-	 * @param string  $meta_key     The meta key to register.
-	 * @param string  $meta_type    The type of the meta key.
-	 *
-	 * @return boolean
-	 */
-	public static function is_protected_meta( bool $is_protected, string $meta_key, string $meta_type = 'string' ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
-		$protected_keys = array( 'se_event_date_end', 'se_event_date_start' );
-
-		if ( in_array( $meta_key, $protected_keys, true ) ) {
-			return true;
-		}
-		return $is_protected;
 	}
 
 	/**
