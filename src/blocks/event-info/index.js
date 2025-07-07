@@ -351,13 +351,11 @@ registerBlockType('simple-events/event-info', {
 		useEffect(() => {
 			// Only check after dateManager is ready to avoid premature decisions
 			if (dateManagerReady && dateManagerState) {
-				const hasLocation = meta?.se_event_location && meta.se_event_location.length > 0;
-				const hasVenue = meta?.se_event_venue && meta.se_event_venue.length > 0;
 				const hasDates = dateManagerState?.getCurrentDates()?.dates &&
 					dateManagerState.getCurrentDates().dates.length > 0;
 
 				// Enter edit mode if we don't have either location/venue AND dates
-				const shouldBeInEditMode = (!hasLocation && !hasVenue) || !hasDates;
+				const shouldBeInEditMode =  !hasDates;
 
 				if (shouldBeInEditMode && !editMode) {
 					setAttributes({ editMode: true });
