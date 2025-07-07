@@ -304,7 +304,7 @@ class SE_Calendar {
 		$query_args = function ( string $meta_key ) use ( $current_date ) {
 			$next_date_time = clone $current_date;
 			$next_date_time->modify( 'last day of this month' );
-			$next_date_time->settime( 23, 29, 59 );
+			$next_date_time->settime( 23, 59, 59 );
 
 			return array(
 				'post_type'  => SE_Event_Post_Type::$event_date_post_type,
