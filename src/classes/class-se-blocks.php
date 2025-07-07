@@ -271,7 +271,9 @@ class SE_Blocks {
 			if ( $active_date ) {
 				$dates_output   .= '<div class="se-event-info-date-header se-event-info-date-header--active">' . $active_date . '</div>';
 				$has_header_date = true;
-				$date_heading    = '<h3>' . _n( 'Additional Date', 'Additional Dates', $dates_count - 1, 'simple-events' ) . '</h3>';
+				if ( $dates_count > 1 ) {
+					$date_heading = '<h3>' . _n( 'Additional Date', 'Additional Dates', $dates_count - 1, 'simple-events' ) . '</h3>';
+				}
 			} else {
 				$date_heading = '<h3>' . _n( 'Date', 'Dates', $dates_count, 'simple-events' ) . '</h3>';
 			}
