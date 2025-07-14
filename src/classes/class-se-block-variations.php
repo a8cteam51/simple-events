@@ -132,7 +132,7 @@ class SE_Block_Variations {
 				// Get the event timezone.
 				$timezone = get_post_meta( $parent->ID, 'se_event_timezone', true );
 				// use the timezone or default to the site timezone.
-				$timezone = $timezone ? $timezone : get_option( 'timezone_string' );
+				$timezone = $timezone ? $timezone : wp_timezone_string();
 
 				// Get the date im this format 2025-07-01 13:14:09
 				$start_date     = wp_date( 'Y-m-d H:i:s', $start_date_ts, new \DateTimeZone( $timezone ) );
