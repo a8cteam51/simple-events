@@ -7,9 +7,9 @@
 import { InspectorControls } from '@wordpress/block-editor';
 import { registerBlockType, registerBlockVariation } from '@wordpress/blocks';
 import { addFilter } from '@wordpress/hooks';
-import { PanelBody, SelectControl } from '@wordpress/components';
+import { PanelBody, SelectControl, RangeControl } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
-import { useEffect } from '@wordpress/element';
+import { useEffect, useState } from '@wordpress/element';
 import { createReduxStore, register, dispatch, select } from '@wordpress/data';
 
 const EVENTS_VARIATION = 'se-events/query-loop-events';
@@ -56,7 +56,7 @@ registerBlockVariation('core/query', {
 			perPage: 6,
 			pages: 0,
 			offset: 0,
-			postType: 'se-event',
+			postType: 'se-event-date',
 			order: 'asc',
 			orderBy: 'date',
 			author: '',
@@ -67,10 +67,7 @@ registerBlockVariation('core/query', {
 			inheritTaxQuery: true,
 			feedType: 'default',
 		},
-	},
-	providesContext: {
-		'se-events/feedType': 'query.feedType',
-		'se-events/feedOrder': 'query.order',
+		eventsPerPage: 6,
 	},
 	innerBlocks: [
 		[
@@ -90,6 +87,9 @@ const FeedTypeControl = ({ attributes, setAttributes, clientId }) => {
 	const { query } = attributes;
 	const feedType = query.feedType || 'default';
 	const feedOrder = query.order || 'asc';
+	const [eventsPerPage, setEventsPerPage] = useState(
+		query.perPage || 6
+	);
 
 	// Store the query data so child blocks can access it
 	useEffect(() => {
@@ -136,6 +136,29 @@ const FeedTypeControl = ({ attributes, setAttributes, clientId }) => {
 				}}
 				__nextHasNoMarginBottom
 			/>
+			<RangeControl
+				label={__('Events per Page', 'simple-events')}
+				value={eventsPerPage}
+				onChange={(value) => {
+					setEventsPerPage(value);
+					setAttributes({
+						query: {
+							...query,
+							perPage: value,
+						},
+					});
+				}}
+				min={1}
+				max={100}
+				step={1}
+				__nextHasNoMarginBottom
+			/>
+			<p className="description">
+				{__(
+					'Select the type of events to display and their order.',
+					'simple-events'
+				)}
+			</p>
 		</>
 	);
 };
