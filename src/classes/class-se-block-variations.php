@@ -101,9 +101,6 @@ class SE_Block_Variations {
 		// Change the post type.
 		$query['post_type'] = SE_Event_Post_Type::$event_date_post_type;
 
-		// Add filter to modify posts results
-		add_filter( 'the_posts', array( $this, 'modify_event_posts' ), 10, 2 );
-
 		return $this->set_event_query_args( $query, $feed_type, $feed_order );
 	}
 
@@ -132,7 +129,7 @@ class SE_Block_Variations {
 				// Get the event timezone.
 				$timezone = get_post_meta( $parent->ID, 'se_event_timezone', true );
 				// use the timezone or default to the site timezone.
-				$timezone = $timezone ? $timezone : get_option( 'timezone_string' );
+				$timezone = $timezone ? $timezone : wp_timezone_string();
 
 				// Get the date im this format 2025-07-01 13:14:09
 				$start_date     = wp_date( 'Y-m-d H:i:s', $start_date_ts, new \DateTimeZone( $timezone ) );
@@ -162,7 +159,7 @@ class SE_Block_Variations {
 	public function set_admin_query( $args, $request ) {
 
 		$feed_type  = $request->get_param( 'feedType' );
-		$feed_order = $request->get_param( 'order' );
+		$feed_order = $request->get_param( 'order' );#
 
 		return $this->set_event_query_args( $args, $feed_type, $feed_order );
 	}
@@ -223,6 +220,9 @@ class SE_Block_Variations {
 		// Add a filter to modify the posts results.
 		add_filter( 'the_posts', array( $this, 'modify_event_posts' ), 10, 2 );
 
+		// Add a custom order by.
+		add_filter( 'posts_orderby', array( $this, 'fix_editor_sort_order' ), 10, 2 );
+
 		/**
 		 * A filter to customize the args of the event query loop.
 		 *
@@ -232,6 +232,29 @@ class SE_Block_Variations {
 		 */
 		return apply_filters( 'se_pre_set_event_query_loop_args', $args, $feed_type, $feed_order );
 	}
+
+	/**
+	 * Ensure the sort order is correctly set for the unique parents query.
+	 *
+	 * This fixes a weird bug where the admin/editor order is always ASC.
+	 *
+	 * @param string   $orderby The current orderby clause.
+	 * @param WP_Query $query   The WP_Query instance.
+	 *
+	 * @return string
+	 */
+	public function fix_editor_sort_order( $orderby, $query ) {
+		if ( isset( $query->query_vars['unique_parents'] ) && $query->query_vars['unique_parents'] ) {
+			if ( str_ends_with( $orderby, '+0 ASC' ) ) {
+				$feed_order = isset( $query->query_vars['feed_order'] ) ? $query->query_vars['feed_order'] : 'ASC';
+				$new_order  = sprintf( ' %s', strtoupper( $feed_order ) );
+				$orderby    = str_replace( '+0 ASC', $new_order, $orderby );
+			}
+		}
+
+		return $orderby;
+	}
+
 
 	/**
 	 * Filter posts to only include the correct event date for each parent.
@@ -247,6 +270,8 @@ class SE_Block_Variations {
 			return $where;
 		}
 
+		// adump( $query->query_vars['unique_parents'] );
+
 		// Skip if treating each date as own event
 		if ( se_event_treat_each_date_as_own_event() ) {
 			return $where;
@@ -256,7 +281,6 @@ class SE_Block_Variations {
 
 		$feed_order = $query->query_vars['feed_order'];
 		$meta_key   = 'desc' === $feed_order ? 'se_event_date_end' : 'se_event_date_start';
-
 		// Get the current time filtering from the main query's meta_query
 		$time_filter = '';
 		$meta_query  = $query->get( 'meta_query' );

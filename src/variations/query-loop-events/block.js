@@ -7,9 +7,9 @@
 import { InspectorControls } from '@wordpress/block-editor';
 import { registerBlockType, registerBlockVariation } from '@wordpress/blocks';
 import { addFilter } from '@wordpress/hooks';
-import { PanelBody, SelectControl } from '@wordpress/components';
+import { PanelBody, SelectControl, RangeControl } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
-import { useEffect } from '@wordpress/element';
+import { useEffect, useState } from '@wordpress/element';
 import { createReduxStore, register, dispatch, select } from '@wordpress/data';
 
 const EVENTS_VARIATION = 'se-events/query-loop-events';
@@ -66,11 +66,9 @@ registerBlockVariation('core/query', {
 			inherit: false,
 			inheritTaxQuery: true,
 			feedType: 'default',
+			_cacheBuster: Date.now(),
 		},
-	},
-	providesContext: {
-		'se-events/feedType': 'query.feedType',
-		'se-events/feedOrder': 'query.order',
+		eventsPerPage: 6,
 	},
 	innerBlocks: [
 		[
@@ -86,10 +84,14 @@ registerBlockVariation('core/query', {
 	allowedControls: ['taxQuery', 'search', 'feedType'],
 });
 
+
 const FeedTypeControl = ({ attributes, setAttributes, clientId }) => {
 	const { query } = attributes;
 	const feedType = query.feedType || 'default';
 	const feedOrder = query.order || 'asc';
+	const [eventsPerPage, setEventsPerPage] = useState(
+		query.perPage || 6
+	);
 
 	// Store the query data so child blocks can access it
 	useEffect(() => {
@@ -98,6 +100,35 @@ const FeedTypeControl = ({ attributes, setAttributes, clientId }) => {
 			order: feedOrder,
 		});
 	}, [feedType, feedOrder, clientId]);
+
+
+/**
+ * Gets options for feed order based on the type.
+ * @param {string} type The current feed type.
+ * @returns options for feed order based on the type.
+ */
+const getFeedOrderOptions = (type) => {
+	switch (type) {
+		case 'upcoming':
+			return [
+				{ label: 'Soonest First', value: 'asc' },
+				{ label: 'Furthest in Future First', value: 'desc' },
+			];
+		case 'past':
+			return [
+				{ label: 'Oldest First', value: 'asc' },
+				{ label: 'Most Recent First', value: 'desc' },
+			];
+		case 'default':
+		default:
+			return [
+				{ label: 'Oldest to Newest', value: 'asc' },
+				{ label: 'Newest to Oldest', value: 'desc' },
+			];
+	}
+};
+
+let feedOrderOptions = getFeedOrderOptions(feedType);
 
 	return (
 		<>
@@ -114,6 +145,7 @@ const FeedTypeControl = ({ attributes, setAttributes, clientId }) => {
 						query: {
 							...query,
 							feedType: value,
+							_cacheBuster: Date.now()
 						},
 					});
 				}}
@@ -122,20 +154,42 @@ const FeedTypeControl = ({ attributes, setAttributes, clientId }) => {
 			<SelectControl
 				label="Feed Order"
 				value={feedOrder}
-				options={[
-					{ label: 'Oldest First', value: 'asc' },
-					{ label: 'Newest First', value: 'desc' },
-				]}
+				options={feedOrderOptions}
 				onChange={(value) => {
 					setAttributes({
 						query: {
 							...query,
 							order: value,
+							_cacheBuster: Date.now()
 						},
 					});
 				}}
 				__nextHasNoMarginBottom
 			/>
+			<RangeControl
+				label={__('Events per Page', 'simple-events')}
+				value={eventsPerPage}
+				onChange={(value) => {
+					setEventsPerPage(value);
+					setAttributes({
+						query: {
+							...query,
+							perPage: value,
+							_cacheBuster: Date.now()
+						},
+					});
+				}}
+				min={1}
+				max={100}
+				step={1}
+				__nextHasNoMarginBottom
+			/>
+			<p className="description">
+				{__(
+					'Select the type of events to display and their order.',
+					'simple-events'
+				)}
+			</p>
 		</>
 	);
 };
