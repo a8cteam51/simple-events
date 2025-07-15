@@ -262,6 +262,24 @@ class SE_Blocks {
 			$date_display_formatter->modify_timezone( $event_timezone );
 		}
 
+		// If we are hiding past dates.
+		$options       = get_option( 'se_options' );
+		$event_options = array( 'hide_events_on_both', 'hide_events_on_feed', 'on' );
+		if ( isset( $options['hide_past_events'] ) && in_array( $options['hide_past_events'], $event_options, true ) ) {
+			try {
+				$ts = '' !== $event_timezone ? new \DateTimeZone( $event_timezone ) : null;
+			} catch ( \Throwable $th ) {
+				$ts = null;
+			}
+
+			$now = se_create_date_time_from_timestamp( time(), $ts )->getTimestamp();
+			// Remove any dates that have passed.
+			$event_dates = array_filter(
+				$event_dates,
+				fn( array $date ): bool => ! isset( $date['end_date'] ) || $date['end_date'] >= $now
+			);
+		}
+
 		$dates_output = '';
 
 		if ( ! empty( $event_dates ) ) {
