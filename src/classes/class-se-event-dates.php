@@ -271,7 +271,8 @@ class SE_Event_Dates {
 	 */
 	public static function find_event_dates( $start_date, $end_date, $hide_from_calendar, $hide_from_feed ): array {
 		// Create the timestamp for the start and end of the $start_date.
-		$start_date_time  = se_create_date_time_from_timestamp( $start_date );
+		$start_date_time = se_create_date_time_from_timestamp( $start_date )->setTimezone( wp_timezone() );
+
 		$start_date_range = array(
 			$start_date_time->setTime( 0, 0, 0 )->getTimestamp(),
 			$start_date_time->setTime( 23, 59, 59 )->getTimestamp(),
@@ -341,8 +342,10 @@ class SE_Event_Dates {
 	 * @return array
 	 */
 	public static function get_event_dates_for_date( $date, $hide_from_calendar = false, $hide_from_feed = false ): array {
-		// Get the start of the day for the date.
-		$date_time = new DateTime( $date );
+		// Create date explicitly in site timezone
+		$date_time = DateTime::createFromFormat( 'Y-m-d H:i:s', $date . ' 00:00:00', wp_timezone() );
+
+		// Set the time to the start of the day.
 		$date_time->setTime( 0, 0, 0 );
 		// set as a timestamp.
 		$start_date = $date_time->getTimestamp();
