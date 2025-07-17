@@ -94,6 +94,7 @@ class SE_Migrate_Events {
 					),
 				),
 				'posts_per_page' => -1,
+				'post_status'    => 'any',
 			)
 		);
 	}
