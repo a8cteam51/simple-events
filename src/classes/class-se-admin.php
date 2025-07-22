@@ -32,7 +32,7 @@ class SE_Admin {
 	 * @return void
 	 */
 	public static function enqueue_admin_scripts() {
-		wp_enqueue_script(
+		wp_register_script(
 			'se-admin',
 			SE_PLUGIN_URL . '/build/js/admin.js',
 			array( 'jquery' ),
@@ -42,6 +42,16 @@ class SE_Admin {
 				'strategy'  => 'async',
 			)
 		);
+
+		wp_localize_script(
+			'se-admin',
+			'seAdmin',
+			array(
+				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+				'nonce'   => wp_create_nonce( 'wp_rest' ),
+			)
+		);
+		wp_enqueue_script( 'se-admin' );
 	}
 
 	/**

@@ -17,9 +17,40 @@ import {
 	InspectorControls,
 	BlockControls,
 } from '@wordpress/block-editor';
+import { useSelect } from '@wordpress/data';
+import { useEffect } from '@wordpress/element';
 
 registerBlockType(metadata, {
-	edit: ({ attributes: { metaName, metaPrefix, thePostId, textAlign, addCalendarLinks }, setAttributes, context: { postId } }) => {
+	edit: ({ attributes: { metaName, metaPrefix, thePostId, textAlign, addCalendarLinks, feedType, order }, setAttributes, context: { postId }, clientId }) => {
+
+		// Get query loop data from our custom store
+		const queryData = useSelect((select) => {
+			const blockEditor = select('core/block-editor');
+			const parents = blockEditor.getBlockParents(clientId);
+
+			// Find the query block parent
+			for (const parentId of parents) {
+				const parentBlock = blockEditor.getBlock(parentId);
+				if (parentBlock && parentBlock.name === 'core/query') {
+					const storeData = select('se-events/query-data').getQueryData(parentId);
+					return storeData || {};
+				}
+			}
+			return {};
+		}, [clientId]);
+
+		const { feedType: contextFeedType = feedType, order: contextOrder = order } = queryData;
+
+		// Update block attributes when context values change
+		useEffect(() => {
+			if (contextFeedType !== feedType || contextOrder !== order) {
+				setAttributes({
+					feedType: contextFeedType,
+					order: contextOrder,
+				});
+			}
+		}, [contextFeedType, contextOrder, feedType, order, setAttributes]);
+
 		return (
 			<>
 				<InspectorControls>
@@ -75,6 +106,8 @@ registerBlockType(metadata, {
 							textAlign,
 							thePostId: postId, // Passes the current post ID to the render callback, even if in a query loop.
 							addCalendarLinks,
+							feedType, // Use block attribute values
+							order, // Use block attribute values
 						}}
 					/>
 				</div>

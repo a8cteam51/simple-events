@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Event Dates
  */
-class SE_Event_Dates {
+class SE_Event_Query_Dates {
 	public const UPDATE_QUERY_DATES_HOOK = 'se_event_update_query_dates_cron';
 
 	/**
@@ -154,4 +154,4 @@ class SE_Event_Dates {
 }
 
 // Self initialization.
-SE_Event_Dates::init();
+SE_Event_Query_Dates::init();

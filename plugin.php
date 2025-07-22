@@ -3,7 +3,7 @@
  * Simple Events Plugin bootstrap file.
  *
  * @since       1.0.0
- * @version     1.0.55
+ * @version     2.0.0-RC1
  * @author      WordPress.com Special Projects
  * @license     GPL-3.0-or-later
  *
@@ -13,7 +13,7 @@
  * Description:             Event management frontend for WooCommerce Box Office.
  * Requires at least:       6.2
  * Tested up to:            6.4
- * Version:                 1.0.55
+ * Version:                 2.0.0-RC1
  * Requires PHP:            8.0
  * Author:                  WordPress.com Special Projects
  * Author URI:              https://wpspecialprojects.wordpress.com
@@ -31,12 +31,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 function_exists( 'get_plugin_data' ) || require_once ABSPATH . 'wp-admin/includes/plugin.php';
 define( 'SE_METADATA', get_plugin_data( __FILE__, false, false ) );
 
-define( 'SE_VERSION', '1.0.55' );
+define( 'SE_VERSION', '2.0.0' );
 define( 'SE_BASENAME', plugin_basename( __FILE__ ) );
 define( 'SE_PLUGIN_DIR', untrailingslashit( plugin_dir_path( __FILE__ ) ) );
 define( 'SE_PLUGIN_URL', untrailingslashit( plugin_dir_url( __FILE__ ) ) );
 define( 'SE_SRC_PATH', untrailingslashit( SE_PLUGIN_DIR . '/src' ) );
 define( 'SE_TEMPLATE_PATH', untrailingslashit( SE_SRC_PATH . '/templates' ) );
+
+// This should only be updated if there are changes to the way we handle dates and there are migration method to handle.
+// This is used to determine if we need to run migrations.
+define( 'SE_MIGRATION_VERSION', '2.0.0' );
 
 // Load the autoloader.
 if ( ! is_file( SE_PLUGIN_DIR . '/vendor/autoload.php' ) ) {
@@ -52,20 +56,6 @@ if ( ! is_file( SE_PLUGIN_DIR . '/vendor/autoload.php' ) ) {
 }
 require_once SE_PLUGIN_DIR . '/vendor/autoload.php';
 
-// Initialize the plugin if system requirements check out.
-$se_requirements = validate_plugin_requirements( SE_BASENAME );
-define( 'SE_REQUIREMENTS', $se_requirements );
-
-if ( $se_requirements instanceof WP_Error ) {
-	add_action(
-		'admin_notices',
-		static function () use ( $se_requirements ) {
-			$html_message = wp_sprintf( '<div class="error notice se">%s</div>', $se_requirements->get_error_message() );
-			echo wp_kses_post( $html_message );
-		}
-	);
-	return;
-}
 
 require_once SE_SRC_PATH . '/classes/class-se-event-post-type.php';
 require_once SE_SRC_PATH . '/classes/class-se-blocks.php';
@@ -76,6 +66,9 @@ require_once SE_SRC_PATH . '/classes/class-se-admin.php';
 require_once SE_SRC_PATH . '/classes/class-se-calendar-export.php';
 require_once SE_SRC_PATH . '/classes/class-se-calendar.php';
 require_once SE_SRC_PATH . '/classes/class-se-event-query-dates.php';
+require_once SE_SRC_PATH . '/classes/class-se-event-dates.php';
+require_once SE_SRC_PATH . '/classes/class-date-display-formatter.php';
+require_once SE_SRC_PATH . '/classes/class-se-migrate-events.php';
 
 require_once SE_SRC_PATH . '/calendar-functions.php';
 require_once SE_SRC_PATH . '/event-functions.php';
@@ -84,6 +77,7 @@ require_once SE_SRC_PATH . '/template-hooks.php';
 require_once SE_SRC_PATH . '/woocommerce-hooks.php';
 require_once SE_SRC_PATH . '/rest-api.php';
 require_once SE_SRC_PATH . '/back-compat.php';
+
 
 /**
  * Add a flag to leverage for flushing rewrite rules.

@@ -12,12 +12,29 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Post types Class.
  */
 class SE_Event_Post_Type {
+
+	/**
+	 * The current event version.
+	 *
+	 * @var string
+	 */
+	public static $current_event_version = '2.0.0';
+
+
 	/**
 	 * This is the name of this post type.
 	 *
 	 * @var string
 	 */
 	public static $post_type = 'se-event';
+
+
+	/**
+	 * The event date post type.
+	 *
+	 * @var string
+	 */
+	public static $event_date_post_type = 'se-event-date';
 
 	/**
 	 * This is the slug of this post type.
@@ -123,6 +140,64 @@ class SE_Event_Post_Type {
 				),
 			)
 		);
+
+		// Register the event-date post type. This is a child of the above event post type.
+		register_post_type(
+			'se-event-date',
+			array(
+				'labels'                => array(
+					'name'                  => __( 'Event Dates', 'simple-events' ),
+					'singular_name'         => __( 'Event Date', 'simple-events' ),
+					'all_items'             => __( 'All Event Dates', 'simple-events' ),
+					'archives'              => __( 'Event Date Archives', 'simple-events' ),
+					'attributes'            => __( 'Event Date Attributes', 'simple-events' ),
+					'insert_into_item'      => __( 'Insert into Event Date', 'simple-events' ),
+					'uploaded_to_this_item' => __( 'Uploaded to this Event Date', 'simple-events' ),
+					'featured_image'        => _x( 'Featured Image', 'se-event-date', 'simple-events' ),
+					'set_featured_image'    => _x( 'Set featured image', 'se-event-date', 'simple-events' ),
+					'remove_featured_image' => _x( 'Remove featured image', 'se-event-date', 'simple-events' ),
+					'use_featured_image'    => _x( 'Use as featured image', 'se-event-date', 'simple-events' ),
+					'filter_items_list'     => __( 'Filter Event Dates list', 'simple-events' ),
+					'items_list_navigation' => __( 'Event Dates list navigation', 'simple-events' ),
+					'items_list'            => __( 'Event Dates list', 'simple-events' ),
+					'new_item'              => __( 'New Event Date', 'simple-events' ),
+					'add_new'               => __( 'Add New', 'simple-events' ),
+					'add_new_item'          => __( 'Add New Event Date', 'simple-events' ),
+					'edit_item'             => __( 'Edit Event Date', 'simple-events' ),
+					'view_item'             => __( 'View Event Date', 'simple-events' ),
+					'view_items'            => __( 'View Event Dates', 'simple-events' ),
+					'search_items'          => __( 'Search Event Dates', 'simple-events' ),
+					'not_found'             => __( 'No Event Dates found', 'simple-events' ),
+					'not_found_in_trash'    => __( 'No Event Dates found in trash', 'simple-events' ),
+					'parent_item_colon'     => __( 'Parent Event Date:', 'simple-events' ),
+					'menu_name'             => __( 'Event Dates', 'simple-events' ),
+				),
+				'public'                => false,
+				'hierarchical'          => false,
+				'show_ui'               => false,
+				'show_in_nav_menus'     => false,
+				'supports'              => array(
+					'title',
+					'editor',
+					'thumbnail',
+					'custom-fields',
+				),
+				'rewrite'               => array(
+					'slug'       => 'event-date',
+					'with_front' => false,
+				),
+				'has_archive'           => false,
+				'query_var'             => false,
+				'menu_position'         => null,
+				'menu_icon'             => 'dashicons-calendar-alt',
+				'show_in_rest'          => true,
+				'rest_base'             => 'se-event-date',
+				'rest_controller_class' => 'WP_REST_Posts_Controller',
+				'capabilities'          => array(
+					'create_posts' => 'do_not_allow', // Disable creation of new event dates.
+				),
+			)
+		);
 	}
 
 	/**
@@ -200,26 +275,15 @@ class SE_Event_Post_Type {
 			'post',
 			'se_event_dates',
 			array(
-				'single'       => true,
-				'type'         => 'array',
-				'show_in_rest' => array(
-					'schema' => array(
-						'items' => array(
-							'type'       => 'object',
-							'properties' => array(
-								'datetime_start' => array(
-									'type' => 'string',
-								),
-								'datetime_end'   => array(
-									'type' => 'string',
-								),
-								'all_day'        => array(
-									'type' => 'boolean',
-								),
-							),
-						),
-					),
-				),
+				'single'            => true,
+				'type'              => 'array',
+				'default'           => array(),
+				'sanitize_callback' => function ( $value ) {
+					if ( is_null( $value ) || ! is_array( $value ) ) {
+						return array();
+					}
+					return $value;
+				},
 			)
 		);
 
@@ -414,6 +478,44 @@ class SE_Event_Post_Type {
 				'default'        => true,
 			)
 		);
+
+		// is all day (bool)
+		register_meta(
+			'post',
+			'se_event_all_day',
+			array(
+				'show_in_rest'   => true,
+				'single'         => true,
+				'type'           => 'boolean',
+				'object_subtype' => self::$event_date_post_type,
+			)
+		);
+
+		// hide from calendar (bool)
+		register_meta(
+			'post',
+			'se_event_hide_from_calendar',
+			array(
+				'show_in_rest'   => true,
+				'single'         => true,
+				'type'           => 'boolean',
+				'object_subtype' => self::$event_date_post_type,
+				'default'        => false,
+			)
+		);
+
+		// hide from feed (bool)
+		register_meta(
+			'post',
+			'se_event_hide_from_feed',
+			array(
+				'show_in_rest'   => true,
+				'single'         => true,
+				'type'           => 'boolean',
+				'object_subtype' => self::$event_date_post_type,
+				'default'        => false,
+			)
+		);
 	}
 
 	/**
@@ -452,9 +554,60 @@ class SE_Event_Post_Type {
 		if (
 			( $query->is_main_query() && ( is_post_type_archive( self::$post_type )
 			|| is_tax( self::$post_type . '-category' ) ) )
-			|| ( ! $query->is_main_query() && self::$post_type === $query->get( 'post_type' ) && ! $query->get( 'se_countdown' ) && $query->get( 'sub-type' ) !== SE_Block_Variations::QUERY_LOOP_EVENTS )
+			|| ( ! $query->is_main_query() && self::$post_type === $query->get( 'post_type' ) && ! $query->get( 'se_countdown' ) && $query->get( 'sub-type' ) === SE_Block_Variations::QUERY_LOOP_EVENTS )
 		) {
-			$query->set( 'orderby', 'meta_value' );
+			// Handle taxonomy filtering by getting parent event IDs first
+			$parent_event_ids = null;
+			$tax_query        = $query->get( 'tax_query' );
+
+			// Check if we have taxonomy queries for event categories
+			if ( ! empty( $tax_query ) || is_tax( self::$post_type . '-category' ) ) {
+				// Create a separate query to get parent events that match taxonomy criteria
+				$parent_query_args = array(
+					'post_type'      => self::$post_type,
+					'posts_per_page' => -1,
+					'fields'         => 'ids',
+					'post_status'    => 'publish',
+				);
+
+				// Add taxonomy query from original query
+				if ( ! empty( $tax_query ) ) {
+					$parent_query_args['tax_query'] = $tax_query;
+				}
+
+				// Handle category archive pages
+				if ( is_tax( self::$post_type . '-category' ) ) {
+					$term                           = get_queried_object();
+					$parent_query_args['tax_query'] = array(
+						array(
+							'taxonomy' => self::$post_type . '-category',
+							'field'    => 'term_id',
+							'terms'    => $term->term_id,
+						),
+					);
+				}
+
+				$parent_events    = new WP_Query( $parent_query_args );
+				$parent_event_ids = $parent_events->posts;
+
+				// If no parent events match, set to empty array to return no results
+				if ( empty( $parent_event_ids ) ) {
+					$parent_event_ids = array( 0 );
+				}
+			}
+
+			// Change query to target event dates instead of events
+			$query->set( 'post_type', self::$event_date_post_type );
+
+			// If we have taxonomy filtering, limit to dates of matching parent events
+			if ( null !== $parent_event_ids ) {
+				$query->set( 'post_parent__in', $parent_event_ids );
+				// Remove tax_query since we're now querying date posts
+				$query->set( 'tax_query', array() );
+			}
+
+			// Order by event date start timestamp
+			$query->set( 'orderby', 'meta_value_num' );
 			$query->set( 'meta_key', 'se_event_date_start' );
 			$query->set( 'order', apply_filters( 'se_pre_get_posts_order', $sort_order, $query ) );
 
@@ -462,16 +615,19 @@ class SE_Event_Post_Type {
 			$event_options = array( 'hide_events_on_both', 'hide_events_on_feed', 'on' );
 
 			if ( isset( $options['hide_past_events'] ) && in_array( $options['hide_past_events'], $event_options, true ) ) {
-				$query->set(
-					'meta_query',
-					array(
-						array(
-							'key'     => 'se_event_date_end',
-							'value'   => wp_date( 'U' ),
-							'compare' => '>=',
-						),
-					)
+				$existing_meta_query = $query->get( 'meta_query' );
+				if ( ! is_array( $existing_meta_query ) ) {
+					$existing_meta_query = array();
+				}
+
+				$existing_meta_query[] = array(
+					'key'     => 'se_event_date_end',
+					'value'   => time(),
+					'compare' => '>=', // what is this?
+					'type'    => 'NUMERIC',
 				);
+
+				$query->set( 'meta_query', $existing_meta_query );
 			}
 		}
 	}
@@ -553,7 +709,8 @@ class SE_Event_Post_Type {
 		}
 
 		if ( ! $is_event_info_block_present ) {
-			delete_post_meta( $event_id, 'se_event_dates' );
+			// Delete all the event dates.
+			SE_Event_Dates::delete_all_event_dates( $event_id );
 		}
 	}
 }

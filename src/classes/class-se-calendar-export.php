@@ -72,20 +72,25 @@ class SE_Calendar_Export {
 		// Get dates.
 		if ( ! empty( $events ) ) {
 			foreach ( $events as $event_id ) {
-				$event_dates = se_event_get_dates( $event_id );
+				$event_dates = se_event_get_event_dates( $event_id );
 
 				foreach ( $event_dates as $event_date ) {
 					$v_event = new \Eluceo\iCal\Component\Event();
 
-					if ( empty( $event_date['datetime_start'] ) || empty( $event_date['datetime_end'] ) ) {
+					// If the date is hidden from the calendar, skip it.
+					if ( true === (bool) $event_date['hide_from_calendar'] ) {
+						continue;
+					}
+
+					if ( empty( $event_date['start_date'] ) || empty( $event_date['end_date'] ) ) {
 						continue;
 					}
 
 					$date_start = new \DateTime();
-					$date_start->setTimestamp( $event_date['datetime_start'] );
+					$date_start->setTimestamp( $event_date['start_date'] );
 
 					$date_end = new \DateTime();
-					$date_end->setTimestamp( $event_date['datetime_end'] );
+					$date_end->setTimestamp( $event_date['end_date'] );
 
 					$v_event
 						->setDtStart( $date_start )

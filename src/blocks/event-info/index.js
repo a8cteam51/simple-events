@@ -1,8 +1,13 @@
 /* global lodash, ajaxurl */
 /**
- * BLOCK: Events Info
+ * Event Info Block
  *
- * Event date and location management.
+ * Gutenberg block for managing event date, time, location, and venue information.
+ * Provides an interface for adding multiple event dates with timezone support,
+ * venue and location details, external links, and calendar integration options.
+ *
+ * @package SimpleEvents
+ * @since   1.0.0
  */
 
 import './editor.scss';
@@ -11,19 +16,17 @@ import moment from 'moment';
 import { clone, isEqual, sortBy, head, last, pull } from 'lodash';
 import { __ } from '@wordpress/i18n';
 import { registerBlockType } from '@wordpress/blocks';
-import { Fragment } from '@wordpress/element';
+import { Fragment, useState, useEffect } from '@wordpress/element';
 import {
 	PanelRow,
 	Placeholder,
-	BaseControl,
-	Dropdown,
+
 	Button,
 	TextControl,
 	Toolbar,
 	Disabled,
 	CheckboxControl,
 	ComboboxControl,
-	DateTimePicker,
 	PanelBody,
 	ToggleControl,
 } from '@wordpress/components';
@@ -34,145 +37,265 @@ import {
 	InspectorControls,
 	useBlockProps,
 } from '@wordpress/block-editor';
-import { withState } from '@wordpress/compose';
 import { useEntityProp } from '@wordpress/core-data';
+import { useSelect, useDispatch } from '@wordpress/data';
+
+// Import date utilities
+import {
+
+	TIMEZONE,
+	TIMEZONE_NAME,
+	TIMEZONES,
+
+} from './date-utils';
+
+import apiFetch from '@wordpress/api-fetch';
+
+import { dateManager } from './event-manager';
+
+// Import the new DateTimeGroup component as DateTimeGroupNew
+import DateTimeGroupNew from './components/DateTimeGroup';
+
+const DATE_SETTINGS = getSettings(); // Still needed for timeFormat
 
 /**
- * Constants
- */
-const DEFAULT_START_HOUR = 9;
-const DEFAULT_END_HOUR = 10;
-const DATE_SETTINGS = getSettings(); // eslint-disable-line no-restricted-syntax
-
-const OFFSET = Number(DATE_SETTINGS.timezone.offset);
-const TIMEZONE = DATE_SETTINGS.timezone.string;
-let TIMEZONE_NAME = TIMEZONE;
-if ('' === TIMEZONE) {
-	TIMEZONE_NAME = 'UTC' + (OFFSET >= 0 ? '+' : '') + OFFSET;
-}
-const FORMAT = 'YYYY-MM-DD HH:mm';
-const TIMEZONES = moment.tz
-	.names()
-	.map((tz) => ({ label: tz, value: tz }));
-
-// Add an option to use the site settings.
-// (This label is as helpful as we can be since manual offsets have no string.)
-TIMEZONES.unshift({
-	label: __('Same as site', 'simple-events'),
-	value: '',
-});
-
-/**
- * Get the start and end date from a collection of dates.
- * Will remove any event that has passed.
+ * Fetches event dates from the custom REST API endpoint.
  *
- * @param {{all_day: boolean, datetime_start: string, datetime_end: string}[]} dates The dates to check.
+ * Retrieves all event dates associated with the current post via the
+ * Simple Events REST API. Returns an empty array if no post ID is found.
  *
- * returns {{ datetime_start: string, datetime_end: string }}
+ * @since 2.0.0
+ *
+ * @return {Promise<Array>} Promise that resolves to an array of event date objects.
  */
-const getStartAndEndDate = (dates) => {
-	// iterate over and remove any that has passed.
-	const now = moment().utcOffset(OFFSET);
-	const filteredDates = dates.filter((date) => {
-
-		const endDate = moment.unix(date.datetime_end).utcOffset(OFFSET);
-		return endDate.isAfter(now);
-	});
-
-	// If we have no filtered dates, but we had dates, before.
-	if (filteredDates.length === 0 && dates.length > 0) {
-		// Extract all start dates with the offset.
-		const allStartDates = dates.map((date) =>
-			moment.unix(date.datetime_start).utcOffset(OFFSET)
-		);
-		const allEndDates = dates.map((date) =>
-			moment.unix(date.datetime_end).utcOffset(OFFSET)
-		);
-
-		// Return the latest start date and earliest end date.
-		return {
-			datetime_start: moment.max(allStartDates).unix().toString(),
-			datetime_end: moment.max(allEndDates).unix().toString(),
-		}
+export const getEventDatePosts = () => {
+	// Get the current post id.
+	const postId = window?.wp?.data?.select('core/editor')?.getCurrentPostId();
+	if (!postId) {
+		// Return an empty array if no post id is found.
+		return Promise.resolve([]);
 	}
 
-	let startDate = null;
-	let endDate = null;
+	// simple-events/event-dates/{event}
+	return apiFetch({ path: '/simple-events/event-dates/' + postId }).then((posts) => posts
+	).catch((error) => {
+		console.error('Error fetching event dates:', error);
+		return [];
+	});
 
-	// Loop over the dates and set the start date as the earliest and the end as the latest.
-	filteredDates.forEach((date) => {
-		const startDateMoment = moment.unix(date.datetime_start).utcOffset(OFFSET);
-		const endDateMoment = moment.unix(date.datetime_end).utcOffset(OFFSET);
+};
 
-		// If the end date has passed, skip it.
-		if (endDateMoment.isBefore(now)) {
-			return;
+/**
+ * Saves event dates to the custom REST API endpoint.
+ *
+ * Sends event dates to the server for persistence via the Simple Events
+ * REST API sync endpoint. Displays success/error notifications and optionally
+ * refreshes the date manager instance with updated data.
+ *
+ * @since 2.0.0
+ *
+ * @param {Array}       dates               Array of event date objects to save.
+ * @param {Object|null} dateManagerInstance Optional date manager instance to refresh after save.
+ * @return {Promise<Object>} Promise that resolves to the API response object.
+ */
+export const saveEventDates = (dates, dateManagerInstance = null) => {
+	// Get the current post id.
+	const postId = window?.wp?.data?.select('core/editor')?.getCurrentPostId();
+	if (!postId) {
+		return Promise.reject(new Error('No post ID found'));
+	}
+
+	// simple-events/event-dates/{event}
+	return apiFetch({
+		path: '/simple-events/event-dates/' + postId + '/sync',
+		method: 'POST',
+		data: {
+			dates: dates,
+			event_id: postId,
+			nonce: seSettings.syncDatesNonce
+		}
+	}).then((response) => {
+		// Show notification message if available
+		if (response.message) {
+			// Show success notification in bottom left
+			window.wp.data.dispatch('core/notices').createSuccessNotice(
+				response.message,
+				{
+					type: 'snackbar',
+					isDismissible: true,
+					id: 'event-dates-saved'
+				}
+			);
 		}
 
-		/**
-		 * Closure for setting the start or end date.
-		 * @param {moment.Moment} startDateMoment
-		 * @param {moment.Moment} endDateMoment
-		 */
-		const setDate = (startDateMoment, endDateMoment) => {
-			// If the start date is before the current start date, set it.
-			if (!startDate || startDateMoment.isBefore(startDate) || (startDate.isAfter(startDateMoment) && startDate.isBefore(now))) {
-				startDate = startDateMoment;
-			}
+		// Refresh dateManager with new dates if available and dateManager instance is provided
+		if (response.dates && dateManagerInstance && dateManagerInstance.refreshWithNewDates) {
+			dateManagerInstance.refreshWithNewDates(response.dates);
+		}
 
-			// If the end date is after the current end date, set it.
-			if (!endDate || endDateMoment.isAfter(endDate)) {
-				endDate = endDateMoment;
+
+
+		return response;
+	}).catch((error) => {
+		console.error('Error saving event dates:', error);
+
+		// Show error notification
+		window.wp.data.dispatch('core/notices').createErrorNotice(
+			__('Failed to save event dates. Please try again.', 'simple-events'),
+			{
+				type: 'snackbar',
+				isDismissible: true,
+				id: 'event-dates-error'
+			}
+		);
+
+		throw error;
+	});
+};
+
+/**
+ * Auto-saves event dates when they change.
+ *
+ * Wrapper function for saveEventDates that handles automatic saving
+ * of event dates during user interactions.
+ *
+ * @since 2.0.0
+ *
+ * @param {Array}       dates               Array of event date objects to auto-save.
+ * @param {Object|null} dateManagerInstance Optional date manager instance to refresh.
+ * @return {Promise<Object>} Promise that resolves to the saved event dates response.
+ */
+export const autoSaveEventDates = async (dates, dateManagerInstance = null) => {
+	try {
+		// Save to REST API
+		const savedDates = await saveEventDates(dates, dateManagerInstance);
+
+		return savedDates;
+	} catch (error) {
+		console.error('Error auto-saving event dates:', error);
+		throw error;
+	}
+};
+
+/**
+ * Saves event dates when the post is being saved.
+ *
+ * Handles saving event dates during WordPress post save operations.
+ * Also updates block attributes to ensure the saved dates with IDs
+ * are properly persisted in the block editor.
+ *
+ * @since 2.0.0
+ *
+ * @param {Array}       dates               Array of event date objects to save.
+ * @param {Object|null} dateManagerInstance Optional date manager instance to refresh.
+ * @return {Promise<Object>} Promise that resolves to the saved event dates response.
+ */
+export const saveEventDatesOnPostSave = async (dates, dateManagerInstance = null) => {
+	try {
+		// Save to REST API
+		const savedDates = await saveEventDates(dates, dateManagerInstance);
+
+		// Update the post meta to ensure the updated dates (with IDs) are persisted
+		const postId = window?.wp?.data?.select('core/editor')?.getCurrentPostId();
+		if (postId && savedDates) {
+
+			// Update the block attributes to ensure the updated dates (with IDs) are persisted
+			const blocks = window.wp.data.select('core/block-editor').getBlocks();
+			const eventInfoBlock = blocks.find(block => block.name === 'simple-events/event-info');
+
+			if (eventInfoBlock) {
+				window.wp.data.dispatch('core/block-editor').updateBlockAttributes(
+					eventInfoBlock.clientId,
+					{
+						eventDates: savedDates.dates || savedDates,
+					}
+				);
+			}
+		}
+
+		return savedDates;
+	} catch (error) {
+		console.error('Error saving event dates on post save:', error);
+		throw error;
+	}
+};
+
+
+// Initialize date manager instance outside the component
+let dateManagerInstance = null;
+let gettingDates = false;
+
+/**
+ * Initializes the date manager with resolved event date posts.
+ *
+ * Creates and configures a date manager instance with event dates fetched
+ * from the REST API. Handles post meta synchronization and timezone settings.
+ * Uses singleton pattern to avoid multiple initializations.
+ *
+ * @since 2.0.0
+ *
+ * @return {Promise<Object|null>} Promise that resolves to the date manager instance or null on error.
+ */
+const initializeDateManager = async () => {
+	if (gettingDates || dateManagerInstance) {
+		return dateManagerInstance;
+	}
+
+	gettingDates = true;
+	try {
+		const eventDatePosts = await getEventDatePosts();
+
+		// Get current post meta to pass to dateManager for sync
+		const currentPostId = window?.wp?.data?.select('core/editor')?.getCurrentPostId();
+		const currentMeta = currentPostId ? window?.wp?.data?.select('core/editor')?.getEditedPostAttribute('meta') : {};
+		const currentTimezone = currentMeta?.se_event_timezone || '';
+
+		// Create meta sync object
+		const metaSync = {
+			meta: currentMeta,
+			setMeta: (updates) => {
+				window.wp.data.dispatch('core/editor').editPost({
+					meta: updates
+				});
 			}
 		};
 
-		// If the start date if after now
-		if (startDateMoment.isAfter(now) && endDateMoment.isAfter(now)) {
-			setDate(startDateMoment, endDateMoment);
-		} else if (startDateMoment.isBefore(now) && endDateMoment.isAfter(now)) {
-			setDate(startDateMoment, endDateMoment);
-		}
-	});
-
-	// If we have no startDate or endDate, just get the first from dates.
-	if (!startDate) {
-		startDate = moment.unix(head(filteredDates).datetime_start).utcOffset(OFFSET);
+		dateManagerInstance = dateManager(eventDatePosts, currentTimezone, metaSync);
+		return dateManagerInstance;
+	} catch (error) {
+		console.error('Error initializing date manager:', error);
+		return null;
+	} finally {
+		gettingDates = false;
 	}
-	if (!endDate) {
-		endDate = moment.unix(last(filteredDates).datetime_end).utcOffset(OFFSET);
-	}
-
-	return {
-		datetime_start: startDate.unix().toString(),
-		datetime_end: endDate.unix().toString(),
-	};
-}
-
+};
 
 /**
- * Register: a Gutenberg Block.
+ * Registers the Event Info Gutenberg block.
  *
- * Registers a new block provided a unique name and an object defining its
- * behavior. Once registered, the block is made editor as an option to any
- * editor interface where blocks are implemented.
+ * Creates a custom block for event information management including dates,
+ * times, locations, venues, and related settings. The block provides both
+ * edit and preview modes with extensive customization options.
  *
- * @link https://wordpress.org/gutenberg/handbook/block-api/
- * @param {string} name     Block name.
- * @param {Object} settings Block settings.
- * @return {?WPBlock}          The block, if it has been successfully
- *                             registered; otherwise `undefined`.
+ * @since 1.0.0
+ *
+ * @see https://wordpress.org/gutenberg/handbook/block-api/
  */
 registerBlockType('simple-events/event-info', {
 	/**
-	 * The edit function describes the structure of your block in the context of the editor.
-	 * This represents what the editor will render when the block is used.
+	 * Block edit function.
 	 *
-	 * The "edit" property must be a valid function.
+	 * Defines the structure and behavior of the Event Info block in the editor.
+	 * Manages event dates through a date manager instance, handles post meta
+	 * synchronization, and provides interfaces for editing event information
+	 * including dates, times, locations, venues, and display options.
 	 *
-	 * @link https://wordpress.org/gutenberg/handbook/block-api/block-edit-save/
+	 * @since 1.0.0
 	 *
-	 * @param {Object} props Props.
-	 * @return {JSX.Element} JSX Component.
+	 * @param {Object} props               Block properties.
+	 * @param {Object} props.attributes    Block attributes including editMode and showOnFrontEnd.
+	 * @param {Function} props.setAttributes Function to update block attributes.
+	 * @return {JSX.Element} The block editor interface.
 	 */
 	edit: (props) => {
 		const { attributes, setAttributes } = props;
@@ -184,79 +307,109 @@ registerBlockType('simple-events/event-info', {
 			'meta'
 		);
 
+		// Add state for loading indication
+		const [isGettingDates, setIsGettingDates] = useState(false);
+		const [dateManagerReady, setDateManagerReady] = useState(false);
+		const [dateManagerState, setDateManagerState] = useState(null);
+		// Add refresh counter to force re-renders when dateManager state changes
+		const [refreshCounter, setRefreshCounter] = useState(0);
 
-		// Sets the default timezone for calculations.
+		// Watch for post save events
+		const { isSavingPost, isAutosavingPost } = useSelect((select) => {
+			const { isSavingPost, isAutosavingPost } = select('core/editor');
+			return {
+				isSavingPost: isSavingPost(),
+				isAutosavingPost: isAutosavingPost(),
+			};
+		}, []);
 
-		let currentTimezone = meta?.se_event_timezone;
-		if ('' === currentTimezone) {
-			currentTimezone = TIMEZONE;
-		}
+		// Trigger date save when post is being saved
+		useEffect(() => {
+			const saveDatesOnPostSave = async () => {
+				if (isSavingPost && !isAutosavingPost && dateManagerState?.getCurrentDates()?.dates) {
+					try {
+						await saveEventDatesOnPostSave(dateManagerState.getCurrentDates().dates, dateManagerState);
+					} catch (error) {
+						console.error('Failed to save event dates on post save:', error);
+					}
+				}
+			};
 
-		const getDstOffset = (timestamp, timezone = null) => {
-			// Return no offset if the event timezone is the same as the site.
-			if (null === timezone) {
-				timezone = currentTimezone;
+			saveDatesOnPostSave();
+		}, [isSavingPost, isAutosavingPost, dateManagerState]);
+
+		// Sync dateManagerState dates to block attributes
+		useEffect(() => {
+			if (dateManagerState?.getCurrentDates()?.dates) {
+				setAttributes({
+					eventDates: dateManagerState.getCurrentDates().dates
+				});
 			}
+		}, [dateManagerState, refreshCounter, setAttributes]);
 
-			if ('' === timezone) {
-				return OFFSET;
+		// Check if we should be in edit mode based on missing data
+		useEffect(() => {
+			// Only check after dateManager is ready to avoid premature decisions
+			if (dateManagerReady && dateManagerState) {
+				const hasDates = dateManagerState?.getCurrentDates()?.dates &&
+					dateManagerState.getCurrentDates().dates.length > 0;
+
+				// Enter edit mode if we don't have either location/venue AND dates
+				const shouldBeInEditMode =  !hasDates;
+
+				if (shouldBeInEditMode && !editMode) {
+					setAttributes({ editMode: true });
+				}
 			}
+		}, [dateManagerReady, dateManagerState, meta?.se_event_location, meta?.se_event_venue, editMode, setAttributes]);
 
-			// Get the timezone details.
-			const timezoneDetails = moment.tz.zone(timezone);
+		// Initialize date manager on component mount
+		useEffect(() => {
+			const initManager = async () => {
+				setIsGettingDates(true);
+				try {
+					const manager = await initializeDateManager();
+					setDateManagerReady(true);
+					setDateManagerState(manager);
+				} catch (error) {
+					console.error('Failed to initialize date manager:', error);
+				} finally {
+					setIsGettingDates(false);
+				}
+			};
 
-			// Get the index of the current timezone offset i.e DST or non-DST. -1 at the end to account for search algorithm.
-			const untilIndex = timezoneDetails.untils.findIndex(function (
-				number
-			) {
-				return number / 1000 > timestamp;
-			});
-
-			return timezoneDetails.offsets[untilIndex] * -1;
-		};
+			if (!dateManagerReady && !isGettingDates) {
+				initManager();
+			}
+		}, [dateManagerReady, isGettingDates]);
 
 		/**
-		 * Creates a moment in the site timezone from the provided unix timestamp.
+		 * Handles the Done button click event.
 		 *
-		 * @param {string}  timestamp Timestamp to convert to a moment.
-		 * @param {boolean} formatted Whether to return a human-readable formatted string.
-		 * @return {Mixed}             Human readable formatted string if `formatted` is true,
-		 *                             moment object otherwise.
-		 */
-		const getMoment = (timestamp, formatted = false) => {
-			const dateTime = moment
-				.unix(timestamp)
-				.utcOffset(getDstOffset(timestamp));
-
-			if (!formatted) {
-				return dateTime;
-			}
-
-			return dateTime.format(FORMAT);
-		};
-
-		/**
-		 * Creates a timestamp from the provided date string.
+		 * Exits edit mode by setting the editMode attribute to false.
 		 *
-		 * @param {string} dateTime Date string to convert to a timestamp.
-		 * @return {string}          The timestamp, cast as a string.
+		 * @since 1.0.0
 		 */
-		const getTimestamp = (dateTime) => {
-			return String(
-				moment(dateTime)
-					.utcOffset(
-						getDstOffset(moment(dateTime).unix()),
-						true
-					)
-					.utc()
-					.unix()
-			);
-		};
-
 		const onDone = () => {
 			setAttributes({ editMode: false });
+
+			// Update the date attriutes from dateManagerState
+			if (dateManagerState?.getCurrentDates()?.dates) {
+				setAttributes({
+					eventDates: dateManagerState.getCurrentDates().dates,
+				});
+			}
 		};
 
+		/**
+		 * Handles event location input changes.
+		 *
+		 * Updates the se_event_location meta field when the location input changes.
+		 *
+		 * @since 1.0.0
+		 *
+		 * @param {string} value The new location value.
+		 */
 		const onChangeEventLocation = (value) => {
 			setMeta({
 				...meta,
@@ -264,24 +417,16 @@ registerBlockType('simple-events/event-info', {
 			});
 		};
 
-		const maybeUpdateEventDateTime = (oldDate, newDate) => {
-			if (!isEqual(oldDate, newDate)) {
-				const updatedDates = sortBy(
-					meta?.se_event_dates.map((item) =>
-						item === oldDate ? newDate : item
-					),
-					'datetime_start'
-				);
-
-				setMeta({
-					...meta,
-					se_event_dates: updatedDates,
-					se_event_date_start: getStartAndEndDate(updatedDates).datetime_start,
-					se_event_date_end: getStartAndEndDate(updatedDates).datetime_end,
-				});
-			}
-		};
-
+		/**
+		 * Renders the block toolbar controls.
+		 *
+		 * Creates the edit and visibility toggle buttons that appear in the
+		 * block toolbar when the block is selected.
+		 *
+		 * @since 1.0.0
+		 *
+		 * @return {JSX.Element} The BlockControls component with toolbar buttons.
+		 */
 		const getBlockControls = () => (
 			<BlockControls>
 				<Toolbar
@@ -311,418 +456,143 @@ registerBlockType('simple-events/event-info', {
 			</BlockControls>
 		);
 
-		const DateTimeGroup = withState({
-			tempEventDate: null,
-			tempEventTime: null,
-		})(
-			({
-				eventDateTime,
-				removeDate,
-				multiDay,
-				tempEventDate,
-				tempEventTime,
-				setState,
-			}) => {
-				const eventStart = getMoment(
-					eventDateTime.datetime_start,
-					true
-				);
-				const eventEnd = getMoment(eventDateTime.datetime_end, true);
-				const timeFormat = DATE_SETTINGS.formats.datetime;
+		// Wrapper functions to trigger re-renders when dateManager state changes
+		/**
+		 * Handles adding a new date to the event.
+		 *
+		 * Calls the date manager's addDate method and triggers a re-render
+		 * by incrementing the refresh counter.
+		 *
+		 * @since 2.0.0
+		 */
+		const handleAddDate = () => {
+			if (dateManagerState?.addDate) {
+				dateManagerState.addDate();
+				setRefreshCounter(prev => prev + 1);
+			}
+		};
 
-				// To know if the current timezone is a 12 hour time with look for an "a" in the time format.
-				// We also make sure this a is not escaped by a "/".
-				const is12HourTime = /a(?!\\)/i.test(
-					timeFormat
-						.toLowerCase() // Test only the lower case a
-						.replace(/\\\\/g, '') // Replace "//" with empty strings
-						.split('')
-						.reverse()
-						.join('') // Reverse the string and test for "a" not followed by a slash
-				);
+		/**
+		 * Handles reverting date changes.
+		 *
+		 * Calls the date manager's revertDates method and triggers a re-render
+		 * by incrementing the refresh counter.
+		 *
+		 * @since 2.0.0
+		 */
+		const handleRevertDates = () => {
+			if (dateManagerState?.revertDates) {
+				dateManagerState.revertDates();
+				setRefreshCounter(prev => prev + 1);
+			}
+		};
 
-				/**
-				 * Combines a given date and time into a moment object.
-				 *
-				 * @param {string} date The date to combine.
-				 * @param {string} time The time to combine.
-				 *
-				 * @return {moment} The combined date and time.
-				 */
-				const combineDateAndTime = (date, time) => {
-					const timeMoment = moment(time);
-					const dateMoment = moment(date);
+		// Create enhanced dateManagerInstance that triggers re-renders
+		const enhancedDateManagerInstance = dateManagerState ? {
+			...dateManagerState,
+			upsertDate: (date) => {
+				const result = dateManagerState.upsertDate(date);
+				setRefreshCounter(prev => prev + 1);
+				return result;
+			},
+			removeDate: (date) => {
+				const result = dateManagerState.removeDate(date);
+				setRefreshCounter(prev => prev + 1);
+				return result;
+			},
+			addDate: () => {
+				const result = dateManagerState.addDate();
+				setRefreshCounter(prev => prev + 1);
+				return result;
+			},
+			revertDates: () => {
+				const result = dateManagerState.revertDates();
+				setRefreshCounter(prev => prev + 1);
+				return result;
+			},
+			refreshWithNewDates: (newDates) => {
+				if (dateManagerState.refreshWithNewDates) {
+					dateManagerState.refreshWithNewDates(newDates);
+					setRefreshCounter(prev => prev + 1);
+				}
+			},
+			updateTimezone: (newTimezone) => {
+				const result = dateManagerState.updateTimezone(newTimezone);
+				setRefreshCounter(prev => prev + 1);
+				return result;
+			}
+		} : null;
 
-					// Set the timeMoment's time to the dateMoment.
-					return dateMoment.set({
-						hour: timeMoment.get('hour'),
-						minute: timeMoment.get('minute'),
-					});
-				};
+		/**
+		 * Renders the unsaved changes warning component.
+		 *
+		 * Displays a warning message when the date manager has unsaved changes,
+		 * informing the user that they need to save the post to persist changes.
+		 *
+		 * @since 2.0.0
+		 *
+		 * @return {JSX.Element|null} Warning component or null if no unsaved changes.
+		 */
+		const UnsavedChangesWarning = () => {
+			if (!dateManagerState?.getCurrentDates()?.isDirty) {
+				return null;
+			}
 
-				/**
-				 * Handle the set date and time button click.
-				 *
-				 * @param {boolean} isStartChange Whether this is start or end date change.
-				 *
-				 * @return {void}
-				 */
-				const setDateTimeHandler = (isStartChange) => {
-					// Ensure we have either new date or time in state.
-					if (!tempEventDate && !tempEventTime) {
-						return;
-					}
-
-					const newDate =
-						tempEventDate ||
-						(isStartChange ? eventStart : eventEnd);
-					const newTime =
-						tempEventTime ||
-						(isStartChange ? eventStart : eventEnd);
-
-					// Combine the new date and time and convert to a timestamp.
-					const newDateTime = getTimestamp(
-						combineDateAndTime(newDate, newTime)
-					);
-
-					const newEventDateTime = clone(eventDateTime);
-
-					if (isStartChange) {
-						newEventDateTime.datetime_start = newDateTime;
-
-						// Check if the new start time is after the cuurent end time.
-						if (
-							parseInt(newEventDateTime.datetime_start) >=
-							parseInt(newEventDateTime.datetime_end)
-						) {
-							// Set the new end time to be 1 hour after the start dateTime.
-							newEventDateTime.datetime_end = String(
-								parseInt(newEventDateTime.datetime_start) +
-								3600
-							);
-						}
-					} else {
-						newEventDateTime.datetime_end = newDateTime;
-
-						// Check if the new end time is before the current start time.
-						if (
-							parseInt(newEventDateTime.datetime_start) >=
-							parseInt(newEventDateTime.datetime_end)
-						) {
-							// Set the new start time to be 1 hour before the end dateTime.
-							newEventDateTime.datetime_start = String(
-								parseInt(newEventDateTime.datetime_end) - 3600
-							);
-						}
-					}
-
-					// Reset the temp date and time.
-					setState({
-						tempEventDate: null,
-						tempEventTime: null,
-					});
-
-
-					maybeUpdateEventDateTime(eventDateTime, newEventDateTime);
-				};
-
-				/**
-				 * Handles DateTimePicker changes.
-				 *
-				 * @param {string} currentDateTime The current dateTime.
-				 * @param {string} newDateTime     The new selected dateTime.
-				 *
-				 * @return {void}
-				 */
-				const datePickerHandler = (currentDateTime, newDateTime) => {
-					// Compare the date without time to see if the time or date was changed.
-					const isDateChange =
-						moment(currentDateTime).format('YYYY-MM-DD') ===
-						moment(newDateTime).format('YYYY-MM-DD');
-					const stateUpdate = isDateChange
-						? { tempEventTime: newDateTime }
-						: { tempEventDate: newDateTime };
-					setState(stateUpdate);
-				};
-
-				return (
-					<div className="se-datetimegroup-container">
-						<div className="se-datetimegroup-controls">
-							<BaseControl
-								label={__(
-									'Start Date/Time',
-									'simple-events'
-								)}
-							>
-								<Dropdown
-									contentClassName="se-datetime-popover se-datetime-popover__time"
-									popoverProps={{ placement: 'bottom' }}
-									renderToggle={({ isOpen, onToggle }) => (
-										<Button
-											className="se-datetime-popover__button"
-											variant="secondary"
-											onClick={() => {
-												onToggle();
-											}}
-											aria-expanded={isOpen}
-										>
-											{eventDateTime.all_day
-												? wp.date.format(
-													'F j, Y',
-													eventStart
-												)
-												: wp.date.format(
-													timeFormat,
-													eventStart
-												)}
-										</Button>
-									)}
-									renderContent={() => (
-										<Fragment>
-											<DateTimePicker
-												currentDate={eventStart}
-												is12Hour={is12HourTime}
-												onChange={(newDateTime) =>
-													datePickerHandler(
-														eventStart,
-														newDateTime
-													)
-												}
-												__nextRemoveHelpButton
-												__nextRemoveResetButton
-											/>
-											<Button
-												className="se-datetime-popover__set-datetime"
-												onClick={() =>
-													setDateTimeHandler(true)
-												}
-												variant="secondary"
-											>
-												{__(
-													'Set time',
-													'simple-events'
-												)}
-											</Button>
-										</Fragment>
-									)}
-								/>
-							</BaseControl>
-							<BaseControl
-								label={__('End Date/Time', 'simple-events')}
-							>
-								<Dropdown
-									contentClassName="se-datetime-popover se-datetime-popover__time"
-									popoverProps={{ placement: 'bottom' }}
-									renderToggle={({ isOpen, onToggle }) => (
-										<Button
-											className="se-datetime-popover__button"
-											variant="secondary"
-											onClick={() => {
-												onToggle();
-											}}
-											aria-expanded={isOpen}
-											disabled={eventDateTime.all_day}
-										>
-											{eventDateTime.all_day
-												? '--:--'
-												: wp.date.format(
-													timeFormat,
-													eventEnd
-												)}
-										</Button>
-									)}
-									renderContent={() => (
-										<Fragment>
-											<DateTimePicker
-												currentDate={eventEnd}
-												is12Hour={is12HourTime}
-												onChange={(newDateTime) =>
-													datePickerHandler(
-														eventEnd,
-														newDateTime
-													)
-												}
-												__nextRemoveHelpButton
-												__nextRemoveResetButton
-											/>
-											<Button
-												className="se-datetime-popover__set-datetime"
-												onClick={() =>
-													setDateTimeHandler(false)
-												}
-												variant="secondary"
-												text={__(
-													'Set time',
-													'simple-events'
-												)}
-											/>
-										</Fragment>
-									)}
-								/>
-							</BaseControl>
-							<BaseControl>
-								<CheckboxControl
-									label={__('All day', 'simple-events')}
-									className='se-all-day-checkbox'
-									checked={eventDateTime.all_day}
-									onChange={() => {
-										const newEventDateTime =
-											clone(eventDateTime);
-
-										newEventDateTime.all_day =
-											!eventDateTime.all_day;
-
-										newEventDateTime.datetime_start =
-											getMoment(
-												newEventDateTime.datetime_start
-											);
-										newEventDateTime.datetime_end =
-											getMoment(
-												newEventDateTime.datetime_end
-											);
-
-										// If all day event, set time between 00:00 and 23:59.
-										if (newEventDateTime.all_day) {
-											newEventDateTime.datetime_start.startOf(
-												'date'
-											);
-											newEventDateTime.datetime_end.endOf(
-												'date'
-											);
-										} else {
-											newEventDateTime.datetime_start
-												.hour(DEFAULT_START_HOUR)
-												.minute(0);
-											newEventDateTime.datetime_end
-												.hour(DEFAULT_END_HOUR)
-												.minute(0);
-										}
-
-										newEventDateTime.datetime_start =
-											getTimestamp(
-												newEventDateTime.datetime_start
-											);
-										newEventDateTime.datetime_end =
-											getTimestamp(
-												newEventDateTime.datetime_end
-											);
-
-										const updatedDates = sortBy(
-											meta?.se_event_dates.map((item) =>
-												item === eventDateTime
-													? newEventDateTime
-													: item
-											),
-											'datetime_start'
-										);
-
-										setMeta({
-											...meta,
-											se_event_dates: updatedDates,
-											se_event_date_start: getStartAndEndDate(updatedDates).datetime_start,
-											se_event_date_end: getStartAndEndDate(updatedDates).datetime_end,
-										});
-									}}
-								/>
-							</BaseControl>
-							{multiDay && (
-								<div className="se-datetime-control__delete">
-									<Button
-										isDestructive
-										icon="no-alt"
-										label={__(
-											'Remove date',
-											'simple-events'
-										)}
-										onClick={() =>
-											removeDate(eventDateTime)
-										}
-									/>
-								</div>
-							)}
-						</div>
+			return (
+				<div className="se-unsaved-changes-message" style={{
+					background: '#fff3cd',
+					border: '1px solid #ffeaa7',
+					borderRadius: '4px',
+					padding: '12px 16px',
+					margin: '0 0 20px 0',
+					display: 'flex',
+					alignItems: 'center',
+					gap: '8px',
+					color: '#856404',
+					width: 'fit-content'
+				}}>
+					<span className="dashicons dashicons-warning" style={{
+						fontSize: '16px',
+						color: '#f39c12'
+					}}></span>
+					<div>
+						<strong>{__('Unsaved Changes', 'simple-events')}</strong>
+						<br />
+						<span style={{ fontSize: '13px' }}>
+							{__('You have unsaved date and timezone changes. Save the post to persist these changes.', 'simple-events')}
+						</span>
 					</div>
-				);
-			}
-		);
+				</div>
+			);
+		};
 
-		const EventDateTime = ({ dates }) => {
-			const addNewDate = () => {
-				const existingDates =
-					!dates || 0 === dates.length ? [] : dates;
-
-				// Set default date and time.
-				let eventStart = moment().utcOffset(OFFSET);
-
-				eventStart.hour(DEFAULT_START_HOUR);
-				eventStart.minute(0);
-				eventStart.second(0);
-
-				let eventEnd = eventStart.clone();
-
-				eventEnd.hour(DEFAULT_END_HOUR);
-
-				// Override with existing date if there is one.
-				if (existingDates.length) {
-					eventStart = getMoment(
-						last(existingDates).datetime_start
-					);
-					eventEnd = getMoment(last(existingDates).datetime_end);
-				}
-
-				// Set default date to be +1 day from the last date.
-				eventStart.add(1, 'days');
-				eventEnd.add(1, 'days');
-
-				const updatedDates = sortBy(
-					[
-						...existingDates,
-						{
-							datetime_start: wp.date.date('U', eventStart),
-							datetime_end: wp.date.date('U', eventEnd),
-							all_day: false,
-						},
-					],
-					'datetime_start'
-				);
-
-				setMeta({
-					...meta,
-					se_event_dates: updatedDates,
-					se_event_date_start: getStartAndEndDate(updatedDates).datetime_start,
-					se_event_date_end: getStartAndEndDate(updatedDates).datetime_end,
-				});
-			};
-
-			const removeDate = (date) => {
-				if (!dates.length) {
-					return;
-				}
-
-				const updatedDates = pull(dates, date);
-
-				setMeta({
-					...meta,
-					se_event_dates: updatedDates,
-					se_event_date_start: getStartAndEndDate(updatedDates).datetime_start,
-					se_event_date_end: getStartAndEndDate(updatedDates).datetime_end,
-				});
-			};
-
-			// If no dates, add a date.
-			if (!dates || 0 === dates.length) {
-				addNewDate();
-			}
+		/**
+		 * Renders the event date/time component.
+		 *
+		 * Creates a list of DateTimeGroupNew components for each event date,
+		 * sorted by start date. Each component allows editing of individual
+		 * date and time information.
+		 *
+		 * @since 2.0.0
+		 *
+		 * @param {Object} props              Component properties.
+		 * @param {Array}  props.dates        Array of event date objects to render.
+		 * @param {number} props.refreshCounter Counter to force component re-renders.
+		 * @return {JSX.Element} Fragment containing the event dates interface.
+		 */
+		const EventDateTime = ({ dates, refreshCounter }) => {
 
 			const datesOutput = [];
 
-			sortBy(dates, 'datetime_start').forEach((date, index) => {
+			sortBy(dates, 'start_date').forEach((date, index) => {
 				datesOutput.push(
-					<DateTimeGroup
-						key={index}
+					<DateTimeGroupNew
+						key={`${index}-${refreshCounter}`}
 						eventDateTime={date}
-						removeDate={removeDate}
-						multiDay={dates.length > 1}
+						removeDate={null}
+						hasMultipleDates={dates.length > 1}
+						currentTimezone={dateManagerState?.getCurrentDates()?.timezone ?? meta?.se_event_timezone ?? TIMEZONE}
+						dateManagerInstance={enhancedDateManagerInstance}
 					/>
 				);
 			});
@@ -730,45 +600,48 @@ registerBlockType('simple-events/event-info', {
 			return (
 				<Fragment>
 					<span className="se-datetimegroup-controls-label">
-						{__('Date & Time', 'simple-events')}
+						{__('Event Dates (New)', 'simple-events')}
 					</span>
 					{datesOutput}
-					<div className="se-datetime-addmore">
-						<Button isLink onClick={() => addNewDate()}>
-							{__('+ Add another date', 'simple-events')}
-						</Button>
-					</div>
+
 				</Fragment>
 			);
 		};
 
+		/**
+		 * Renders the block preview mode.
+		 *
+		 * Displays the front-end representation of the block using ServerSideRender
+		 * with the current event data. Includes block controls and unsaved changes warning.
+		 *
+		 * @since 1.0.0
+		 *
+		 * @return {JSX.Element} The preview component with ServerSideRender.
+		 */
 		const renderPreview = () => (
 			<div {...useBlockProps()}>
 				{getBlockControls()}
+				<UnsavedChangesWarning />
 				<Disabled>
 					<ServerSideRender
 						block="simple-events/event-info"
+						additionalQueryArgs={{
+							context: 'edit'
+						}}
 						attributes={{
 							eventVenue: meta?.se_event_venue,
 							eventLocation: meta?.se_event_location,
-							eventDates: meta?.se_event_dates,
-							eventTimezone: meta?.se_event_timezone,
+							eventDates: dateManagerState?.getCurrentDates()?.dates,
+							eventTimezone: dateManagerState?.getCurrentDates()?.timezone ?? meta?.se_event_timezone,
 							externalLink: meta?.se_event_external_link,
 							externalLinkLabel: meta?.se_event_external_link_label,
 							addCalendarLinks: meta?.se_event_add_calendar_links,
 						}}
+
 					/>
 				</Disabled>
 			</div>
 		);
-
-		// Show editMode if no location or date set.
-		if (
-			meta?.se_event_location.length === 0 &&
-			(!meta?.se_event_dates || !meta?.se_event_dates?.length)
-		) {
-			setAttributes({ editMode: true });
-		}
 
 		if (!editMode) {
 			return renderPreview();
@@ -783,7 +656,35 @@ registerBlockType('simple-events/event-info', {
 					isColumnLayout
 					className={props.className}
 				>
-					<EventDateTime dates={meta?.se_event_dates} />
+					<UnsavedChangesWarning />
+
+					<EventDateTime
+						dates={dateManagerState?.getCurrentDates()?.dates}
+						refreshCounter={refreshCounter}
+					/>
+					{/* Button container with 50/50 layout */}
+					<div style={{
+						display: 'flex',
+						gap: '12px',
+						width: '100%',
+						marginBottom: '16px'
+					}}>
+						<Button
+							className="se-add-date-button"
+							variant="primary"
+							onClick={handleAddDate}
+							text={__('Add Date', 'simple-events')}
+							style={{ flex: 1 }}
+						/>
+						<Button
+							className="se-revert-changes-button"
+							variant="secondary"
+							onClick={handleRevertDates}
+							disabled={!dateManagerState?.getCurrentDates()?.isDirty}
+							text={__('Revert Changes', 'simple-events')}
+							style={{ flex: 1 }}
+						/>
+					</div>
 					<TextControl
 						className="se-location-label"
 						label={__('Venue', 'simple-events')}
@@ -868,59 +769,13 @@ registerBlockType('simple-events/event-info', {
 								"Events default to the site's time zone as configured in the WordPress settings. If this event is happening in a different region, manually set the time zone here.",
 								'simple-events'
 							)}
-							value={meta?.se_event_timezone ?? TIMEZONE}
+							value={dateManagerState?.getCurrentDates()?.timezone ?? meta?.se_event_timezone ?? TIMEZONE}
 							options={TIMEZONES}
 							onChange={(value) => {
-								const updatedDates = clone(
-									meta?.se_event_dates ?? []
-								);
-
-								// Ensure that the value is a string.
-								value = !Boolean(value) ? '' : value;
-								currentTimezone = value;
-
-								if ('' === value) {
-									currentTimezone = TIMEZONE;
+								if (enhancedDateManagerInstance?.updateTimezone) {
+									enhancedDateManagerInstance.updateTimezone(value);
+									setRefreshCounter(prev => prev + 1);
 								}
-
-								updatedDates.forEach((eventDateTime) => {
-									[
-										'datetime_start',
-										'datetime_end',
-									].forEach((key) => {
-										const dateTime = moment
-											.unix(eventDateTime[key])
-											.utcOffset(
-												getDstOffset(
-													eventDateTime[key],
-													meta?.se_event_timezone
-												)
-											);
-
-										const newOffset =
-											'' !== currentTimezone
-												? getDstOffset(
-													eventDateTime[key],
-													currentTimezone
-												)
-												: OFFSET;
-
-										eventDateTime[key] = String(
-											dateTime
-												.utcOffset(newOffset, true)
-												.utc()
-												.unix()
-										);
-									});
-								});
-
-								setMeta({
-									...meta,
-									se_event_dates: updatedDates,
-									se_event_date_start: getStartAndEndDate(updatedDates).datetime_start,
-									se_event_date_end: getStartAndEndDate(updatedDates).datetime_end,
-									se_event_timezone: value,
-								});
 							}}
 						/>
 						<ToggleControl
@@ -1039,15 +894,15 @@ registerBlockType('simple-events/event-info', {
 	},
 
 	/**
-	 * The save function defines the way in which the different attributes should be combined
-	 * into the final markup, which is then serialized by Gutenberg into post_content.
+	 * Block save function.
 	 *
-	 * The "save" property must be specified and must be a valid function.
+	 * Defines how the block content is saved to the database. This block
+	 * uses dynamic rendering (ServerSideRender), so the save function
+	 * returns null and all content is generated server-side via PHP.
 	 *
-	 * @link https://wordpress.org/gutenberg/handbook/block-api/block-edit-save/
+	 * @since 1.0.0
 	 *
-	 * @param {Object} props Props.
-	 * @return {Mixed} JSX Frontend HTML.
+	 * @return {null} Returns null as this is a dynamic block.
 	 */
 	save: () => {
 		return null;
