@@ -72,7 +72,7 @@ jQuery(document).ready(function ($) {
 	 */
 	function processMigrationBatch() {
 		// Track events processed.
-		const perBatch = 1;
+		const perBatch = 24;
 
 		// Get the next events that are still pending
 		const nextEvents = $('#se_migrate_events_wrapper .se_migrate_event').filter('[data-status="pending"]').slice(0, perBatch);
