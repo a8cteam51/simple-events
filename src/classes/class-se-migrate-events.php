@@ -58,6 +58,19 @@ class SE_Migrate_Events {
 				},
 			)
 		);
+
+		// Register the route to migrate all events.
+		register_rest_route(
+			$namespace,
+			'/migrate-all-events',
+			array(
+				'methods'             => array( 'POST', 'GET' ),
+				'callback'            => array( __CLASS__, 'migrate_events_rest_all' ),
+				'permission_callback' => function () {
+					return true;
+				},
+			)
+		);
 	}
 
 	/**
@@ -94,6 +107,7 @@ class SE_Migrate_Events {
 					),
 				),
 				'posts_per_page' => -1,
+				'post_status'    => 'any',
 			)
 		);
 	}
@@ -105,6 +119,48 @@ class SE_Migrate_Events {
 	 */
 	public static function has_events_to_migrate() {
 		return count( self::get_events_to_migrate() ) > 0;
+	}
+
+	/**
+	 * Migrate all events.
+	 *
+	 * @param WP_REST_Request $request The request object.
+	 *
+	 * @return WP_REST_Response
+	 */
+	public static function migrate_events_rest_all( $request ) {
+		// Check if we have events to migrate.
+		if ( ! self::has_events_to_migrate() ) {
+			return new WP_REST_Response(
+				array(
+					'message' => esc_html__( 'No events to migrate.', 'simple-events' ),
+				),
+				200
+			);
+		}
+
+		try {
+			// Get all events to migrate.
+			$events = self::get_events_to_migrate();
+			// Migrate the events.
+			$response = self::migrate_events_by_ids( wp_list_pluck( $events, 'ID' ) );
+		} catch ( \Throwable $th ) {
+			return new WP_REST_Response(
+				array(
+					'message' => esc_html__( 'An error occurred while migrating events.', 'simple-events' ),
+					'error'   => esc_html( $th->getMessage() ),
+				),
+				500
+			);
+		}
+		// Return the response.
+		return new WP_REST_Response(
+			array(
+				'message' => esc_html__( 'Events migrated successfully.', 'simple-events' ),
+				'data'    => $response,
+			),
+			200
+		);
 	}
 
 	/**
