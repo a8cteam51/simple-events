@@ -15,7 +15,7 @@ if ( get_post_type() === SE_Event_Post_Type::$event_date_post_type ) {
 	// Validate that we have a valid event date post with a parent
 	if ( $se_post_event_date && $se_post_event_date->post_parent ) {
 		$se_parent_post = get_post( $se_post_event_date->post_parent );
-		if ( $parent_post ) {
+		if ( $se_parent_post ) {
 			$post                = $se_parent_post; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
 			$post->event_date_id = $se_post_event_date->ID;
 		}

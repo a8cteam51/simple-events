@@ -58,6 +58,7 @@ require_once SE_PLUGIN_DIR . '/vendor/autoload.php';
 
 
 require_once SE_SRC_PATH . '/classes/class-se-event-post-type.php';
+require_once SE_SRC_PATH . '/classes/class-se-event-query-utils.php';
 require_once SE_SRC_PATH . '/classes/class-se-blocks.php';
 require_once SE_SRC_PATH . '/classes/class-se-block-variations.php';
 require_once SE_SRC_PATH . '/classes/class-se-template-loader.php';

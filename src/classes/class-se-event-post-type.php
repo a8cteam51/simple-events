@@ -556,6 +556,7 @@ class SE_Event_Post_Type {
 			|| is_tax( self::$post_type . '-category' ) ) )
 			|| ( ! $query->is_main_query() && self::$post_type === $query->get( 'post_type' ) && ! $query->get( 'se_countdown' ) && $query->get( 'sub-type' ) === SE_Block_Variations::QUERY_LOOP_EVENTS )
 		) {
+
 			// Handle taxonomy filtering by getting parent event IDs first
 			$parent_event_ids = null;
 			$tax_query        = $query->get( 'tax_query' );
@@ -613,8 +614,8 @@ class SE_Event_Post_Type {
 
 			// Values for which passed events should be hidden on Feed.
 			$event_options = array( 'hide_events_on_both', 'hide_events_on_feed', 'on' );
+			if ( isset( $options['hide_past_events'] ) && ! empty( $options['hide_past_events'] ) && in_array( $options['hide_past_events'], $event_options, true ) ) {
 
-			if ( isset( $options['hide_past_events'] ) && in_array( $options['hide_past_events'], $event_options, true ) ) {
 				$existing_meta_query = $query->get( 'meta_query' );
 				if ( ! is_array( $existing_meta_query ) ) {
 					$existing_meta_query = array();
@@ -623,11 +624,30 @@ class SE_Event_Post_Type {
 				$existing_meta_query[] = array(
 					'key'     => 'se_event_date_end',
 					'value'   => time(),
-					'compare' => '>=', // what is this?
+					'compare' => '>=',
 					'type'    => 'NUMERIC',
 				);
 
 				$query->set( 'meta_query', $existing_meta_query );
+			}
+
+			// Add unique parents filtering if not treating each date as own event
+			if ( ! se_event_treat_each_date_as_own_event() ) {
+				$query->set( 'unique_parents', true );
+				$query->set( 'feed_order', $sort_order );
+
+				// Add filter for unique parents WHERE clause
+				add_filter( 'posts_where', array( 'SE_Event_Query_Utils', 'filter_unique_parents_where' ), 10, 2 );
+
+				// Add filter to modify posts for event_date_id
+				add_filter( 'the_posts', array( 'SE_Event_Query_Utils', 'modify_event_posts' ), 10, 2 );
+
+				// Add custom order by filter
+				add_filter( 'posts_orderby', array( 'SE_Event_Query_Utils', 'fix_sort_order' ), 10, 2 );
+			} else {
+				// When treating each date as own event, still convert event date posts to parent events
+				// but don't filter for unique parents
+				add_filter( 'the_posts', array( 'SE_Event_Query_Utils', 'modify_event_posts' ), 10, 2 );
 			}
 		}
 	}

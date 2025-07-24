@@ -35,3 +35,19 @@ add_action( 'se_single_content', 'the_content', 20 );
 add_action( 'se_single_content', 'se_template_calendar_links', 30 );
 // Show the next and previous links either above or below content (based on settings).
 add_action( 'se_single_content', 'se_template_event_next_previous', se_event_show_links_above_content() ? 40 : 15 );
+
+
+// Custom hooks for archive loaded vanilla.
+add_filter( 'post_type_link', function ( string $permalink, $post ) {
+// If the post type is not an event, return the permalink unchanged.
+	if ( get_post_type( $post ) !== SE_Event_Post_Type::$post_type ) {
+		return $permalink;
+	}
+
+	// If we're treating each date as own event and the post has an event_date_id, append it to the permalink.
+	if ( se_event_treat_each_date_as_own_event() && isset( $post->event_date_id ) ) {
+		$permalink .= '?se-date=' . $post->event_date_id;
+	}
+
+	return $permalink;
+}, 10, 2 );

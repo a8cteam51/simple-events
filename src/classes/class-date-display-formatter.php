@@ -112,6 +112,13 @@ class SE_Date_Display_Formatter {
 	private $time_only = false;
 
 	/**
+	 * Include HTML in date output.
+	 *
+	 * @var boolean
+	 */
+	private $use_html_in_date_output = false;
+
+	/**
 	 * Create a new instance of the date display formatter.
 	 *
 	 * @param integer $event_id The event id.
@@ -136,7 +143,9 @@ class SE_Date_Display_Formatter {
 		$this->hide_start_time                     = filter_var( get_post_meta( $event_id, 'se_event_hide_start_time', true ), FILTER_VALIDATE_BOOLEAN );
 		$this->show_add_to_calendar                = filter_var( get_post_meta( $event_id, 'se_event_add_calendar_links', true ), FILTER_VALIDATE_BOOLEAN );
 		$this->open_in_new_tab                     = filter_var( get_post_meta( $event_id, 'se_event_open_in_new_window', true ), FILTER_VALIDATE_BOOLEAN );
+		$this->use_html_in_date_output             = SE_Settings::use_html_in_date_output();
 	}
+
 
 	/**
 	 * Set the date only.
@@ -330,12 +339,14 @@ class SE_Date_Display_Formatter {
 
 		// If there is only one date, return the single date.
 		if ( 1 === $dates_count ) {
-			return sprintf( '<ul id="se-event-date-list" class="se-event-date-list__single"><li>%s</li></ul>', $this->render_single_date( $event_dates[0] ) );
+			$format = $this->use_html_in_date_output ? '<ul id="se-event-date-list" class="se-event-date-list__single"><li>%s</li></ul>' : '%s';
+			return sprintf( $format, $this->render_single_date( $event_dates[0] ) );
 		}
-
 		// Start building the output.
 		$wrapper_class = array( 'se-event-date-list', $this->group_dates ? 'se-event-date-list__grouped' : '', $this->event_date_id ? 'se-event-date-list__active' : '' );
-		$output        = sprintf( '<ul id="se-event-date-list" class="%s">', implode( ' ', $wrapper_class ) );
+		$output        = $this->use_html_in_date_output
+			? sprintf( '<ul id="se-event-date-list" class="%s">', implode( ' ', $wrapper_class ) )
+			: '';
 		// Base if we are grouped, or not.
 		if ( $this->can_group_dates( $event_dates ) ) {
 			$output .= $this->render_date_list_grouped( $event_dates );
@@ -343,7 +354,7 @@ class SE_Date_Display_Formatter {
 			$output .= $this->render_date_list_ungrouped( $event_dates );
 		}
 
-		$output .= '</ul>';
+		$output .= $this->use_html_in_date_output ? '</ul>' : '';
 
 		return $output;
 	}
@@ -395,7 +406,9 @@ class SE_Date_Display_Formatter {
 				$date['id'] = null;
 			}
 			$item_class       = array( 'se-event-date-list-item', $date['id'] === $this->event_date_id ? 'se-event-date-list-item__active' : '' );
-			$existing_output .= sprintf( '<li id="se-event-date-list-item-%s" class="%s">%s</li>', $date['id'], implode( ' ', $item_class ), $this->render_single_date( $date ) );
+			$existing_output .= $this->use_html_in_date_output
+				? sprintf( '<li id="se-event-date-list-item-%s" class="%s">%s</li>', $date['id'], implode( ' ', $item_class ), $this->render_single_date( $date ) )
+				: $this->render_single_date( $date ) . '</br>';
 		}
 
 		return $existing_output;
@@ -467,20 +480,34 @@ class SE_Date_Display_Formatter {
 
 				// Lets start compiling the output.
 				$output = '';
-				// If the date is on the same day, we can just render the date.
-				$output .= '<li><div class="se-event-date-list-item__grouped" data-se_grouped_date_label="' . $time_label . '">';
-				// Add the date.
-				$output .= '<div class="se-event-date-list-item__grouped-date">';
+				if( $this->use_html_in_date_output ) {
+
+					// If the date is on the same day, we can just render the date.
+					$output .= '<li><div class="se-event-date-list-item__grouped" data-se_grouped_date_label="' . $time_label . '">';
+					// Add the date.
+					$output .= '<div class="se-event-date-list-item__grouped-date">';
+				}
 				$output .= $this->time_only ? '' : $dates_string;
-				$output .= '</div>';
+				if( $this->use_html_in_date_output ) {
+					$output .= '</div>';
+				} else {
+					$output .= ' - ';
+				}
 
 				// Add the time.
-				$output .= '<div class="se-event-date-list-item__grouped-time">';
+				if( $this->use_html_in_date_output ) {
+					$output .= '<div class="se-event-date-list-item__grouped-time">';
+				}
 				$output .= $this->date_only ? '' : $time_label;
-				$output .= '</div>';
+				if( $this->use_html_in_date_output ) {
+					$output .= '</div>';
 
-				$output          .= '</div>';
-				$output          .= '</li>';
+					$output          .= '</div>';
+					$output          .= '</li>';
+				}
+
+				// dump( $output );
+
 				$existing_output .= $output;
 			}
 		}
@@ -544,20 +571,30 @@ class SE_Date_Display_Formatter {
 
 		// If there is only one date, return the single date.
 		if ( 1 === $dates_count ) {
-			return sprintf( '<ul id="se-event-date-list" class="se-event-date-list__single"><li>%s</li></ul>', $this->render_single_date( $event_dates[0] ) );
+			return $this->use_html_in_date_output
+				? sprintf( '<ul id="se-event-date-list" class="se-event-date-list__single"><li>%s</li></ul>', $this->render_single_date( $event_dates[0] ) )
+				: $this->render_single_date( $event_dates[0] );
 		}
 
 		// Start building the output.
 		$wrapper_class = array( 'se-event-date-list', $this->group_dates ? 'se-event-date-list__grouped' : '', $this->event_date_id ? 'se-event-date-list__active' : '' );
-		$output        = sprintf( '<ul id="se-event-date-list" class="%s">', implode( ' ', $wrapper_class ) );
+		$output        = $this->use_html_in_date_output
+			? sprintf( '<ul id="se-event-date-list" class="%s">', implode( ' ', $wrapper_class ) )
+			: '';
 
 		// Loop over each date.
 		foreach ( $event_dates as $date ) {
 			$item_class = array( 'se-event-date-list-item', $date['id'] === $this->event_date_id ? 'se-event-date-list-item__active' : '' );
-			$output    .= sprintf( '<li id="se-event-date-list-item-%s" class="%s">%s</li>', $date['id'], implode( ' ', $item_class ), $this->render_single_date( $date ) );
+
+			$output    .= $this->use_html_in_date_output
+				? sprintf( '<li id="se-event-date-list-item-%s" class="%s">%s</li>', $date['id'], implode( ' ', $item_class ), $this->render_single_date( $date ) )
+				:  $this->render_single_date( $date ) . '</br>';
 		}
 
-		$output .= '</ul>';
+		if ( $this->use_html_in_date_output ) {
+			// Close the list.
+			$output .= '</ul>';
+		}
 
 		return $output;
 	}

@@ -566,3 +566,14 @@ if ( ! function_exists( 'se_template_event_content' ) ) {
 		the_excerpt();
 	}
 }
+
+// HEREEEE
+add_action( 'pre_get_posts', function( $query ) {
+	if ( ! is_admin() ) {
+		$post_type = $query->get( 'post_type' );
+		if ( $post_type === 'se-event' || $post_type === 'se-event-date' ) {
+			// dump( $query->query_vars );
+			error_log( 'Query detected for post_type: ' . $post_type . ', is_main_query: ' . ($query->is_main_query() ? 'yes' : 'no') . ', query_vars: ' . print_r( $query->query_vars, true ) );
+		}
+	}
+}, 5 );

@@ -683,9 +683,10 @@ function se_event_create_event_date( $event_id, $event_dates ) {
 	// Create the event date post.
 	$event_date_post = array(
 		'post_title'   => sprintf(
-			// translators: %s is the event title.
-			__( 'Event Date for %s', 'simple-events' ),
-			get_the_title( $event_id )
+			// translators: 1: Event title, 2: Formatted date
+			__( '%1$s - %2$s', 'simple-events' ),
+			get_the_title( $event_id ),
+			wp_date( get_option( 'date_format' ), $event_dates['start_date'] )
 		),
 		'post_content' => '',
 		'post_status'  => 'publish',
