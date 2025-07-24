@@ -575,7 +575,7 @@ class SE_Blocks {
 				$events_query_args['feed_order']     = $feed_order;
 
 				// Add filter for unique parents WHERE clause
-				add_filter( 'posts_where', array( __CLASS__, 'filter_unique_parents_where' ), 10, 2 );
+				add_filter( 'posts_where', array( 'SE_Event_Query_Utils', 'filter_unique_parents_where' ), 10, 2 );
 			}
 
 			$show_year_dividers = ! empty( $attributes['showYearDividers'] );
@@ -584,7 +584,7 @@ class SE_Blocks {
 
 			// Add filter to modify posts for event_date_id if not treating each date as own event
 			if ( ! se_event_treat_each_date_as_own_event() ) {
-				add_filter( 'the_posts', array( __CLASS__, 'modify_event_posts_for_blocks' ), 10, 2 );
+				add_filter( 'the_posts', array( 'SE_Event_Query_Utils', 'modify_event_posts' ), 10, 2 );
 			}
 
 			if ( $events_query->have_posts() ) {
@@ -975,123 +975,6 @@ class SE_Blocks {
 		$vars[] = 'se_event_order';
 
 		return $vars;
-	}
-
-	/**
-	 * Filter posts to only include the correct event date for each parent.
-	 *
-	 * @param string   $where The WHERE clause of the query.
-	 * @param WP_Query $query The WP_Query instance.
-	 *
-	 * @return string
-	 */
-	public static function filter_unique_parents_where( $where, $query ) {
-		// Check if this is our events query and unique parents is enabled
-		if ( ! isset( $query->query_vars['unique_parents'] ) || ! isset( $query->query_vars['feed_order'] ) ) {
-			return $where;
-		}
-
-		// Skip if treating each date as own event
-		if ( se_event_treat_each_date_as_own_event() ) {
-			return $where;
-		}
-
-		global $wpdb;
-
-		$feed_order = $query->query_vars['feed_order'];
-		$meta_key   = 'desc' === strtolower( $feed_order ) ? 'se_event_date_end' : 'se_event_date_start';
-
-		// Get the current time filtering from the main query's meta_query
-		$time_filter = '';
-		$meta_query  = $query->get( 'meta_query' );
-		if ( ! empty( $meta_query ) && is_array( $meta_query ) ) {
-			foreach ( $meta_query as $meta_condition ) {
-				if ( isset( $meta_condition['key'] ) && 'se_event_date_end' === $meta_condition['key'] ) {
-					$compare = $meta_condition['compare'];
-					$value   = $meta_condition['value'];
-
-					// Add the same time filtering to the subquery
-					if ( '>=' === $compare ) {
-						// For upcoming events
-						$time_filter = "AND pm3.meta_value >= {$value}";
-					} elseif ( '<' === $compare ) {
-						// For past events
-						$time_filter = "AND pm3.meta_value < {$value}";
-					}
-					break;
-				}
-			}
-		}
-
-		// Subquery to get the correct post ID for each parent based on sort order
-		$subquery = "
-			AND {$wpdb->posts}.ID IN (
-				SELECT p1.ID
-				FROM {$wpdb->posts} p1
-				INNER JOIN {$wpdb->postmeta} pm1 ON p1.ID = pm1.post_id AND pm1.meta_key = '{$meta_key}'
-				WHERE p1.post_type = '" . SE_Event_Post_Type::$event_date_post_type . "'
-				AND p1.post_status = 'publish'
-				AND pm1.meta_value = (
-					SELECT " . ( 'desc' === strtolower( $feed_order ) ? 'MAX' : 'MIN' ) . "(pm2.meta_value)
-					FROM {$wpdb->posts} p2
-					INNER JOIN {$wpdb->postmeta} pm2 ON p2.ID = pm2.post_id AND pm2.meta_key = '{$meta_key}'
-					" . ( $time_filter ? "INNER JOIN {$wpdb->postmeta} pm3 ON p2.ID = pm3.post_id AND pm3.meta_key = 'se_event_date_end'" : '' ) . "
-					WHERE p2.post_parent = p1.post_parent
-					AND p2.post_type = '" . SE_Event_Post_Type::$event_date_post_type . "'
-					AND p2.post_status = 'publish'
-					{$time_filter}
-				)
-				GROUP BY p1.post_parent
-			)
-		";
-
-		$where .= $subquery;
-
-		return $where;
-	}
-
-	/**
-	 * Modify event posts results for blocks.
-	 *
-	 * @param array    $posts The array of post objects.
-	 * @param WP_Query $query The WP_Query instance.
-	 *
-	 * @return array
-	 */
-	public static function modify_event_posts_for_blocks( $posts, $query ) {
-		// Check if this is our events query
-		if ( ! isset( $query->query_vars['unique_parents'] ) || ! $query->query_vars['unique_parents'] ) {
-			return $posts;
-		}
-
-		// Return back the modified posts with parent info and event_date_id
-		return array_map(
-			function ( $post ) {
-				$parent = get_post( $post->post_parent );
-
-				// Get the start date from the event.
-				$start_date_ts = get_post_meta( $post->ID, 'se_event_date_start', true );
-
-				// Get the event timezone.
-				$timezone = get_post_meta( $parent->ID, 'se_event_timezone', true );
-				// use the timezone or default to the site timezone.
-				$timezone = $timezone ? $timezone : get_option( 'timezone_string' );
-
-				// Get the date in this format 2025-07-01 13:14:09
-				$start_date     = wp_date( 'Y-m-d H:i:s', $start_date_ts, new \DateTimeZone( $timezone ) );
-				$start_date_gmt = wp_date( 'Y-m-d H:i:s', $start_date_ts, new \DateTimeZone( 'UTC' ) );
-
-				// update the parent posts post date
-				$parent->post_date         = $start_date;
-				$parent->post_date_gmt     = $start_date_gmt;
-				$parent->post_modified     = $start_date;
-				$parent->post_modified_gmt = $start_date_gmt;
-				$parent->event_date_id     = $post->ID;
-
-				return $parent;
-			},
-			$posts
-		);
 	}
 }
 

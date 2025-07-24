@@ -210,6 +210,23 @@ class SE_Settings {
 			)
 		);
 
+		// Use HTML in date output.
+		add_settings_field(
+			'use_html_in_date_output',
+			sprintf(
+				// translators: %s is a HTML break tag.
+				__( 'Use HTML in date output.%s', 'simple-events' ),
+				wp_kses_post( '<br><small><em>When enabled, the date output will be wrapped in HTML tags for better styling.</em></small>' ),
+			),
+			array( __CLASS__, 'field_cb' ),
+			'simple_events',
+			'se_section_archives',
+			array(
+				'label_for' => 'use_html_in_date_output',
+				'default'   => 'off',
+			)
+		);
+
 		add_settings_section(
 			'se_section_woocommerce',
 			esc_html__( 'WooCommerce', 'simple-events' ),
@@ -807,6 +824,21 @@ class SE_Settings {
 
 		return '';
 	}
+
+	/**
+	 * Checks if there should be HTML in date output.
+	 *
+	 * @return boolean
+	 */
+	public static function use_html_in_date_output() {
+		$options = get_option( 'se_options' );
+		if ( isset( $options['use_html_in_date_output'] ) && 'on' === $options['use_html_in_date_output'] ) {
+			return true;
+		}
+
+		return false;
+	}
 }
+
 
 SE_Settings::init();

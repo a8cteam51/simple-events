@@ -566,3 +566,4 @@ if ( ! function_exists( 'se_template_event_content' ) ) {
 		the_excerpt();
 	}
 }
+
