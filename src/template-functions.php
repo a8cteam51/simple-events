@@ -601,8 +601,8 @@ if ( ! function_exists( 'se_modify_event_date_archive_body_class' ) ) {
 	 */
 	function se_modify_event_date_archive_body_class( $classes ) {
 		$classes = array_map(
-			function ( $class ) {
-				return 'post-type-archive-se-event-date' === $class ? 'post-type-archive-se-event' : $class;
+			function ( $body_class ) {
+				return 'post-type-archive-se-event-date' === $body_class ? 'post-type-archive-se-event' : $class;
 			},
 			$classes
 		);
@@ -627,14 +627,14 @@ if ( ! function_exists( 'se_modify_event_date_archive_template_title' ) ) {
 
 			// If this is a post_typw archive, use the post type archive title.
 			if ( is_post_type_archive() ) {
-				$title  = apply_filters( 'post_type_archive_title', $post_type_obj->labels->name, 'se-event' );
-				$prefix = _x( 'Archives:', 'post type archive title prefix' );
+				$title  = apply_filters( 'post_type_archive_title', $post_type_obj->labels->name, 'se-event' ); // phpcs:ignore
+				$prefix = _x( 'Archives:', 'post type archive title prefix' ); // phpcs:ignore
 			} elseif ( is_tax() && $post_type_obj ) {
 				$tax    = get_taxonomy( $post_type_obj->taxonomy );
 				$title  = single_term_title( '', false );
 				$prefix = sprintf(
 				/* translators: %s: Taxonomy singular name. */
-					_x( '%s:', 'taxonomy term archive title prefix' ),
+					_x( '%s:', 'taxonomy term archive title prefix' ), // phpcs:ignore
 					$tax->labels->singular_name
 				);
 			} else {
@@ -648,11 +648,11 @@ if ( ! function_exists( 'se_modify_event_date_archive_template_title' ) ) {
 			 *
 			 * @param string $prefix Archive title prefix.
 			 */
-			$prefix = apply_filters( 'get_the_archive_title_prefix', $prefix );
+			$prefix = apply_filters( 'get_the_archive_title_prefix', $prefix ); // phpcs:ignore
 			if ( $prefix ) {
 				$title = sprintf(
 					/* translators: 1: Title prefix. 2: Title. */
-					_x( '%1$s %2$s', 'archive title' ),
+					_x( '%1$s %2$s', 'archive title' ), // phpcs:ignore
 					$prefix,
 					'<span>' . $title . '</span>'
 				);
