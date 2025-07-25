@@ -567,3 +567,141 @@ if ( ! function_exists( 'se_template_event_content' ) ) {
 	}
 }
 
+
+if ( ! function_exists( 'se_fix_se_events_fse_archive_template' ) ) {
+	/**
+	 * Fix the template hierarchy for the SE Events FSE archive.
+	 *
+	 * @param array $templates The template hierarchy.
+	 *
+	 * @return array The modified template hierarchy.
+	 */
+	function se_fix_se_events_fse_archive_template( $templates ) {
+		if ( 'se-event-date' === get_query_var( 'post_type' ) ) {
+			// Create proper hierarchy: archive-se-events.html, then archive.html
+			$custom_hierarchy = array(
+				'archive-se-event.html',
+				'archive.html',
+			);
+
+			return $custom_hierarchy;
+		}
+		return $templates;
+	}
+}
+
+// Filter to modify the body class for the event date archive.
+if ( ! function_exists( 'se_modify_event_date_archive_body_class' ) ) {
+	/**
+	 * Modify the body class for the event date archive.
+	 *
+	 * @param array $classes The existing body classes.
+	 *
+	 * @return array The modified body classes.
+	 */
+	function se_modify_event_date_archive_body_class( $classes ) {
+		$classes = array_map(
+			function ( $body_class ) {
+				return 'post-type-archive-se-event-date' === $body_class ? 'post-type-archive-se-event' : $class;
+			},
+			$classes
+		);
+		return $classes;
+	}
+}
+
+// Modify the archive page title.
+if ( ! function_exists( 'se_modify_event_date_archive_template_title' ) ) {
+	/**
+	 * Modify the archive page title for the event date archive.
+	 *
+	 * @param string $title The existing archive title.
+	 *
+	 * @return string The modified archive title.
+	 */
+	function se_modify_event_date_archive_template_title( $title ) {
+		if ( is_post_type_archive( 'se-event-date' ) ) {
+			$original_title = $title;
+			// Get the se-event post type object to use its archive title
+			$post_type_obj = get_post_type_object( 'se-event' );
+
+			// If this is a post_typw archive, use the post type archive title.
+			if ( is_post_type_archive() ) {
+				$title  = apply_filters( 'post_type_archive_title', $post_type_obj->labels->name, 'se-event' ); // phpcs:ignore
+				$prefix = _x( 'Archives:', 'post type archive title prefix' ); // phpcs:ignore
+			} elseif ( is_tax() && $post_type_obj ) {
+				$tax    = get_taxonomy( $post_type_obj->taxonomy );
+				$title  = single_term_title( '', false );
+				$prefix = sprintf(
+				/* translators: %s: Taxonomy singular name. */
+					_x( '%s:', 'taxonomy term archive title prefix' ), // phpcs:ignore
+					$tax->labels->singular_name
+				);
+			} else {
+				$prefix = '';
+			}
+
+			/**
+			 * Filters the archive title prefix.
+			 *
+			 * @since 5.5.0
+			 *
+			 * @param string $prefix Archive title prefix.
+			 */
+			$prefix = apply_filters( 'get_the_archive_title_prefix', $prefix ); // phpcs:ignore
+			if ( $prefix ) {
+				$title = sprintf(
+					/* translators: 1: Title prefix. 2: Title. */
+					_x( '%1$s %2$s', 'archive title' ), // phpcs:ignore
+					$prefix,
+					'<span>' . $title . '</span>'
+				);
+			}
+		}
+		return $title;
+	}
+}
+
+
+
+// Modify the page HTML title for the event date archive.
+if ( ! function_exists( 'se_modify_event_date_archive_page_title' ) ) {
+	/**
+	 * Modify the page HTML title for the event date archive.
+	 *
+	 * @param string $title The existing page title.
+	 *
+	 * @return string The modified page title.
+	 */
+	function se_modify_event_date_archive_page_title( $title ) {
+		if ( is_post_type_archive( 'se-event-date' ) ) {
+			$event_post_type = get_post_type_object( 'se-event' );
+			$title           = $event_post_type->labels->name;
+		} elseif ( is_tax() ) {
+			$taxonomy = get_queried_object();
+			if ( $taxonomy ) {
+				$title = $taxonomy->name;
+			}
+		}
+		return $title;
+	}
+}
+/**
+ * Ensure that legacy themes will call the se-event archive template.
+ *
+ * @since 2.0.0
+ *
+ * @param string $template The template file to use.
+ *
+ * @return string The modified template file.
+ */
+function se_event_archive_template( $template ) {
+	if ( is_post_type_archive( 'se-event-date' ) ) {
+		// If the template is not set, use the default archive template.
+		$date_archive_template = locate_template( 'archive-se-event.php' );
+		if ( $date_archive_template ) {
+			return $date_archive_template;
+		}
+	}
+	return $template;
+}

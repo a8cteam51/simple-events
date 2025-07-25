@@ -35,3 +35,9 @@ add_action( 'se_single_content', 'the_content', 20 );
 add_action( 'se_single_content', 'se_template_calendar_links', 30 );
 // Show the next and previous links either above or below content (based on settings).
 add_action( 'se_single_content', 'se_template_event_next_previous', se_event_show_links_above_content() ? 40 : 15 );
+
+// V2 Fixes
+add_filter( 'archive_template_hierarchy', 'se_fix_se_events_fse_archive_template' );
+add_filter( 'pre_get_document_title', 'se_modify_event_date_archive_page_title' );
+add_filter( 'body_class', 'se_modify_event_date_archive_body_class' );
+add_filter( 'get_the_archive_title', 'se_modify_event_date_archive_template_title', 20, 1 );

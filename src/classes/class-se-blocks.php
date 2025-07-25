@@ -281,6 +281,7 @@ class SE_Blocks {
 		}
 
 		$dates_output = '';
+		$date_heading = '';
 
 		if ( ! empty( $event_dates ) ) {
 			$has_header_date = false;

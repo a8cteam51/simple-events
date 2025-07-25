@@ -659,7 +659,7 @@ class SE_Event_Post_Type {
 	public static function handle_expired_events() {
 		global $wp_query;
 
-		if ( $wp_query->is_singular( self::$post_type ) ) {
+		if ( $wp_query->is_singular( self::$post_type ) || $wp_query->is_singular( self::$event_date_post_type ) ) {
 			$options = get_option( 'se_options' );
 
 			// Values for which passed events should be shown on Single View.
