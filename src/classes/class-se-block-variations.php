@@ -181,7 +181,6 @@ class SE_Block_Variations {
 		// add the arg to denote unique parents.
 		$args['unique_parents'] = true;
 		$args['feed_order']     = $feed_order; // Store feed order for use in the WHERE filter
-
 		// Ensure we only get the correct event date for each parent.
 		add_filter( 'posts_where', array( 'SE_Event_Query_Utils', 'filter_unique_parents_where' ), 10, 2 );
 

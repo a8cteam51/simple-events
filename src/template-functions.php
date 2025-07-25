@@ -602,7 +602,7 @@ if ( ! function_exists( 'se_modify_event_date_archive_body_class' ) ) {
 	function se_modify_event_date_archive_body_class( $classes ) {
 		$classes = array_map(
 			function ( $body_class ) {
-				return 'post-type-archive-se-event-date' === $body_class ? 'post-type-archive-se-event' : $class;
+				return 'post-type-archive-se-event-date' === $body_class ? 'post-type-archive-se-event' : $body_class;
 			},
 			$classes
 		);

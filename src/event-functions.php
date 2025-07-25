@@ -125,7 +125,13 @@ function se_event_get_tickets_stock( $event_id ) {
  * @return mixed
  */
 function se_event_get_dates( $event_id, $event_dates = null ) {
-	__doing_it_wrong( __FUNCTION__, 'Please use the new se_event_get_event_dates() instead.', '2.0.0' );
+	_deprecated_function( __FUNCTION__, 'Please use the new se_event_get_event_dates() instead.', '2.0.0' );
+
+	return apply_filters(
+		'se_event_get_dates',
+		se_event_get_event_dates( $event_id, $event_dates ),
+		$event_id
+	);
 
 	if ( is_null( $event_dates ) ) {
 		$event_dates = get_post_meta( $event_id, 'se_event_dates', true );
@@ -315,8 +321,8 @@ function se_event_get_formatted_dates( $event_id, $event_date_id = null, $date_o
  * @deprecated 2.0.0
  */
 function se_event_format_dates( $event_dates, $timezone, $hide_end_time, $hide_start_time, $display_timezone, $date_only, $time_only ) {
-	// Add doing it wrong, suggest they use the new dateFormatter class instead.
-	__doing_it_wrong( __FUNCTION__, 'Please use the new dateFormatter class instead.', '2.0.0' );
+	// Add _deprecated_function, suggest they use the new dateFormatter class instead.
+	_deprecated_function( __FUNCTION__, 'Please use the new dateFormatter class instead.', '2.0.0' );
 
 	// Attempt to get the event date id from url.
 	$event_date_id = se_template_get_event_date_id();
