@@ -42,7 +42,11 @@ class SE_Template_Loader {
 				// If not use our custom template.
 				$plugins_own = self::locate_template( array( 'single.php' ) );
 				if ( $plugins_own ) {
-					return $plugins_own;
+					// Allow filters to override the template.
+					$plugins_own = apply_filters( 'se_single_event_template', $plugins_own );
+					if ( $plugins_own ) {
+						return $plugins_own;
+					}
 				}
 			}
 		}
@@ -97,6 +101,8 @@ class SE_Template_Loader {
 		$fallback_template = self::locate_template( array( $fallback_template ) );
 
 		if ( '' !== $fallback_template ) {
+			// Allow filters to override the template.
+			$fallback_template = apply_filters( 'se_event_archive_template_legacy', $fallback_template );
 			return $fallback_template;
 		}
 

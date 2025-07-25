@@ -41,4 +41,3 @@ add_filter( 'archive_template_hierarchy', 'se_fix_se_events_fse_archive_template
 add_filter( 'pre_get_document_title', 'se_modify_event_date_archive_page_title' );
 add_filter( 'body_class', 'se_modify_event_date_archive_body_class' );
 add_filter( 'get_the_archive_title', 'se_modify_event_date_archive_template_title', 20, 1 );
-// add_filter( 'template_include', 'se_event_archive_template', 99 );
