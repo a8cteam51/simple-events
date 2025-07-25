@@ -30,14 +30,31 @@ class SE_Template_Loader {
 	 * @return string
 	 */
 	public static function template_include( $template ) {
+		// Check if we are looking for a single event or event date template.
+		if ( is_single() && get_post_type() === SE_Event_Post_Type::$post_type ) {
+			// Attempt to look for the single event template in themes etc.
+			$theme_templates = array(
+				'single-se-event.php',
+			);
+			// Determine if any of these templates is available in the theme.
+			$single_event_template = get_query_template( 'singular', $theme_templates );
+			if ( ! $single_event_template ) {
+				// If not use our custom template.
+				$plugins_own = self::locate_template( array( 'single.php' ) );
+				if ( $plugins_own ) {
+					return $plugins_own;
+				}
+			}
+		}
+
 		// Return early if this view is not an event view.
-		if ( ! is_singular( 'se-event' ) && ! is_post_type_archive( 'se-event' ) ) {
+		if ( ! is_singular( 'se-event-date' ) && ! is_post_type_archive( 'se-event-date' ) ) {
 			return $template;
 		}
 
 		// Determine if standard single se-event templates are available in the theme
 		// before replacing with the custom template in this plugin.
-		if ( is_singular( 'se-event' ) ) {
+		if ( is_singular( 'se-event-date' ) ) {
 			$event = get_post();
 
 			$theme_templates = array(
@@ -62,14 +79,13 @@ class SE_Template_Loader {
 
 		// Determine if standard se-event archive templates are available in the theme
 		// before replacing with the custom template in this plugin.
-		if ( is_archive( 'se-event' ) ) {
+		if ( is_archive( 'se-event-date' ) ) {
 			$theme_templates = array(
 				'archive-se-event.php',
 			);
 
 			// Determine if any of these templates is available in the theme.
 			$archive_event_template = get_query_template( 'archive', $theme_templates );
-
 			if ( $archive_event_template ) {
 				return $archive_event_template;
 			}

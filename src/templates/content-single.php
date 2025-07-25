@@ -9,12 +9,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 ?>
-
-<div id="post-<?php the_ID(); ?>" <?php post_class(); ?>>
+<article id="post-<?php the_ID(); ?>" <?php post_class(); ?>>
 	<?php
 		/**
 		 * Hook: se_archive_content.
 		 */
 		do_action( 'se_single_content' );
 	?>
-</div>
+</article>
