@@ -132,25 +132,6 @@ function se_event_get_dates( $event_id, $event_dates = null ) {
 		se_event_get_event_dates( $event_id, $event_dates ),
 		$event_id
 	);
-
-	if ( is_null( $event_dates ) ) {
-		$event_dates = get_post_meta( $event_id, 'se_event_dates', true );
-	}
-
-	if ( empty( $event_dates ) ) {
-		return apply_filters( 'se_event_dates', false, $event_id );
-	}
-
-	// Sort dates.
-	if ( count( $event_dates ) > 1 ) {
-		array_multisort(
-			array_column( $event_dates, 'datetime_start' ),
-			SORT_ASC,
-			$event_dates
-		);
-	}
-
-	return apply_filters( 'se_event_dates', $event_dates, $event_id );
 }
 
 /**

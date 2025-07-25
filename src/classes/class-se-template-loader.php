@@ -62,10 +62,9 @@ class SE_Template_Loader {
 			if ( $archive_event_template ) {
 				return $archive_event_template;
 			} else {
-				return self::locate_template( array( 'archive.php') );
+				return self::locate_template( array( 'archive.php' ) );
 			}
 		}
-
 
 		// Return early if this view is not an event view.
 		if ( ! is_singular( 'se-event' ) && ! is_post_type_archive( 'se-event' ) ) {
@@ -96,7 +95,6 @@ class SE_Template_Loader {
 
 			$fallback_template = 'single.php';
 		}
-
 
 		// Determine if standard se-event archive templates are available in the theme
 		// before replacing with the custom template in this plugin.
