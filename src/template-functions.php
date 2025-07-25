@@ -52,7 +52,15 @@ if ( ! function_exists( 'se_template_event_archive_title' ) ) {
 	 * @return void
 	 */
 	function se_template_event_archive_title() {
-		the_title( sprintf( '<h2 class="entry-title"><a href="%s" rel="bookmark">', esc_url( get_permalink() ) ), '</a></h2>' );
+		$permalink = get_permalink();
+
+		global $post;
+		// If we have an event date id, add to the permalink.
+		if ( isset( $post->event_date_id ) ) {
+			$permalink = add_query_arg( 'se-date', $post->event_date_id, $permalink );
+		}
+
+		the_title( sprintf( '<h2 class="entry-title"><a href="%s" rel="bookmark">', esc_url( $permalink ) ), '</a></h2>' );
 	}
 }
 
@@ -100,7 +108,7 @@ if ( ! function_exists( 'se_template_event_date' ) ) {
 	 * @return void
 	 */
 	function se_template_event_date() {
-		__doing_it_wrong( __FUNCTION__, 'Please use the new date formatter class instead.', '2.0.0' );
+		_doing_it_wrong( __FUNCTION__, 'Please use the new date formatter class instead.', '2.0.0' );
 
 		$event_dates = se_event_get_dates( get_the_ID() );
 
@@ -233,15 +241,17 @@ if ( ! function_exists( 'se_template_archive_pagination' ) ) {
 
 		$big = 999999999; // need an unlikely integer.
 
-		echo wp_kses_post(
-			paginate_links(
-				array(
-					'base'    => str_replace( $big, '%#%', get_pagenum_link( $big ) ),
-					'format'  => '?paged=%#%',
-					'current' => max( 1, get_query_var( 'paged' ) ),
-					'total'   => $wp_query->max_num_pages,
-				)
+		$links = paginate_links(
+			array(
+				'base'    => str_replace( $big, '%#%', get_pagenum_link( $big ) ),
+				'format'  => '?paged=%#%',
+				'current' => max( 1, get_query_var( 'paged' ) ),
+				'total'   => $wp_query->max_num_pages,
 			)
+		);
+
+		echo wp_kses_post(
+			$links ?? ''
 		);
 	}
 }

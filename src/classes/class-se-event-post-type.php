@@ -559,7 +559,7 @@ class SE_Event_Post_Type {
 
 			// Handle taxonomy filtering by getting parent event IDs first
 			$date_post_ids = null;
-			$tax_query        = $query->get( 'tax_query' );
+			$tax_query     = $query->get( 'tax_query' );
 
 			// Check if we have taxonomy queries for event categories
 			if ( ! empty( $tax_query ) || is_tax( self::$post_type . '-category' ) ) {
@@ -604,14 +604,7 @@ class SE_Event_Post_Type {
 			// If we have taxonomy filtering, limit to dates of matching parent events
 			if ( null !== $date_post_ids ) {
 				$query->set( 'post__in', $date_post_ids );
-				// Remove tax_query since we're now querying date posts
-				$query->set( 'tax_query', array() );
-
-				// Force rebuild of WP_Tax_Query
-				$query->tax_query = new WP_Tax_Query( array() );
-
-				// Optional: also clear queried_terms if needed
-				$query->tax_query->queried_terms = array();
+				unset( $query->query_vars['se-event-category'] );
 			}
 
 			// Order by event date start timestamp
