@@ -147,10 +147,10 @@ const TicketSelection = withState( {
 		setAttributes( { selected: ids } );
 	};
 
-	const getSelectedProducts = ( items = products ) => {
-		return selected.map( ( id ) =>
-			items.find( ( item ) => item.id === id )
-		);
+	const getSelectedProducts = (items = products) => {
+		return selected
+			.map((id) => items.find((item) => item.id === id))
+			.filter(Boolean); // This removes undefined items
 	};
 
 	const searchList = (
