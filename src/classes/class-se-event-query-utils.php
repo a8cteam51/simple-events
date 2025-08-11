@@ -17,6 +17,60 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class SE_Event_Query_Utils {
 
+		/**
+	 * Get all child date posts from a tax query.
+	 *
+	 * @param array $tax_query The taxonomy query.
+	 *
+	 * @return array
+	 */
+	public static function get_child_date_posts_from_tax_query( array $tax_query ): array {
+
+		// If this is empty, return early.
+		if ( empty( $tax_query ) ) {
+			return array();
+		}
+
+		// Do a query of all se-event posts using the tax query.
+		$query = new \WP_Query(
+			array(
+				'post_type'      => SE_Event_Post_Type::$post_type,
+				'post_status'    => 'publish',
+				'tax_query'      => $tax_query,
+				'fields'         => 'ids',
+				'posts_per_page' => -1,
+			)
+		);
+		// If no posts found, return empty array.
+		if ( ! $query->have_posts() ) {
+			return array();
+		}
+
+		$events = $query->posts;
+
+		return self::get_event_dates_from_events( $events );
+	}
+
+	/**
+	 * Get all child post ids from an array of parent post ids.
+	 *
+	 * @param array $events The parent post IDs.
+	 *
+	 * @return array
+	 */
+	public static function get_event_dates_from_events( array $events ): array {
+		$dates = array();
+		foreach ( $events as $event_id ) {
+			$event_dates = se_event_get_event_dates( $event_id );
+			if ( ! empty( $event_dates ) ) {
+				$dates = array_merge( $dates, wp_list_pluck( $event_dates, 'id' ) );
+			}
+		}
+
+		// Return the unique event dates.
+		return array_unique( $dates );
+	}
+
 	/**
 	 * Filter posts to only include the correct event date for each parent.
 	 *

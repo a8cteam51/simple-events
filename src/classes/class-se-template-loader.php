@@ -51,8 +51,23 @@ class SE_Template_Loader {
 			}
 		}
 
+		// Handle taxonomy archives for event categories.
+		if ( is_archive( 'se-event-category' ) ) {
+			$theme_templates = array(
+				'archive-se-event.php',
+			);
+
+			// Determine if any of these templates is available in the theme.
+			$archive_event_template = get_query_template( 'archive', $theme_templates );
+			if ( $archive_event_template ) {
+				return $archive_event_template;
+			} else {
+				return self::locate_template( array( 'archive.php' ) );
+			}
+		}
+
 		// Return early if this view is not an event view.
-		if ( ! is_singular( 'se-event-date' ) && ! is_post_type_archive( 'se-event-date' ) ) {
+		if ( ! is_singular( 'se-event' ) && ! is_post_type_archive( 'se-event' ) ) {
 			return $template;
 		}
 

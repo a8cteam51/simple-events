@@ -178,10 +178,21 @@ class SE_Block_Variations {
 			$args['order']    = $feed_order;
 		}
 
+		// If we have any taxonomies, we need to ensure they are set correctly.
+		if ( ! empty( $args['tax_query'] ) && is_array( $args['tax_query'] ) ) {
+			// Ensure we only get the correct event date for each
+			$post_ids = SE_Event_Query_Utils::get_child_date_posts_from_tax_query( $args['tax_query'] );
+			if ( ! empty( $post_ids ) ) {
+				$args['post__in'] = $post_ids;
+			}
+
+			// Unset the tax query to avoid conflicts.
+			unset( $args['tax_query'] );
+		}
+
 		// add the arg to denote unique parents.
 		$args['unique_parents'] = true;
 		$args['feed_order']     = $feed_order; // Store feed order for use in the WHERE filter
-
 		// Ensure we only get the correct event date for each parent.
 		add_filter( 'posts_where', array( 'SE_Event_Query_Utils', 'filter_unique_parents_where' ), 10, 2 );
 
