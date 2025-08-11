@@ -6,7 +6,7 @@ import DraggableItem from '../draggable';
 /**
  * External dependencies
  */
-import { __ } from '@wordpress/i18n';
+import { __, sprintf } from '@wordpress/i18n';
 import apiFetch from "@wordpress/api-fetch";
 import {
 	Button,
