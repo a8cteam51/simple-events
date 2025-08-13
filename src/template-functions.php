@@ -438,9 +438,11 @@ function se_event_get_next_event( int $event_id, ?int $event_date_id = null ): ?
 
 	// If we dont allow grouping, add the event id to parent not in.
 	if ( ! $allow_grouping ) {
-		$args['post__not_in'] = array_merge(
-			$args['post__not_in'],
-			array_map( fn( array $date ): int => $date['id'], se_event_get_event_dates( $event_id ) )
+		$args['post__not_in'] = array_unique(
+			array_merge(
+				$args['post__not_in'],
+				array_map( fn( array $date ): int => $date['id'], se_event_get_event_dates( $event_id ) )
+			)
 		);
 	}
 
@@ -507,9 +509,11 @@ function se_event_get_previous_event( int $event_id, ?int $event_date_id = null 
 
 	// If we dont allow grouping, add the event id to parent not in.
 	if ( ! $allow_grouping ) {
-		$args['post__not_in'] = array_merge(
-			$args['post__not_in'],
-			array_map( fn( array $date ): int => $date['id'], se_event_get_event_dates( $event_id ) )
+		$args['post__not_in'] = array_unique(
+			array_merge(
+				$args['post__not_in'],
+				array_map( fn( array $date ): int => $date['id'], se_event_get_event_dates( $event_id ) )
+			)
 		);
 	}
 
