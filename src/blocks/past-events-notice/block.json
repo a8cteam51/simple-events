@@ -1,0 +1,27 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 2,
+	"name": "simple-events/past-events-notice",
+	"title": "Past Events Notice",
+	"description": "Display the notice message set in the Simple Events settings.",
+	"icon": "megaphone",
+	"category": "simple-events",
+	"keywords": ["past-events", "notice", "Simple Events"],
+	"supports": {
+		"html": false,
+		"align": true,
+		"typography": {
+			"fontSize": true,
+			"lineHeight": true
+		},
+		"spacing": {
+			"margin": true,
+			"padding": true,
+			"blockGap": true
+		},
+		"color": {
+			"text": true
+		}
+	},
+	"editorScript": "file:./index.js"
+}

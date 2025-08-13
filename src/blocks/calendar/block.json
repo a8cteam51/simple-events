@@ -1,0 +1,130 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 2,
+	"name": "simple-events/calendar",
+	"title": "Simple Events Calendar",
+	"icon": "calendar",
+	"category": "simple-events",
+	"keywords": ["event", "calendar", "view", "Simple Events"],
+	"attributes": {
+		"alignment": {
+			"type": "string",
+			"default": "none"
+		},
+		"eventModalAccess": {
+			"type": "boolean",
+			"default": false
+		},
+		"modalBgColor": {
+			"type": "string",
+			"default": ""
+		},
+		"modalTextColor": {
+			"type": "string",
+			"default": ""
+		},
+		"modalIconColor": {
+			"type": "string",
+			"default": ""
+		},
+		"showModalTitle": {
+			"type": "boolean",
+			"default": false
+		},
+		"showModalExcerpt": {
+			"type": "boolean",
+			"default": false
+		},
+		"showModalWhenNoThumbnails": {
+			"type": "boolean",
+			"default": false
+		},
+		"hideNeighbourEvents": {
+			"type": "boolean",
+			"default": false
+		},
+		"presentDayBg": {
+			"type": "string",
+			"default": ""
+		},
+		"presentDayColor": {
+			"type": "string",
+			"default": ""
+		},
+		"presentDayBorder": {
+			"type": "string",
+			"default": ""
+		},
+		"eventDaysBg": {
+			"type": "string",
+			"default": ""
+		},
+		"eventDaysColor": {
+			"type": "string",
+			"default": ""
+		},
+		"eventDaysBorder": {
+			"type": "string",
+			"default": ""
+		},
+		"pastDaysBg": {
+			"type": "string",
+			"default": ""
+		},
+		"pastDaysColor": {
+			"type": "string",
+			"default": ""
+		},
+		"pastDaysBorder": {
+			"type": "string",
+			"default": ""
+		},
+		"upcomingDaysBg": {
+			"type": "string",
+			"default": ""
+		},
+		"upcomingDaysColor": {
+			"type": "string",
+			"default": ""
+		},
+		"upcomingDaysBorder": {
+			"type": "string",
+			"default": ""
+		},
+		"monthYearColor": {
+			"type": "string",
+			"default": ""
+		},
+		"arrowColor": {
+			"type": "string",
+			"default": ""
+		},
+		"arrowPosition": {
+			"type": "string",
+			"default": "top"
+		},
+		"mobileArrowPosition": {
+			"type": "string",
+			"default": "top"
+		},
+		"showDot": {
+			"type": "boolean",
+			"default": true
+		},
+		"eventDotColor": {
+			"type": "string",
+			"default": ""
+		}
+	},
+	"supports": {
+		"multiple": false,
+		"reusable": false,
+		"html": false,
+		"align": true,
+		"alignment": false
+	},
+	"editorScript": "file:./index.js",
+	"editorStyle": "file:./index.css",
+	"style": "file:./style-index.css",
+	"viewScript": "file:./view.js"
+}

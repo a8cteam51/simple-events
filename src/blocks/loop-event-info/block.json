@@ -1,0 +1,69 @@
+{
+    "$schema": "https://schemas.wp.org/trunk/block.json",
+    "apiVersion": 2,
+    "name": "simple-events/loop-event-info",
+    "title": "Event Metadata",
+    "description": "Display event meta in a custom query loop.",
+    "icon": "tag",
+    "category": "simple-events",
+    "keywords": ["event info", "date", "location", "Simple Events", "meta"],
+    "usesContext": ["postId"],
+    "attributes": {
+        "textAlign": {
+            "type": "string",
+            "default": "left"
+        },
+        "thePostId": {
+            "type": "integer",
+            "default": 0
+        },
+        "metaName": {
+            "enum": ["location", "venue", "dates", "date", "time"],
+            "type": "string",
+            "default": "dates"
+        },
+        "metaPrefix": {
+            "type": "string",
+            "default": ""
+        },
+        "addCalendarLinks": {
+            "type": "boolean"
+        },
+        "feedType": {
+            "type": "string",
+            "default": "default"
+        },
+        "order": {
+            "type": "string",
+            "default": "asc"
+        }
+    },
+    "supports": {
+        "html": false,
+        "align": true,
+        "typography": {
+            "fontSize": true,
+            "lineHeight": true,
+            "__experimentalFontFamily": true,
+            "__experimentalFontWeight": true,
+            "__experimentalFontStyle": true,
+            "__experimentalTextTransform": true,
+            "__experimentalTextDecoration": true,
+            "__experimentalLetterSpacing": true,
+            "__experimentalDefaultControls": {
+                "fontSize": true
+            }
+        },
+        "spacing": {
+            "margin": true,
+            "padding": true,
+            "blockGap": true
+        },
+        "color": {
+            "text": true
+        }
+    },
+    "editorScript": "file:./index.js",
+    "editorStyle": "file:./editor.css",
+    "style": "file:./style.css"
+}
