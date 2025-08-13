@@ -532,7 +532,7 @@ if ( ! function_exists( 'se_get_date_ids_for_non_published_events' ) ) {
 	/**
 	 * Return an array of all event dates, where the parent is not published.
 	 *
-	 * @since 2.0.0
+	 * @since 2.0.4
 	 *
 	 * @return int[]
 	 */
