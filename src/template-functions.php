@@ -434,7 +434,7 @@ function se_event_get_next_event( int $event_id, ?int $event_date_id = null ): ?
 	);
 
 	// Ensure any events that are not published are not included in the query.
-	$args['post__not_in'] = se_get_dates_from_non_published_events();
+	$args['post__not_in'] = se_get_date_ids_for_non_published_events();
 
 	// If we dont allow grouping, add the event id to parent not in.
 	if ( ! $allow_grouping ) {
@@ -503,7 +503,7 @@ function se_event_get_previous_event( int $event_id, ?int $event_date_id = null 
 	);
 
 	// Ensure any events that are not published are not included in the query.
-	$args['post__not_in'] = se_get_dates_from_non_published_events();
+	$args['post__not_in'] = se_get_date_ids_for_non_published_events();
 
 	// If we dont allow grouping, add the event id to parent not in.
 	if ( ! $allow_grouping ) {
@@ -527,7 +527,7 @@ function se_event_get_previous_event( int $event_id, ?int $event_date_id = null 
 	return $previous_event;
 }
 
-if ( ! function_exists( 'se_get_dates_from_non_published_events' ) ) {
+if ( ! function_exists( 'se_get_date_ids_for_non_published_events' ) ) {
 
 	/**
 	 * Return an array of all event dates, where the parent is not published.
@@ -536,7 +536,7 @@ if ( ! function_exists( 'se_get_dates_from_non_published_events' ) ) {
 	 *
 	 * @return int[]
 	 */
-	function se_get_dates_from_non_published_events() {
+	function se_get_date_ids_for_non_published_events() {
 		static $dates = null;
 		if ( is_array( $dates ) ) {
 			return $dates;
