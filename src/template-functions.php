@@ -388,6 +388,7 @@ if ( ! function_exists( 'se_template_event_next_previous' ) ) {
 	}
 }
 
+
 /**
  * Gets the next event based on a time stamp.
  *
@@ -431,13 +432,17 @@ function se_event_get_next_event( int $event_id, ?int $event_date_id = null ): ?
 			),
 		),
 	);
+
+	// Ensure any events that are not published are not included in the query.
+	$args['post__not_in'] = se_get_date_ids_for_non_published_events();
+
 	// If we dont allow grouping, add the event id to parent not in.
 	if ( ! $allow_grouping ) {
-		$args['post__not_in'] = array_map(
-			function ( $post ) {
-				return $post['id'];
-			},
-			se_event_get_event_dates( $event_id )
+		$args['post__not_in'] = array_unique(
+			array_merge(
+				$args['post__not_in'],
+				array_map( fn( array $date ): int => $date['id'], se_event_get_event_dates( $event_id ) )
+			)
 		);
 	}
 
@@ -498,13 +503,17 @@ function se_event_get_previous_event( int $event_id, ?int $event_date_id = null 
 			),
 		),
 	);
+
+	// Ensure any events that are not published are not included in the query.
+	$args['post__not_in'] = se_get_date_ids_for_non_published_events();
+
 	// If we dont allow grouping, add the event id to parent not in.
 	if ( ! $allow_grouping ) {
-		$args['post__not_in'] = array_map(
-			function ( $post ) {
-				return $post['id'];
-			},
-			se_event_get_event_dates( $event_id )
+		$args['post__not_in'] = array_unique(
+			array_merge(
+				$args['post__not_in'],
+				array_map( fn( array $date ): int => $date['id'], se_event_get_event_dates( $event_id ) )
+			)
 		);
 	}
 
@@ -520,6 +529,45 @@ function se_event_get_previous_event( int $event_id, ?int $event_date_id = null 
 	wp_reset_postdata();
 
 	return $previous_event;
+}
+
+if ( ! function_exists( 'se_get_date_ids_for_non_published_events' ) ) {
+
+	/**
+	 * Return an array of all event dates, where the parent is not published.
+	 *
+	 * @since 2.0.4
+	 *
+	 * @return int[]
+	 */
+	function se_get_date_ids_for_non_published_events() {
+		static $dates = null;
+		if ( is_array( $dates ) ) {
+			return $dates;
+		}
+
+		// Get all events that not published (draft or pending or private).
+		$args        = array(
+			'post_type'      => SE_Event_Post_Type::$post_type,
+			'post_status'    => array_diff( get_post_stati(), array( 'publish' ) ),
+			'posts_per_page' => -1,
+			'fields'         => 'ids',
+		);
+		$draft_dates = get_posts( $args );
+
+		$dates = array();
+
+		foreach ( $draft_dates as $draft_date ) {
+			// Get all dates for this event.
+			$event_dates = se_event_get_event_dates( $draft_date );
+			if ( ! empty( $event_dates ) ) {
+				foreach ( $event_dates as $date ) {
+					$dates[] = $date['id'];
+				}
+			}
+		}
+		return $dates;
+	}
 }
 
 if ( ! function_exists( 'se_expired_event_notice' ) ) {

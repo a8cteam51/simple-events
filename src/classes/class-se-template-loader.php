@@ -71,6 +71,9 @@ class SE_Template_Loader {
 			return $template;
 		}
 
+		// Define a fallback template.
+		$fallback_template = '';
+
 		// Determine if standard single se-event templates are available in the theme
 		// before replacing with the custom template in this plugin.
 		if ( is_singular( 'se-event-date' ) ) {
