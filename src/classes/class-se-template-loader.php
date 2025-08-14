@@ -30,6 +30,10 @@ class SE_Template_Loader {
 	 * @return string
 	 */
 	public static function template_include( $template ) {
+		if ( wp_is_block_theme() && str_contains( $template, 'template-canvas.php' ) ) {
+			return $template;
+		}
+
 		// Check if we are looking for a single event or event date template.
 		if ( is_single() && get_post_type() === SE_Event_Post_Type::$post_type ) {
 			// Attempt to look for the single event template in themes etc.

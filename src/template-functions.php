@@ -637,12 +637,15 @@ if ( ! function_exists( 'se_fix_se_events_fse_archive_template' ) ) {
 	function se_fix_se_events_fse_archive_template( $templates ) {
 		if ( 'se-event-date' === get_query_var( 'post_type' ) ) {
 			// Create proper hierarchy: archive-se-events.html, then archive.html
-			$custom_hierarchy = array(
+			$custom_hierarchy_fse    = array(
 				'archive-se-event.html',
 				'archive.html',
 			);
-
-			return $custom_hierarchy;
+			$custom_hierarchy_legacy = array(
+				'archive-se-event.php',
+				'archive.php',
+			);
+			return wp_is_block_theme() ? $custom_hierarchy_fse : $custom_hierarchy_legacy;
 		}
 		return $templates;
 	}
