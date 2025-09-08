@@ -137,27 +137,37 @@ class SE_Calendar_Export {
 					// Get the event location from the post meta.
 					$location = get_post_meta( $event_id, 'se_event_location', true );
 					if ( ! empty( $location ) ) {
-						$location = apply_filters( 'se_ical_event_location', $location, $event_id, $event_date );
-						$location = new Location( $location );
-						$event->setLocation( $location );
+						$location_object = new Location( $location );
+						$location_object = apply_filters( 'se_calendar_export_event_location', $location_object, $event_id, $event_date );
+						$event->setLocation( $location_object );
 					}
+
+					// Allow 3rd parties to modify the event.
+					$event = apply_filters( 'se_calendar_export_event', $event, $event_id, $event_date );
+
 					$v_events[] = $event;
 				}
 			}
 		}
-		// dd( $v_events );
 		// Create the calendar.
 		$calendar = new Calendar( $v_events );
-		$calendar->addTimeZone(new TimeZone('UTC'));
+		$calendar->addTimeZone( new TimeZone( 'UTC' ) );
 
-		// dd( 1 );
+		// Allow 3rd parties to modify the calendar.
+		$calendar = apply_filters( 'se_calendar_export_calendar', $calendar );
+
 		// Create the presenter.
 		$calendar_presenter = new CalendarFactory();
 
 		header( 'Content-Type: text/calendar; charset=utf-8' );
 		header( 'Content-Disposition: attachment; filename="cal.ics"' );
 
-		echo (string) $calendar_presenter->createCalendar( $calendar ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		$renderable = (string) $calendar_presenter->createCalendar( $calendar );
+
+		// Allow 3rd parties to modify the output.
+		$renderable = apply_filters( 'se_calendar_export_rendered', $renderable );
+
+		echo $renderable; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		exit;
 	}
 }

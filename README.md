@@ -95,6 +95,60 @@ add_action('se_event_updated_query_dates', function( int $event_id ) {
 }, 10, 2);
 ```
 
+### Calendar Export
+
+#### Modify export query arguments
+```php
+add_filter('se_calendar_export_query_args', function( array $args ) {
+	// Modify the query arguments for calendar export
+	$args['posts_per_page'] = 50; // Export more events
+	return $args;
+}, 10, 1);
+```
+
+#### Modify event location for iCal
+```php
+add_filter('se_calendar_export_event_location', function( $location_object, int $event_id, array $event_date ) {
+	// Modify the location object in iCal export
+	// $location_object is an Eluceo\iCal\Domain\ValueObject\Location object
+	
+	// You can create a new Location object with additional details
+	$venue = get_post_meta( $event_id, 'se_event_venue', true );
+	$full_address = $location_object->getValue();
+	if ( ! empty( $venue ) ) {
+		$full_address = $venue . ', ' . $full_address;
+	}
+	
+	return new \Eluceo\iCal\Domain\ValueObject\Location( $full_address );
+}, 10, 3);
+```
+
+#### Modify individual event in export
+```php
+add_filter('se_calendar_export_event', function( $event, int $event_id, array $event_date ) {
+	// Modify individual event before adding to calendar
+	// $event is an Eluceo\iCal\Domain\Entity\Event object
+	return $event;
+}, 10, 3);
+```
+
+#### Modify the calendar object
+```php
+add_filter('se_calendar_export_calendar', function( $calendar, array $events ) {
+	// Modify the calendar object before rendering
+	// $calendar is an Eluceo\iCal\Domain\Entity\Calendar object
+	return $calendar;
+}, 10, 2);
+```
+
+#### Modify the raw iCal output
+```php
+add_filter('se_calendar_export_rendered', function( string $ical_content ) {
+	// Modify the final iCal text output before sending
+	return $ical_content;
+}, 10, 1);
+```
+
 ## Extensions
 
 ### Featured image with Focal Point
