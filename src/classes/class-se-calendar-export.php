@@ -18,7 +18,6 @@ use Eluceo\iCal\Domain\ValueObject\TimeSpan;
 use Eluceo\iCal\Domain\ValueObject\SingleDay;
 use Eluceo\iCal\Domain\ValueObject\UniqueIdentifier;
 use Eluceo\iCal\Presentation\Factory\CalendarFactory;
-use Eluceo\iCal\Domain\ValueObject\TimeZoneIdentifier;
 use Eluceo\iCal\Domain\ValueObject\DateTime as ICalDateTime;
 
 
