@@ -8,6 +8,20 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+use Eluceo\iCal\Domain\Entity\Event;
+use Eluceo\iCal\Domain\Entity\Calendar;
+use Eluceo\iCal\Domain\Entity\TimeZone;
+use Eluceo\iCal\Domain\ValueObject\Date;
+use Eluceo\iCal\Domain\ValueObject\Location;
+use Eluceo\iCal\Domain\ValueObject\MultiDay;
+use Eluceo\iCal\Domain\ValueObject\TimeSpan;
+use Eluceo\iCal\Domain\ValueObject\SingleDay;
+use Eluceo\iCal\Domain\ValueObject\UniqueIdentifier;
+use Eluceo\iCal\Presentation\Factory\CalendarFactory;
+use Eluceo\iCal\Domain\ValueObject\TimeZoneIdentifier;
+use Eluceo\iCal\Domain\ValueObject\DateTime as ICalDateTime;
+
+
 /**
  * Template Loader Class.
  */
@@ -45,9 +59,9 @@ class SE_Calendar_Export {
 	 * @return void
 	 */
 	public static function icalendar() {
-		$events     = array();
-		$post_id    = false;
-		$v_calendar = new \Eluceo\iCal\Component\Calendar( get_site_url() );
+		$events   = array();
+		$post_id  = false;
+		$v_events = array();
 
 		if ( ! empty( $_REQUEST['id'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			$post_id = intval( $_REQUEST['id'] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
@@ -75,8 +89,6 @@ class SE_Calendar_Export {
 				$event_dates = se_event_get_event_dates( $event_id );
 
 				foreach ( $event_dates as $event_date ) {
-					$v_event = new \Eluceo\iCal\Component\Event();
-
 					// If the date is hidden from the calendar, skip it.
 					if ( true === (bool) $event_date['hide_from_calendar'] ) {
 						continue;
@@ -86,34 +98,67 @@ class SE_Calendar_Export {
 						continue;
 					}
 
-					$date_start = new \DateTime();
-					$date_start->setTimestamp( $event_date['start_date'] );
+					$date_start = new \DateTimeImmutable();
+					$date_start = $date_start->setTimestamp( $event_date['start_date'] );
 
-					$date_end = new \DateTime();
-					$date_end->setTimestamp( $event_date['end_date'] );
+					$date_end = new \DateTimeImmutable();
+					$date_end = $date_end->setTimestamp( $event_date['end_date'] );
 
-					$v_event
-						->setDtStart( $date_start )
-						->setDtEnd( $date_end )
-						->setSummary( se_event_get_title( $event_id ) );
+					// Set the start and end as UTC.
+					$start_utc = $date_start->setTimezone( new \DateTimeZone( 'UTC' ) );
+					$end_utc   = $date_end->setTimezone( new \DateTimeZone( 'UTC' ) );
+
+					// Build the occurrence to match old semantics:
+					$same_day   = $date_start->format( 'Y-m-d' ) === $date_end->format( 'Y-m-d' );
+					$is_all_day = filter_var( $event_date['all_day'], FILTER_VALIDATE_BOOLEAN );
+
+					if ( ! $is_all_day ) {
+						$occurrence = new TimeSpan(
+							new ICalDateTime( $start_utc, true ),
+							new ICalDateTime( $end_utc, true )
+						);
+					} elseif ( $same_day ) {
+						$occurrence = new SingleDay( new Date( $date_start ) );
+					} else {
+						// so add +1 day to include the final day in the all-day span.
+						$end_date_exclusive = $date_end->modify( '+1 day' );
+						$occurrence         = new MultiDay( new Date( $start_utc ), new Date( $end_date_exclusive ) );
+					}
+
+					// Create the event, with a unique but reproducible ID.
+					$uid   = md5( get_site_url() . '_' . $event_id . '_' . $event_date['start_date'] . '_' . $event_date['end_date'] );
+					$event = ( new Event( new UniqueIdentifier( $uid ) ) )
+						->setOccurrence( $occurrence )
+						->setSummary( get_the_title( $event_id ) )
+						->setDescription( esc_html( get_the_excerpt( $event_id ) ) );
 
 					// Ensure we're working with a boolean.
 					$event_date['all_day'] = filter_var( $event_date['all_day'], FILTER_VALIDATE_BOOLEAN );
 
-					if ( $event_date['all_day'] ) {
-						$v_event->setNoTime( true );
+					// Get the event location from the post meta.
+					$location = get_post_meta( $event_id, 'se_event_location', true );
+					if ( ! empty( $location ) ) {
+						$location = apply_filters( 'se_ical_event_location', $location, $event_id, $event_date );
+						$location = new Location( $location );
+						$event->setLocation( $location );
 					}
-
-					$v_calendar->addComponent( $v_event );
+					$v_events[] = $event;
 				}
 			}
 		}
+		// dd( $v_events );
+		// Create the calendar.
+		$calendar = new Calendar( $v_events );
+		$calendar->addTimeZone(new TimeZone('UTC'));
+
+		// dd( 1 );
+		// Create the presenter.
+		$calendar_presenter = new CalendarFactory();
 
 		header( 'Content-Type: text/calendar; charset=utf-8' );
 		header( 'Content-Disposition: attachment; filename="cal.ics"' );
 
-		echo $v_calendar->render(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-
+		echo (string) $calendar_presenter->createCalendar( $calendar ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		exit;
 	}
 }
