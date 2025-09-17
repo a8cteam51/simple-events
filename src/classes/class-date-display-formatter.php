@@ -446,7 +446,6 @@ class SE_Date_Display_Formatter {
 		// Iterate over each group, and break them down to the starting month.
 		foreach ( $groups as $group ) {
 			// Create the time label.
-
 			$time_label = $group[0]['all_day'] ? SE_Settings::get_all_day_message() : null;
 
 			if ( ! $time_label ) {
