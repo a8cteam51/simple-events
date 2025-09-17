@@ -354,6 +354,7 @@ class SE_Date_Display_Formatter {
 			$output .= $this->render_date_list_ungrouped( $event_dates );
 		}
 
+
 		$output .= $this->use_html_in_date_output ? '</ul>' : '';
 		return $output;
 	}
@@ -498,6 +499,12 @@ class SE_Date_Display_Formatter {
 					$output .= '<div class="se-event-date-list-item__grouped-time">';
 				}
 				$output .= $this->date_only ? '' : $time_label;
+
+
+				// If the output ends ' - ', remove it.
+				$output = rtrim( $output, ' - ' );
+
+
 				if ( $this->use_html_in_date_output ) {
 					$output .= '</div>';
 
