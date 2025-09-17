@@ -354,7 +354,6 @@ class SE_Date_Display_Formatter {
 			$output .= $this->render_date_list_ungrouped( $event_dates );
 		}
 
-
 		$output .= $this->use_html_in_date_output ? '</ul>' : '';
 		return $output;
 	}
@@ -447,7 +446,9 @@ class SE_Date_Display_Formatter {
 		// Iterate over each group, and break them down to the starting month.
 		foreach ( $groups as $group ) {
 			// Create the time label.
+
 			$time_label = $group[0]['all_day'] ? SE_Settings::get_all_day_message() : null;
+
 			if ( ! $time_label ) {
 				$time_start = ( $this->hide_start_time ) ? '' : $this->format_time( $group[0]['start_date'] );
 				$time_end   = ( $this->hide_end_time ) ? '' : $this->format_time( $group[0]['end_date'] );
@@ -500,10 +501,8 @@ class SE_Date_Display_Formatter {
 				}
 				$output .= $this->date_only ? '' : $time_label;
 
-
 				// If the output ends ' - ', remove it.
 				$output = rtrim( $output, ' - ' );
-
 
 				if ( $this->use_html_in_date_output ) {
 					$output .= '</div>';
@@ -533,7 +532,7 @@ class SE_Date_Display_Formatter {
 	 * @return string
 	 */
 	private function join_string( array $items, string $separator, string $separator_end ) {
-		// If arrray only contains one item, return it.
+		// If array only contains one item, return it.
 		if ( count( $items ) === 1 ) {
 			return $items[0];
 		}
