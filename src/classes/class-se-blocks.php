@@ -262,6 +262,8 @@ class SE_Blocks {
 			$date_display_formatter->modify_timezone( $event_timezone );
 		}
 
+		$date_count = 0;
+
 		// If we are hiding past dates.
 		$options       = get_option( 'se_options' );
 		$event_options = array( 'hide_events_on_both', 'hide_events_on_feed', 'on' );
@@ -273,6 +275,7 @@ class SE_Blocks {
 			}
 
 			$now = se_create_date_time_from_timestamp( time(), $ts )->getTimestamp();
+
 			// Remove any dates that have passed.
 			$event_dates = array_filter(
 				$event_dates,
@@ -365,6 +368,16 @@ class SE_Blocks {
 		$calendar_links = get_post_meta( $post_ID, 'se_event_add_calendar_links', true );
 		if ( $calendar_links ) {
 			$output .= se_template_calendar_links( false );
+		}
+
+		// Maybe show the event passes message.
+		if ( 0 === count( $event_dates ) && '' === $output ) {
+			$options = get_option( 'se_options' );
+			if ( isset( $options['past_event_notice'] ) && ! empty( $options['past_event_notice'] ) ) {
+				$output .= '<div class="wp-block-se-event-info">';
+				$output .= '<p class="se-event-past-notice">' . esc_html( $options['past_event_notice'] ) . '</p>';
+				$output .= '</div>';
+			}
 		}
 
 		return apply_filters( 'simple_events_event_info_render', $output, $event_dates, $event_timezone, $event_location, $attributes );
