@@ -118,18 +118,32 @@ function se_event_get_tickets_stock( $event_id ) {
  * Get event dates.
  *
  * @param integer $event_id    Event id.
- * @param array   $event_dates Event dates.
+ * @param array   $event_dates Event dates, not used.
  *
  * @deprecated 2.0.0 Please use the new se_event_get_event_dates() instead.
  *
- * @return mixed
+ * @return array<int, array{datetime_start:int, datetime_end:int, all_day:boolean}> Event dates.
  */
 function se_event_get_dates( $event_id, $event_dates = null ) {
-	_deprecated_function( __FUNCTION__, 'Please use the new se_event_get_event_dates() instead.', '2.0.0' );
+
+	// Get dates in new format.
+	$dates = se_event_get_event_dates( $event_id );
+
+	// Map to old format.
+	$dates = array_map(
+		function ( $date ) {
+			return array(
+				'datetime_start' => $date['start_date'],
+				'datetime_end'   => $date['end_date'],
+				'all_day'        => $date['all_day'],
+			);
+		},
+		$dates
+	);
 
 	return apply_filters(
 		'se_event_get_dates',
-		se_event_get_event_dates( $event_id, $event_dates ),
+		$dates,
 		$event_id
 	);
 }
@@ -750,9 +764,6 @@ function se_event_get_event_dates( $event_id ): array {
 		},
 		$event_dates
 	);
-
-	// Legacy filter.
-	$dates = apply_filters( 'se_event_get_dates', $dates, $event_id );
 
 	return apply_filters( 'se_event_get_event_dates', $dates, $event_id );
 }
