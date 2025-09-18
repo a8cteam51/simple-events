@@ -124,7 +124,7 @@ function se_event_get_tickets_stock( $event_id ) {
  *
  * @return array<int, array{datetime_start:int, datetime_end:int, all_day:boolean}> Event dates.
  */
-function se_event_get_dates( $event_id, $event_dates = null ) { // phpcs:ignore Generic.CodeAnalysis.UselessOverridingFunction.Found
+function se_event_get_dates( $event_id, $event_dates = null ) { // phpcs:ignore 
 
 	// Get dates in new format.
 	$dates = se_event_get_event_dates( $event_id );
