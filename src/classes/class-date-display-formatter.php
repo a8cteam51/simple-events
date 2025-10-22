@@ -675,8 +675,8 @@ class SE_Date_Display_Formatter {
 			// For all day events, just show the date (or date range if different days).
 			if ( ! $same_day ) {
 				$output .= ' &ndash; ' . $end_date . ' ' . SE_Settings::get_all_day_message();
-			} else {
-				$output .= ' ' . SE_Settings::get_all_day_message();
+			} elseif ( ! $this->date_only ) {
+					$output .= ' ' . SE_Settings::get_all_day_message();
 			}
 		} elseif ( $same_day ) {
 			// Same day event with times.
@@ -703,7 +703,7 @@ class SE_Date_Display_Formatter {
 		}
 
 		// Add timezone if the option is set.
-		if ( $this->display_timezone ) {
+		if ( $this->display_timezone && ! $this->time_only && ! $is_all_day ) {
 			$output .= ' (' . $this->get_timezone_abbreviation() . ')';
 		}
 
