@@ -56,7 +56,14 @@ const createDateHash = (start, end, postId) => {
 export const dateManager = (initialDates = [], timezone = '', metaSync = null) => {
 	// lOOP through dates and add a hash to each date
 	initialDates.dates.forEach(date => {
-		date.hash = createDateHash(date.start_date, date.end_date);
+		// If date has a hash and its not empty, skip
+		if (date.hash && date.hash !== '') {
+			return;
+		}
+
+		date.hash = date.id && date.id !== ''
+			? createDateHash(date.start_date, date.end_date, date.id)
+			: createDateHash(date.start_date, date.end_date);
 	});
 
 	// Internal state
