@@ -82,12 +82,13 @@ const DateTimeGroupNew = ({
 			return;
 		}
 
-		const newDate =
-			tempEventDate ||
-			(isStartChange ? eventStart : eventEnd);
-		const newTime =
-			tempEventTime ||
-			(isStartChange ? eventStart : eventEnd);
+		// Get the full date time instance from either temp date or time.
+		const dateInstance = tempEventDate ? tempEventDate : tempEventTime;
+
+		// Set the new date and time based on what was changed.
+		const newDate = tempEventDate || dateInstance || (isStartChange ? eventStart : eventEnd);
+		const newTime = tempEventTime || dateInstance || (isStartChange ? eventStart : eventEnd);
+
 
 		// Combine the new date and time and convert to a timestamp.
 		const newDateTime = getTimestamp(
@@ -96,6 +97,7 @@ const DateTimeGroupNew = ({
 		);
 
 		const newEventDateTime = clone(currentEventDateTime);
+
 
 		if (isStartChange) {
 			newEventDateTime.start_date = newDateTime;
