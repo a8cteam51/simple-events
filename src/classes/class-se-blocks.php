@@ -767,6 +767,11 @@ class SE_Blocks {
 		$previous_date_time = SE_Calendar::get_instance()->get_previous_month_with_events( $current_date_time );
 		$next_date_time     = SE_Calendar::get_instance()->get_next_month_with_events( $current_date_time );
 
+		// If this being loaded on an archive page, ensure event query filters are removed.
+		if ( is_archive() && in_array( get_post_type(), array( SE_Event_Post_Type::$post_type, SE_Event_Post_Type::$event_date_post_type ), true ) ) {
+			SE_Event_Query_Utils::remove_event_query_filters();
+		}
+
 		$current_date = $current_date_time->format( 'Y-m-01' );
 		$month_data   = SE_Calendar::get_instance()->get_month_days( $current_date );
 
