@@ -56,7 +56,7 @@ class SE_Template_Loader {
 		}
 
 		// Handle taxonomy archives for event categories.
-		if ( is_archive( 'se-event-category' ) ) {
+		if ( is_tax( 'se-event-category' ) ) {
 			$theme_templates = array(
 				'archive-se-event.php',
 			);
@@ -105,7 +105,7 @@ class SE_Template_Loader {
 
 		// Determine if standard se-event archive templates are available in the theme
 		// before replacing with the custom template in this plugin.
-		if ( is_archive( 'se-event-date' ) ) {
+		if ( is_post_type_archive( 'se-event-date' ) ) {
 			$theme_templates = array(
 				'archive-se-event.php',
 			);
