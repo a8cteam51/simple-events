@@ -1,0 +1,6 @@
+# Agent context files – for development only, do not deploy
+CLAUDE.md
+AGENTS.md
+.agents/
+.cursor/
+.deployignore
