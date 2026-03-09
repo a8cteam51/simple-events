@@ -124,7 +124,7 @@ function se_event_get_tickets_stock( $event_id ) {
  *
  * @return array<int, array{datetime_start:int, datetime_end:int, all_day:boolean}> Event dates.
  */
-function se_event_get_dates( $event_id, $event_dates = null ) { // phpcs:ignore 
+function se_event_get_dates( $event_id, $event_dates = null ) { // phpcs:ignore
 
 	// Get dates in new format.
 	$dates = se_event_get_event_dates( $event_id );
@@ -163,7 +163,6 @@ function se_event_get_dates( $event_id, $event_dates = null ) { // phpcs:ignore
  * @return string
  */
 function se_event_get_future_dates( $event_id, $event_date_id = null, $date_only = false, $time_only = false, $event_dates = null ) {
-
 	$date_display_formatter = new SE_Date_Display_Formatter( $event_id );
 	$now                    = SE_Calendar::get_instance()->create_date_time( 'now' )->format( 'U' );
 
@@ -178,6 +177,7 @@ function se_event_get_future_dates( $event_id, $event_date_id = null, $date_only
 	if ( ! $event_dates ) {
 		$event_dates = se_event_get_event_dates( $event_id );
 	}
+
 	// Filter out only the current event date, if set.
 	if ( se_event_treat_each_date_as_own_event() && $event_date_id ) {
 		$event_dates = array_filter(
@@ -188,11 +188,13 @@ function se_event_get_future_dates( $event_id, $event_date_id = null, $date_only
 		);
 	}
 
-	// Filter out any dates that are in the past. (start and end)
+	// Filter out dates that have fully passed.
+	// Use end_date if it exists and hasn't passed, otherwise fall back to start_date.
 	$event_dates = array_filter(
 		$event_dates,
 		function ( $date ) use ( $now ) {
-			return $date['start_date'] > $now && $date['end_date'] > $now;
+			$compare_date = ! empty( $date['end_date'] ) ? $date['end_date'] : $date['start_date'];
+			return $compare_date > $now;
 		}
 	);
 
