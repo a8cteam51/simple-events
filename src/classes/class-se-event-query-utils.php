@@ -182,32 +182,38 @@ class SE_Event_Query_Utils {
 		}
 
 		// Return back the modified posts with parent info and event_date_id
-		return array_map(
-			function ( $post ) {
-				$parent = get_post( $post->post_parent );
+		return array_filter(
+			array_map(
+				function ( $post ) {
+					$parent = get_post( $post->post_parent );
 
-				// Get the start date from the event.
-				$start_date_ts = get_post_meta( $post->ID, 'se_event_date_start', true );
+					if ( ! $parent ) {
+						return null;
+					}
 
-				// Get the event timezone.
-				$timezone = get_post_meta( $parent->ID, 'se_event_timezone', true );
-				// use the timezone or default to the site timezone.
-				$timezone = $timezone ? $timezone : wp_timezone_string();
+					// Get the start date from the event.
+					$start_date_ts = get_post_meta( $post->ID, 'se_event_date_start', true );
 
-				// Get the date in this format 2025-07-01 13:14:09
-				$start_date     = wp_date( 'Y-m-d H:i:s', $start_date_ts, new \DateTimeZone( $timezone ) );
-				$start_date_gmt = wp_date( 'Y-m-d H:i:s', $start_date_ts, new \DateTimeZone( 'UTC' ) );
+					// Get the event timezone.
+					$timezone = get_post_meta( $parent->ID, 'se_event_timezone', true );
+					// use the timezone or default to the site timezone.
+					$timezone = $timezone ? $timezone : wp_timezone_string();
 
-				// update the parent posts post date
-				$parent->post_date         = $start_date;
-				$parent->post_date_gmt     = $start_date_gmt;
-				$parent->post_modified     = $start_date;
-				$parent->post_modified_gmt = $start_date_gmt;
-				$parent->event_date_id     = $post->ID;
+					// Get the date in this format 2025-07-01 13:14:09
+					$start_date     = wp_date( 'Y-m-d H:i:s', $start_date_ts, new \DateTimeZone( $timezone ) );
+					$start_date_gmt = wp_date( 'Y-m-d H:i:s', $start_date_ts, new \DateTimeZone( 'UTC' ) );
 
-				return $parent;
-			},
-			$posts
+					// update the parent posts post date
+					$parent->post_date         = $start_date;
+					$parent->post_date_gmt     = $start_date_gmt;
+					$parent->post_modified     = $start_date;
+					$parent->post_modified_gmt = $start_date_gmt;
+					$parent->event_date_id     = $post->ID;
+
+					return $parent;
+				},
+				$posts
+			)
 		);
 	}
 
