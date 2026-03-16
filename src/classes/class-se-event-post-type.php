@@ -58,6 +58,9 @@ class SE_Event_Post_Type {
 		add_filter( 'get_the_archive_title', array( __CLASS__, 'the_archive_title' ) );
 		register_activation_hook( __FILE__, array( __CLASS__, 'flush_rewrite_rules' ) );
 		add_action( 'save_post', array( __CLASS__, 'delete_event_dates_if_no_event_info_block' ) );
+		add_action( 'before_delete_post', array( __CLASS__, 'delete_child_event_dates' ) );
+		add_action( 'wp_trash_post', array( __CLASS__, 'trash_child_event_dates' ) );
+		add_action( 'untrashed_post', array( __CLASS__, 'untrash_child_event_dates' ) );
 		add_filter( 'is_protected_meta', array( __CLASS__, 'is_protected_meta' ), 10, 3 );
 	}
 
@@ -730,6 +733,93 @@ class SE_Event_Post_Type {
 		if ( ! $is_event_info_block_present ) {
 			// Delete all the event dates.
 			SE_Event_Dates::delete_all_event_dates( $event_id );
+		}
+	}
+
+	/**
+	 * Delete child event-date posts when a parent event is permanently deleted.
+	 *
+	 * @param integer $post_id Post ID.
+	 *
+	 * @return void
+	 */
+	public static function delete_child_event_dates( $post_id ) {
+		if ( get_post_type( $post_id ) !== self::$post_type ) {
+			return;
+		}
+
+		$children = get_posts(
+			array(
+				'post_type'      => self::$event_date_post_type,
+				'post_status'    => array( 'publish', 'trash' ),
+				'post_parent'    => $post_id,
+				'posts_per_page' => -1,
+				'fields'         => 'ids',
+			)
+		);
+
+		foreach ( $children as $child_id ) {
+			wp_delete_post( $child_id, true );
+		}
+	}
+
+	/**
+	 * Trash child event-date posts when a parent event is trashed.
+	 *
+	 * @param integer $post_id Post ID.
+	 *
+	 * @return void
+	 */
+	public static function trash_child_event_dates( $post_id ) {
+		if ( get_post_type( $post_id ) !== self::$post_type ) {
+			return;
+		}
+
+		$children = get_posts(
+			array(
+				'post_type'      => self::$event_date_post_type,
+				'post_status'    => 'publish',
+				'post_parent'    => $post_id,
+				'posts_per_page' => -1,
+				'fields'         => 'ids',
+			)
+		);
+
+		foreach ( $children as $child_id ) {
+			wp_trash_post( $child_id );
+		}
+	}
+
+	/**
+	 * Restore child event-date posts when a parent event is untrashed.
+	 *
+	 * @param integer $post_id Post ID.
+	 *
+	 * @return void
+	 */
+	public static function untrash_child_event_dates( $post_id ) {
+		if ( get_post_type( $post_id ) !== self::$post_type ) {
+			return;
+		}
+
+		$children = get_posts(
+			array(
+				'post_type'      => self::$event_date_post_type,
+				'post_status'    => 'trash',
+				'post_parent'    => $post_id,
+				'posts_per_page' => -1,
+				'fields'         => 'ids',
+			)
+		);
+
+		foreach ( $children as $child_id ) {
+			wp_untrash_post( $child_id );
+			wp_update_post(
+				array(
+					'ID'          => $child_id,
+					'post_status' => 'publish',
+				)
+			);
 		}
 	}
 }

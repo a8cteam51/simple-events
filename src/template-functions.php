@@ -534,38 +534,48 @@ function se_event_get_previous_event( int $event_id, ?int $event_date_id = null 
 if ( ! function_exists( 'se_get_date_ids_for_non_published_events' ) ) {
 
 	/**
-	 * Return an array of all event dates, where the parent is not published.
+	 * Return an array of all event date IDs whose parent event is not published
+	 * or no longer exists (orphaned).
 	 *
 	 * @since 2.0.4
 	 *
+	 * @param boolean $reset Optional. Clear the static cache so results are recalculated. Default false.
+	 *
 	 * @return int[]
 	 */
-	function se_get_date_ids_for_non_published_events() {
+	function se_get_date_ids_for_non_published_events( $reset = false ) {
 		static $dates = null;
+		if ( $reset ) {
+			$dates = null;
+		}
 		if ( is_array( $dates ) ) {
 			return $dates;
 		}
 
-		// Get all events that not published (draft or pending or private).
-		$args        = array(
-			'post_type'      => SE_Event_Post_Type::$post_type,
-			'post_status'    => array_diff( get_post_stati(), array( 'publish' ) ),
-			'posts_per_page' => -1,
-			'fields'         => 'ids',
+		global $wpdb;
+
+		$date_post_type  = SE_Event_Post_Type::$event_date_post_type;
+		$event_post_type = SE_Event_Post_Type::$post_type;
+
+		// Single query: find all published event-date posts whose parent is
+		// either not published or doesn't exist at all (orphaned).
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$results = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT child.ID
+				FROM {$wpdb->posts} child
+				LEFT JOIN {$wpdb->posts} parent ON child.post_parent = parent.ID
+					AND parent.post_type = %s
+				WHERE child.post_type = %s
+					AND child.post_status = 'publish'
+					AND ( parent.ID IS NULL OR parent.post_status != 'publish' )",
+				$event_post_type,
+				$date_post_type
+			)
 		);
-		$draft_dates = get_posts( $args );
 
-		$dates = array();
+		$dates = array_map( 'intval', $results );
 
-		foreach ( $draft_dates as $draft_date ) {
-			// Get all dates for this event.
-			$event_dates = se_event_get_event_dates( $draft_date );
-			if ( ! empty( $event_dates ) ) {
-				foreach ( $event_dates as $date ) {
-					$dates[] = $date['id'];
-				}
-			}
-		}
 		return $dates;
 	}
 }
