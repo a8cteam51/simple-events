@@ -198,6 +198,11 @@ class SE_Event_Query_Utils {
 				function ( $post ) {
 					$parent = get_post( $post->post_parent );
 
+					// If we can't get the parent for some reason, return the original post to avoid breaking things, even though it likely won't display correctly.
+					if ( ! $parent ) {
+						return null;
+					}
+
 					// Get the start date from the event.
 					$start_date_ts = get_post_meta( $post->ID, 'se_event_date_start', true );
 
