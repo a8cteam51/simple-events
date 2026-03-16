@@ -748,7 +748,19 @@ class SE_Event_Post_Type {
 			return;
 		}
 
-		SE_Event_Dates::delete_all_event_dates( $post_id );
+		$children = get_posts(
+			array(
+				'post_type'      => self::$event_date_post_type,
+				'post_status'    => array( 'publish', 'trash' ),
+				'post_parent'    => $post_id,
+				'posts_per_page' => -1,
+				'fields'         => 'ids',
+			)
+		);
+
+		foreach ( $children as $child_id ) {
+			wp_delete_post( $child_id, true );
+		}
 	}
 
 	/**
@@ -802,8 +814,6 @@ class SE_Event_Post_Type {
 
 		foreach ( $children as $child_id ) {
 			wp_untrash_post( $child_id );
-			// wp_untrash_post restores to 'draft' by default. Event dates
-			// are internal posts that should always be 'publish'.
 			wp_update_post(
 				array(
 					'ID'          => $child_id,
