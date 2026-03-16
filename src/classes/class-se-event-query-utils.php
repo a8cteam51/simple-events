@@ -72,25 +72,33 @@ class SE_Event_Query_Utils {
 	}
 
 	/**
-	 * Filter posts to only include the correct event date for each parent.
+	 * Filter event date queries to ensure parent events are published,
+	 * and optionally include only the correct event date for each parent.
 	 *
 	 * @param string   $where The WHERE clause of the query.
 	 * @param WP_Query $query The WP_Query instance.
 	 *
 	 * @return string
 	 */
-	public static function filter_unique_parents_where( $where, $query ) {
-		// Check if this is our events query and unique parents is enabled
-		if ( ! isset( $query->query_vars['unique_parents'] ) || ! isset( $query->query_vars['feed_order'] ) ) {
-			return $where;
-		}
-
-		// Skip if treating each date as own event
-		if ( se_event_treat_each_date_as_own_event() ) {
+	public static function filter_event_dates_where( $where, $query ) {
+		// Only apply to event date queries.
+		if ( SE_Event_Post_Type::$event_date_post_type !== $query->get( 'post_type' ) ) {
 			return $where;
 		}
 
 		global $wpdb;
+
+		// Always ensure the parent event post is published.
+		$where .= " AND {$wpdb->posts}.post_parent IN (
+			SELECT ID FROM {$wpdb->posts}
+			WHERE post_type = '" . SE_Event_Post_Type::$post_type . "'
+			AND post_status = 'publish'
+		)";
+
+		// If treating each date as own event or unique_parents not set, skip the unique parents subquery.
+		if ( se_event_treat_each_date_as_own_event() || ! isset( $query->query_vars['unique_parents'] ) || ! isset( $query->query_vars['feed_order'] ) ) {
+			return $where;
+		}
 
 		$feed_order = $query->query_vars['feed_order'];
 		$meta_key   = 'desc' === strtolower( $feed_order ) ? 'se_event_date_end' : 'se_event_date_start';
@@ -117,7 +125,7 @@ class SE_Event_Query_Utils {
 			}
 		}
 
-		// Subquery to get the correct post ID for each parent based on sort order
+		// Subquery to get the correct post ID for each parent based on sort order.
 		$subquery = "
 			AND {$wpdb->posts}.ID IN (
 				SELECT p1.ID
@@ -187,10 +195,6 @@ class SE_Event_Query_Utils {
 				function ( $post ) {
 					$parent = get_post( $post->post_parent );
 
-					if ( ! $parent ) {
-						return null;
-					}
-
 					// Get the start date from the event.
 					$start_date_ts = get_post_meta( $post->ID, 'se_event_date_start', true );
 
@@ -253,7 +257,7 @@ class SE_Event_Query_Utils {
 			$query->set( 'feed_order', $feed_order );
 
 			// Add filter for unique parents WHERE clause
-			add_filter( 'posts_where', array( __CLASS__, 'filter_unique_parents_where' ), 10, 2 );
+			add_filter( 'posts_where', array( __CLASS__, 'filter_event_dates_where' ), 10, 2 );
 
 			// Add filter to modify posts
 			add_filter( 'the_posts', array( __CLASS__, 'modify_event_posts' ), 10, 2 );
@@ -277,7 +281,7 @@ class SE_Event_Query_Utils {
 	public static function remove_event_query_filters( $context = 'archive' ) { // phpcs:ignore
 		// Remove filters based on context
 		if ( ! se_event_treat_each_date_as_own_event() ) {
-			remove_filter( 'posts_where', array( __CLASS__, 'filter_unique_parents_where' ), 10 );
+			remove_filter( 'posts_where', array( __CLASS__, 'filter_event_dates_where' ), 10 );
 			remove_filter( 'posts_orderby', array( __CLASS__, 'fix_sort_order' ), 10 );
 		}
 

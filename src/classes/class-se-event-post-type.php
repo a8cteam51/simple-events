@@ -636,7 +636,7 @@ class SE_Event_Post_Type {
 				$query->set( 'feed_order', $sort_order );
 
 				// Add filter for unique parents WHERE clause
-				add_filter( 'posts_where', array( 'SE_Event_Query_Utils', 'filter_unique_parents_where' ), 10, 2 );
+				add_filter( 'posts_where', array( 'SE_Event_Query_Utils', 'filter_event_dates_where' ), 10, 2 );
 
 				// Add filter to modify posts for event_date_id
 				add_filter( 'the_posts', array( 'SE_Event_Query_Utils', 'modify_event_posts' ), 10, 2 );
