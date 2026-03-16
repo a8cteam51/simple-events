@@ -24,5 +24,10 @@
 		</properties>
 	</rule>
 
+	<!-- Exclude test files from prefix requirements. -->
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+		<exclude-pattern>tests/</exclude-pattern>
+	</rule>
+
 	<!-- Add any other custom rules here. -->
 </ruleset>

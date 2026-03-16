@@ -27,7 +27,10 @@
         "wp-coding-standards/wpcs": "3.1.*",
         "phpcompatibility/phpcompatibility-wp": "*",
 
-        "roave/security-advisories": "dev-latest"
+        "roave/security-advisories": "dev-latest",
+
+        "phpunit/phpunit": "^9.6",
+        "yoast/phpunit-polyfills": "^2.0"
     },
 
     "scripts": {

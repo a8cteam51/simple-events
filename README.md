@@ -29,6 +29,35 @@ Below you will find some information on how to run scripts.
 - Use to build production code for your block inside `build` folder.
 - Runs once and reports back the gzip file sizes of the produced code.
 
+## Testing
+
+Tests run inside a Dockerized WordPress environment powered by [`@wordpress/env`](https://developer.wordpress.org/block-editor/reference-guides/packages/packages-env/).
+
+### Prerequisites
+
+- Docker must be running
+- Dependencies installed (`composer install` && `npm install`)
+
+### Start the test environment
+
+```
+npx wp-env start
+```
+
+### Run PHP integration tests
+
+```
+npm run test:php
+```
+
+This executes PHPUnit inside the `tests` WordPress container. Tests live in `tests/phpunit/` and must extend `WP_UnitTestCase`. Test files should end in `Test.php`.
+
+### Stop the test environment
+
+```
+npx wp-env stop
+```
+
 ## Hooks
 
 ### Next & Previous Links

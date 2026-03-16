@@ -50,6 +50,10 @@ simple-events/
 │   ├── woocommerce-hooks.php
 │   ├── rest-api.php
 │   └── ...
+├── tests/
+│   └── phpunit/            # PHPUnit integration tests
+│       ├── bootstrap.php   # Loads WP test suite and activates plugin
+│       └── *Test.php       # Test files (must end in Test.php)
 ├── build/                  # Compiled output (blocks, variations, js)
 ├── vendor/                 # Composer dependencies
 └── .github/workflows/      # CI (build-release, phpcs, php-syntax)
@@ -105,10 +109,28 @@ npm run format:js
 
 ### Tests
 
-- `npm run test:unit` – unit tests (no test files present in repo as of this writing)
-- `npm run test:e2e` – E2E tests (requires WordPress environment)
+PHP integration tests run inside a Dockerized WordPress environment via `@wordpress/env`. Docker must be running.
 
-There are no unit or E2E tests checked in. If adding tests, follow `@wordpress/scripts` patterns.
+```bash
+# Start the WordPress test environment
+npx wp-env start
+
+# Run PHPUnit integration tests
+npm run test:php
+
+# Stop the environment
+npx wp-env stop
+```
+
+- Tests live in `tests/phpunit/` and must end in `Test.php`.
+- Test classes extend `WP_UnitTestCase` (provided by the WordPress test suite).
+- The bootstrap (`tests/phpunit/bootstrap.php`) loads the WordPress test library from `/tmp/wordpress-tests-lib` (standard wp-env location) and activates the plugin.
+- PHPUnit 9.6 with Yoast PHPUnit Polyfills 2.x (required by the WordPress test suite in wp-env).
+- WooCommerce is not loaded in the test environment. Tests for WooCommerce-dependent code should be skipped or use mocks.
+
+Other test scripts (no test files checked in yet):
+- `npm run test:unit` – JS unit tests (`@wordpress/scripts`)
+- `npm run test:e2e` – E2E tests (`@wordpress/scripts`)
 
 ### Release build (CI)
 
