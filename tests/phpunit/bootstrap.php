@@ -20,6 +20,8 @@ require_once $_tests_dir . '/includes/functions.php';
 
 /**
  * Manually load the plugin being tested.
+ *
+ * @return void
  */
 function _manually_load_plugin() {
 	require dirname( __DIR__, 2 ) . '/plugin.php';

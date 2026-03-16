@@ -539,7 +539,7 @@ if ( ! function_exists( 'se_get_date_ids_for_non_published_events' ) ) {
 	 *
 	 * @since 2.0.4
 	 *
-	 * @param bool $reset Optional. Clear the static cache so results are recalculated. Default false.
+	 * @param boolean $reset Optional. Clear the static cache so results are recalculated. Default false.
 	 *
 	 * @return int[]
 	 */

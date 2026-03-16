@@ -4,7 +4,6 @@
  *
  * @package Simple_Events
  */
-
 class EventQueryUtilsTest extends WP_UnitTestCase {
 
 	/**
@@ -18,6 +17,8 @@ class EventQueryUtilsTest extends WP_UnitTestCase {
 	 * this gracefully.
 	 *
 	 * @see class-se-event-query-utils.php:modify_event_posts()
+	 *
+	 * @return void
 	 */
 	public function test_modify_event_posts_does_not_fatal_with_orphaned_date_posts() {
 		// 1. Create orphaned event-date posts whose post_parent does not exist.

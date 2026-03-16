@@ -812,7 +812,6 @@ class SE_Event_Post_Type {
 			);
 		}
 	}
-
 }
 
 SE_Event_Post_Type::init();

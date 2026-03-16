@@ -4,11 +4,12 @@
  *
  * @package Simple_Events
  */
-
 class TemplateFunctionsTest extends WP_UnitTestCase {
 
 	/**
 	 * Reset the static cache between tests.
+	 *
+	 * @return void
 	 */
 	public function set_up() {
 		parent::set_up();
@@ -16,8 +17,10 @@ class TemplateFunctionsTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * se_event_get_next_event() should not return an orphaned event-date
+	 * The se_event_get_next_event() function should not return an orphaned event-date
 	 * whose parent event has been deleted.
+	 *
+	 * @return void
 	 */
 	public function test_get_next_event_skips_orphaned_dates() {
 		// Create event A with a date.
@@ -28,8 +31,8 @@ class TemplateFunctionsTest extends WP_UnitTestCase {
 			)
 		);
 
-		$now     = time();
-		$date_a  = se_event_create_event_date(
+		$now    = time();
+		$date_a = se_event_create_event_date(
 			$event_a,
 			array(
 				'start_date' => $now,
@@ -47,8 +50,8 @@ class TemplateFunctionsTest extends WP_UnitTestCase {
 			)
 		);
 
-		$later   = $now + 86400;
-		$date_b  = se_event_create_event_date(
+		$later  = $now + 86400;
+		$date_b = se_event_create_event_date(
 			$event_b,
 			array(
 				'start_date' => $later,
@@ -98,8 +101,10 @@ class TemplateFunctionsTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * se_event_get_previous_event() should not return an orphaned event-date
+	 * The se_event_get_previous_event() function should not return an orphaned event-date
 	 * whose parent event has been deleted.
+	 *
+	 * @return void
 	 */
 	public function test_get_previous_event_skips_orphaned_dates() {
 		// Create event A with an early date (should be the previous event).

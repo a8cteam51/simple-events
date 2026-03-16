@@ -4,11 +4,12 @@
  *
  * @package Simple_Events
  */
-
 class EventDatesCleanupTest extends WP_UnitTestCase {
 
 	/**
 	 * Permanently deleting a parent event should also delete its child event-date posts.
+	 *
+	 * @return void
 	 */
 	public function test_deleting_event_removes_child_event_dates() {
 		$event_id = $this->factory->post->create(
@@ -49,6 +50,8 @@ class EventDatesCleanupTest extends WP_UnitTestCase {
 
 	/**
 	 * Trashing a parent event should also trash its child event-date posts.
+	 *
+	 * @return void
 	 */
 	public function test_trashing_event_trashes_child_event_dates() {
 		$event_id = $this->factory->post->create(
@@ -89,6 +92,8 @@ class EventDatesCleanupTest extends WP_UnitTestCase {
 
 	/**
 	 * Untrashing a parent event should restore its child event-date posts to publish.
+	 *
+	 * @return void
 	 */
 	public function test_untrashing_event_restores_child_event_dates() {
 		$event_id = $this->factory->post->create(
