@@ -589,7 +589,7 @@ class SE_Blocks {
 				$events_query_args['feed_order']     = $feed_order;
 
 				// Add filter for unique parents WHERE clause
-				add_filter( 'posts_where', array( 'SE_Event_Query_Utils', 'filter_unique_parents_where' ), 10, 2 );
+				add_filter( 'posts_where', array( 'SE_Event_Query_Utils', 'filter_event_dates_where' ), 10, 2 );
 			}
 
 			$show_year_dividers = ! empty( $attributes['showYearDividers'] );
@@ -632,7 +632,7 @@ class SE_Blocks {
 
 			// Clean up filters
 			if ( ! se_event_treat_each_date_as_own_event() ) {
-				remove_filter( 'posts_where', array( __CLASS__, 'filter_unique_parents_where' ), 10 );
+				remove_filter( 'posts_where', array( __CLASS__, 'filter_event_dates_where' ), 10 );
 				remove_filter( 'the_posts', array( __CLASS__, 'modify_event_posts_for_blocks' ), 10 );
 			}
 
