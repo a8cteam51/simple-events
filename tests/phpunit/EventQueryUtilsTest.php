@@ -8,61 +8,48 @@
 class EventQueryUtilsTest extends WP_UnitTestCase {
 
 	/**
-	 * Deleting a parent event while orphaned date posts remain should not
-	 * cause a fatal error when the next event query runs.
+	 * Orphaned event-date posts (parent deleted outside of WordPress hooks,
+	 * e.g. direct DB deletion) should not cause a fatal when modify_event_posts
+	 * encounters them.
 	 *
-	 * Bug: When an event with multiple dates is trashed/deleted, the child
-	 * se-event-date posts are left behind. A subsequent WP_Query for events
-	 * (e.g. the upcoming-events block) passes these orphaned date posts
-	 * through SE_Event_Query_Utils::modify_event_posts(), which calls
-	 * get_post( $post->post_parent ). Because the parent no longer exists,
-	 * get_post() returns null, and assigning ->post_date on null fatals.
+	 * This is a defensive test: even though deleting via wp_delete_post() now
+	 * cascades to children, orphans can still arise from direct DB operations
+	 * or plugin conflicts. The null-check in modify_event_posts() must handle
+	 * this gracefully.
 	 *
 	 * @see class-se-event-query-utils.php:modify_event_posts()
 	 */
-	public function test_modify_event_posts_does_not_fatal_when_parent_is_deleted() {
-		// 1. Create a parent event.
-		$event_id = $this->factory->post->create(
+	public function test_modify_event_posts_does_not_fatal_with_orphaned_date_posts() {
+		// 1. Create orphaned event-date posts whose post_parent does not exist.
+		$fake_parent_id = 999999;
+
+		$tomorrow  = strtotime( '+1 day' );
+		$day_after = strtotime( '+2 days' );
+
+		$orphan_1 = $this->factory->post->create(
 			array(
-				'post_type'   => 'se-event',
+				'post_type'   => 'se-event-date',
 				'post_status' => 'publish',
-				'post_title'  => 'Multi-day Event',
+				'post_parent' => $fake_parent_id,
 			)
 		);
+		update_post_meta( $orphan_1, 'se_event_date_start', $tomorrow );
+		update_post_meta( $orphan_1, 'se_event_date_end', $tomorrow + 7200 );
 
-		// 2. Create two child event-date posts.
-		$tomorrow     = strtotime( '+1 day' );
-		$day_after    = strtotime( '+2 days' );
-		$event_date_1 = se_event_create_event_date(
-			$event_id,
+		$orphan_2 = $this->factory->post->create(
 			array(
-				'start_date' => $tomorrow,
-				'end_date'   => $tomorrow + 7200,
-				'all_day'    => false,
+				'post_type'   => 'se-event-date',
+				'post_status' => 'publish',
+				'post_parent' => $fake_parent_id,
 			)
 		);
-		$event_date_2 = se_event_create_event_date(
-			$event_id,
-			array(
-				'start_date' => $day_after,
-				'end_date'   => $day_after + 7200,
-				'all_day'    => false,
-			)
-		);
+		update_post_meta( $orphan_2, 'se_event_date_start', $day_after );
+		update_post_meta( $orphan_2, 'se_event_date_end', $day_after + 7200 );
 
-		$this->assertNotNull( $event_date_1 );
-		$this->assertNotNull( $event_date_2 );
+		// Confirm the parent does not exist.
+		$this->assertNull( get_post( $fake_parent_id ) );
 
-		// 3. Delete the parent event, leaving orphaned date posts.
-		wp_delete_post( $event_id, true );
-		$this->assertNull( get_post( $event_id ) );
-
-		// Verify orphaned date posts still exist.
-		$this->assertInstanceOf( WP_Post::class, get_post( $event_date_1->ID ) );
-		$this->assertInstanceOf( WP_Post::class, get_post( $event_date_2->ID ) );
-
-		// 4. Run a query that triggers modify_event_posts — this is the
-		//    code path the upcoming-events block uses.
+		// 2. Run a query that triggers modify_event_posts.
 		add_filter(
 			'the_posts',
 			array( 'SE_Event_Query_Utils', 'modify_event_posts' ),
@@ -85,8 +72,8 @@ class EventQueryUtilsTest extends WP_UnitTestCase {
 			10
 		);
 
-		// 5. If we get here without a fatal, the bug is fixed.
-		//    The orphaned posts should be filtered out of the results.
+		// 3. If we get here without a fatal, the null check works.
+		//    Orphaned posts should be filtered out of results.
 		foreach ( $query->posts as $post ) {
 			$this->assertNotNull(
 				get_post( $post->post_parent ),

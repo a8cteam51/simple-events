@@ -58,6 +58,7 @@ class SE_Event_Post_Type {
 		add_filter( 'get_the_archive_title', array( __CLASS__, 'the_archive_title' ) );
 		register_activation_hook( __FILE__, array( __CLASS__, 'flush_rewrite_rules' ) );
 		add_action( 'save_post', array( __CLASS__, 'delete_event_dates_if_no_event_info_block' ) );
+		add_action( 'before_delete_post', array( __CLASS__, 'delete_child_event_dates' ) );
 		add_filter( 'is_protected_meta', array( __CLASS__, 'is_protected_meta' ), 10, 3 );
 	}
 
@@ -732,6 +733,22 @@ class SE_Event_Post_Type {
 			SE_Event_Dates::delete_all_event_dates( $event_id );
 		}
 	}
+
+	/**
+	 * Delete child event-date posts when a parent event is permanently deleted.
+	 *
+	 * @param integer $post_id Post ID.
+	 *
+	 * @return void
+	 */
+	public static function delete_child_event_dates( $post_id ) {
+		if ( get_post_type( $post_id ) !== self::$post_type ) {
+			return;
+		}
+
+		SE_Event_Dates::delete_all_event_dates( $post_id );
+	}
+
 }
 
 SE_Event_Post_Type::init();
