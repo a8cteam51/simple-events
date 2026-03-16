@@ -57,11 +57,13 @@
         "src/classes",
         "src/templates",
         "src/back-compat.php",
+        "src/calendar-functions.php",
         "src/event-functions.php",
         "src/init.php",
         "src/rest-api.php",
         "src/template-functions.php",
         "src/template-hooks.php",
+        "src/woocommerce-hooks.php",
         "plugin.php",
         "readme.md"
     ],
