@@ -534,9 +534,12 @@ function se_event_get_previous_event( int $event_id, ?int $event_date_id = null 
 if ( ! function_exists( 'se_get_date_ids_for_non_published_events' ) ) {
 
 	/**
-	 * Return an array of all event dates, where the parent is not published.
+	 * Return an array of all event date IDs whose parent event is not published
+	 * or no longer exists (orphaned).
 	 *
 	 * @since 2.0.4
+	 *
+	 * @param bool $reset Optional. Clear the static cache so results are recalculated. Default false.
 	 *
 	 * @return int[]
 	 */
@@ -549,43 +552,29 @@ if ( ! function_exists( 'se_get_date_ids_for_non_published_events' ) ) {
 			return $dates;
 		}
 
-		// Get all events that not published (draft or pending or private).
-		$args        = array(
-			'post_type'      => SE_Event_Post_Type::$post_type,
-			'post_status'    => array_diff( get_post_stati(), array( 'publish' ) ),
-			'posts_per_page' => -1,
-			'fields'         => 'ids',
-		);
-		$draft_dates = get_posts( $args );
+		global $wpdb;
 
-		$dates = array();
+		$date_post_type  = SE_Event_Post_Type::$event_date_post_type;
+		$event_post_type = SE_Event_Post_Type::$post_type;
 
-		foreach ( $draft_dates as $draft_date ) {
-			// Get all dates for this event.
-			$event_dates = se_event_get_event_dates( $draft_date );
-			if ( ! empty( $event_dates ) ) {
-				foreach ( $event_dates as $date ) {
-					$dates[] = $date['id'];
-				}
-			}
-		}
-
-		// Also exclude orphaned event dates whose parent event has been deleted.
-		$all_date_posts = get_posts(
-			array(
-				'post_type'      => SE_Event_Post_Type::$event_date_post_type,
-				'post_status'    => 'publish',
-				'posts_per_page' => -1,
-				'fields'         => 'ids',
+		// Single query: find all published event-date posts whose parent is
+		// either not published or doesn't exist at all (orphaned).
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+		$results = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT child.ID
+				FROM {$wpdb->posts} child
+				LEFT JOIN {$wpdb->posts} parent ON child.post_parent = parent.ID
+					AND parent.post_type = %s
+				WHERE child.post_type = %s
+					AND child.post_status = 'publish'
+					AND ( parent.ID IS NULL OR parent.post_status != 'publish' )",
+				$event_post_type,
+				$date_post_type
 			)
 		);
 
-		foreach ( $all_date_posts as $date_id ) {
-			$parent_id = wp_get_post_parent_id( $date_id );
-			if ( ! $parent_id || ! get_post( $parent_id ) ) {
-				$dates[] = $date_id;
-			}
-		}
+		$dates = array_map( 'intval', $results );
 
 		return $dates;
 	}
