@@ -632,8 +632,8 @@ class SE_Blocks {
 
 			// Clean up filters
 			if ( ! se_event_treat_each_date_as_own_event() ) {
-				remove_filter( 'posts_where', array( __CLASS__, 'filter_event_dates_where' ), 10 );
-				remove_filter( 'the_posts', array( __CLASS__, 'modify_event_posts_for_blocks' ), 10 );
+				remove_filter( 'posts_where', array( 'SE_Event_Query_Utils', 'filter_event_dates_where' ), 10 );
+				remove_filter( 'the_posts', array( 'SE_Event_Query_Utils', 'modify_event_posts' ), 10 );
 			}
 
 			wp_reset_postdata();
