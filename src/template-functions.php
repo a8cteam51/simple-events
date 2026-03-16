@@ -540,8 +540,11 @@ if ( ! function_exists( 'se_get_date_ids_for_non_published_events' ) ) {
 	 *
 	 * @return int[]
 	 */
-	function se_get_date_ids_for_non_published_events() {
+	function se_get_date_ids_for_non_published_events( $reset = false ) {
 		static $dates = null;
+		if ( $reset ) {
+			$dates = null;
+		}
 		if ( is_array( $dates ) ) {
 			return $dates;
 		}
@@ -566,6 +569,24 @@ if ( ! function_exists( 'se_get_date_ids_for_non_published_events' ) ) {
 				}
 			}
 		}
+
+		// Also exclude orphaned event dates whose parent event has been deleted.
+		$all_date_posts = get_posts(
+			array(
+				'post_type'      => SE_Event_Post_Type::$event_date_post_type,
+				'post_status'    => 'publish',
+				'posts_per_page' => -1,
+				'fields'         => 'ids',
+			)
+		);
+
+		foreach ( $all_date_posts as $date_id ) {
+			$parent_id = wp_get_post_parent_id( $date_id );
+			if ( ! $parent_id || ! get_post( $parent_id ) ) {
+				$dates[] = $date_id;
+			}
+		}
+
 		return $dates;
 	}
 }
