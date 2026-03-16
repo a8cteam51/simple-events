@@ -125,12 +125,15 @@ class SE_Event_Query_Utils {
 			}
 		}
 
-		// Subquery to get the correct post ID for each parent based on sort order.
+		// Subquery to get the correct post ID for each parent based on sort order
+		// Also ensures the parent event post is published.
+
 		$subquery = "
 			AND {$wpdb->posts}.ID IN (
 				SELECT p1.ID
 				FROM {$wpdb->posts} p1
 				INNER JOIN {$wpdb->postmeta} pm1 ON p1.ID = pm1.post_id AND pm1.meta_key = '{$meta_key}'
+				INNER JOIN {$wpdb->posts} parent ON p1.post_parent = parent.ID AND parent.post_status = 'publish'
 				WHERE p1.post_type = '" . SE_Event_Post_Type::$event_date_post_type . "'
 				AND p1.post_status = 'publish'
 				AND pm1.meta_value = (

@@ -144,9 +144,10 @@ class SE_Block_Variations {
 	private function set_event_query_args( $args, $feed_type, $feed_order = 'ASC' ) {
 
 		// If we are ordering by desc. we need to sort by end date, else start.
-		$args['meta_key'] = 'desc' === strtolower( $feed_order ) ? 'se_event_date_end' : 'se_event_date_start';
-		$args['orderby']  = 'meta_value';
-		$args['order']    = $feed_order;
+		$args['meta_key']    = 'desc' === strtolower( $feed_order ) ? 'se_event_date_end' : 'se_event_date_start';
+		$args['orderby']     = 'meta_value';
+		$args['order']       = $feed_order;
+		$args['post_status'] = 'publish';
 
 		$args['sub-type'] = self::QUERY_LOOP_EVENTS;
 
