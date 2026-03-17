@@ -9,7 +9,8 @@
  *
  * @wordpress-plugin
  * Plugin Name:             Simple Events
- * Plugin URI:              https://wpspecialprojects.wordpress.com
+ * Plugin URI:              https://github.com/a8cteam51/simple-events
+ * Update URI:              https://github.com/a8cteam51/simple-events
  * Description:             Event management frontend for WooCommerce Box Office.
  * Requires at least:       6.5
  * Tested up to:            6.9
@@ -79,6 +80,36 @@ require_once SE_SRC_PATH . '/woocommerce-hooks.php';
 require_once SE_SRC_PATH . '/rest-api.php';
 require_once SE_SRC_PATH . '/back-compat.php';
 
+// Instruct WordPress to fetch update information from GitHub.
+add_filter(
+	'update_plugins_github.com',
+	static function ( $update, array $plugin_data, string $plugin_file ) {
+		if ( SE_BASENAME !== $plugin_file || false !== $update ) {
+			return $update;
+		}
+
+		$latest_release_info = wp_remote_get( 'https://api.github.com/repos/a8cteam51/simple-events/releases/latest' );
+		if ( is_wp_error( $latest_release_info ) || 200 !== wp_remote_retrieve_response_code( $latest_release_info ) ) {
+			return $update;
+		}
+		$latest_release_info    = json_decode( wp_remote_retrieve_body( $latest_release_info ), true );
+		$latest_release_version = ltrim( $latest_release_info['tag_name'], 'v' );
+		if ( version_compare( $plugin_data['Version'], $latest_release_version, '<' ) ) {
+			$update = array(
+				'slug'    => $plugin_data['TextDomain'],
+				'version' => $latest_release_version,
+				'url'     => $latest_release_info['html_url'],
+				'package' => $latest_release_info['assets'][0]['browser_download_url'],
+			);
+		} else {
+			$update = false;
+		}
+
+		return $update;
+	},
+	10,
+	3
+);
 
 /**
  * Add a flag to leverage for flushing rewrite rules.
