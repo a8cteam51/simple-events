@@ -84,11 +84,11 @@ require_once SE_SRC_PATH . '/back-compat.php';
 add_action(
 	'update_plugins_github.com',
 	static function ( $update, array $plugin_data, string $plugin_file ) {
-		if ( A8CSP_ATLANTIS_BASENAME !== $plugin_file || false !== $update ) {
+		if ( SE_BASENAME !== $plugin_file || false !== $update ) {
 			return $update;
 		}
 
-		$latest_release_info = wp_remote_get( 'https://api.github.com/repos/a8cteam51/simple-events/releases/latest/download' );
+		$latest_release_info = wp_remote_get( 'https://api.github.com/repos/a8cteam51/simple-events/releases/latest' );
 		if ( is_wp_error( $latest_release_info ) || 200 !== wp_remote_retrieve_response_code( $latest_release_info ) ) {
 			return $update;
 		}
