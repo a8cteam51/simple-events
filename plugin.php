@@ -81,7 +81,7 @@ require_once SE_SRC_PATH . '/rest-api.php';
 require_once SE_SRC_PATH . '/back-compat.php';
 
 // Instruct WordPress to fetch update information from GitHub.
-add_action(
+add_filter(
 	'update_plugins_github.com',
 	static function ( $update, array $plugin_data, string $plugin_file ) {
 		if ( SE_BASENAME !== $plugin_file || false !== $update ) {
