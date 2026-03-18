@@ -88,18 +88,57 @@ add_filter(
 			return $update;
 		}
 
-		$latest_release_info = wp_remote_get( 'https://api.github.com/repos/a8cteam51/simple-events/releases/latest' );
-		if ( is_wp_error( $latest_release_info ) || 200 !== wp_remote_retrieve_response_code( $latest_release_info ) ) {
+		$latest_release_info = get_site_transient( 'se_latest_release_info' );
+		if ( false === $latest_release_info ) {
+			$response = wp_remote_get(
+				'https://api.github.com/repos/a8cteam51/simple-events/releases/latest',
+				array(
+					'timeout' => 10,
+					'headers' => array(
+						'Accept' => 'application/vnd.github+json',
+					),
+				)
+			);
+			if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
+				return $update;
+			}
+			$latest_release_info = wp_remote_retrieve_body( $response );
+			set_site_transient( 'se_latest_release_info', $latest_release_info, HOUR_IN_SECONDS );
+		}
+
+		if ( empty( $latest_release_info ) ) {
 			return $update;
 		}
-		$latest_release_info    = json_decode( wp_remote_retrieve_body( $latest_release_info ), true );
+
+		$latest_release_info = json_decode( $latest_release_info, true );
+		if (
+			! is_array( $latest_release_info ) ||
+			empty( $latest_release_info['tag_name'] ) ||
+			empty( $latest_release_info['html_url'] ) ||
+			empty( $latest_release_info['assets'] ) ||
+			! is_array( $latest_release_info['assets'] )
+		) {
+			return $update;
+		}
+
+		$package_url = '';
+		foreach ( $latest_release_info['assets'] as $asset ) {
+			if ( ! empty( $asset['browser_download_url'] ) && str_ends_with( $asset['browser_download_url'], '.zip' ) ) {
+				$package_url = $asset['browser_download_url'];
+				break;
+			}
+		}
+		if ( '' === $package_url ) {
+			return $update;
+		}
+
 		$latest_release_version = ltrim( $latest_release_info['tag_name'], 'v' );
 		if ( version_compare( $plugin_data['Version'], $latest_release_version, '<' ) ) {
 			$update = array(
 				'slug'    => $plugin_data['TextDomain'],
 				'version' => $latest_release_version,
 				'url'     => $latest_release_info['html_url'],
-				'package' => $latest_release_info['assets'][0]['browser_download_url'],
+				'package' => $package_url,
 			);
 		} else {
 			$update = false;
