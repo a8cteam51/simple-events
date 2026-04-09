@@ -1,0 +1,275 @@
+/**
+ * #.# Styles
+ *
+ * CSS for both Frontend.
+ */
+
+@import '../common.scss';
+.simple-events-calendar {
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+    min-height: 700px;
+    .simple-events-top-bar {
+        position: relative;
+        display: flex;
+        flex-direction: row;
+        gap: 20px;
+        align-items: center;
+        width: 100%;
+        nav {
+            display: block;
+            flex: none;
+            ul {
+                display: flex;
+                list-style: none;
+                margin: 10px 0;
+                padding: 0;
+                li {
+                    flex: none;
+                    &:nth-child(2) {
+                        position: absolute;
+                        right: 0;
+                    }
+                    a {
+                        display: flex;
+                    }
+                    svg {
+                        width: 25px;
+                    }
+                }
+            }
+        }
+        &__today-button {
+            font-size: $font-size-sm;
+        }
+        &__month {
+            font-size: $font-size-xl;
+        }
+    }
+    .simple-events-calendar-month {
+        &__body {}
+        &__header {
+            &-row {
+                display: flex;
+            }
+            &-column {
+                flex: 1;
+                display: flex;
+                @include max-mobile {
+                    justify-content: center;
+                }
+                h3 {
+                    font-size: $font-size-md;
+                }
+            }
+        }
+        &__body {}
+        &__week {
+            display: flex;
+        }
+        &__day {
+            display: flex;
+            flex-direction: column;
+            min-height: 150px;
+            flex: 1;
+            border: 1px solid rgba(255, 255, 255, 1);
+            -webkit-background-clip: padding-box;
+            /* for Safari */
+            background-clip: padding-box;
+            /* for IE9+, Firefox 4+, Opera, Chrome */
+            @include max-mobile {
+                align-items: center;
+                min-height: 50px;
+                border: none;
+            }
+            &-date-daynum {
+                line-height: 1.4;
+                font-size: $font-size-xl;
+                padding: $spacer-xs $spacer-sm;
+                @include max-mobile {
+                    line-height: 1.2;
+                    font-size: $font-size-md;
+                    padding: $spacer-xxs $spacer-xs;
+                }
+            }
+            &--today {
+                background-color: rgba(60, 120, 200, 0.3);
+            }
+            &--past>time,
+            &--past .simple-events-calendar-month__calendar-event {
+                opacity: 0.6;
+            }
+            &--active {
+                @include max-mobile {
+                    background-color: rgba(15, 58, 184, 0.8);
+                }
+            }
+        }
+        &__calendar-event {
+            padding: 0 $spacer-sm 0;
+            margin: 0 0 $spacer-md 0;
+            &.se-event-hide-start-time {
+                // Hide first time.
+                time:first-child {
+                    display: none;
+                }
+                .simple-events-calendar-month__calendar-event-datetime-separator {
+                    display: none;
+                }
+            }
+            &.se-event-hide-end-time {
+                // Hide last time.
+                time:last-child {
+                    display: none;
+                }
+                .simple-events-calendar-month__calendar-event-datetime-separator {
+                    display: none;
+                }
+            }
+            @include max-mobile {
+                margin: 0 0 $spacer-xl 0;
+            }
+            &-datetime {
+                font-size: 13px;
+                @include max-mobile {
+                    font-size: $font-size-md;
+                }
+                >* {
+                    vertical-align: middle;
+                }
+            }
+            &-title {
+                font-size: $font-size-xs;
+                margin: 0;
+                @include max-mobile {
+                    font-size: $font-size-md;
+                }
+                &-link {
+                    text-decoration: none;
+                    &:hover {
+                        text-decoration: underline;
+                    }
+                }
+            }
+        }
+        &__mobile-events-icon {
+            background-color: white;
+            height: 8px;
+            width: 8px;
+            border-radius: 50%;
+        }
+    }
+    .simple-events-calendar-month-mobile {
+        &-events__mobile-day {
+            display: none;
+            &--active {
+                @include max-mobile {
+                    display: block;
+                }
+            }
+        }
+    }
+    .simple-events-mobile__nav {
+        &-list {
+            display: flex;
+            list-style: none;
+            margin: 10px 0;
+            padding: 0;
+            justify-content: center;
+            align-items: center;
+            &-item {
+                flex: 1;
+                display: flex;
+                &--prev {
+                    justify-content: flex-start;
+                    width: 33.33%;
+                }
+                &--today {
+                    justify-content: center;
+                    font-size: $font-size-md;
+                    width: 33.33%;
+                }
+                &--next {
+                    justify-content: flex-end;
+                    width: 33.33%;
+                }
+                a {
+                    display: flex;
+                }
+                svg {
+                    width: 35px;
+                }
+            }
+        }
+    }
+    .disabled {
+        opacity: 0.4;
+    }
+    .simple-events-hidden-mobile {
+        @include max-mobile {
+            display: none !important;
+        }
+    }
+    .simple-events-hidden-desktop {
+        @include tablet {
+            display: none !important;
+        }
+    }
+}
+
+.simple-events-calendar-month-mobile-events__mobile-day .se-event-modal.hidden {
+    display: none;
+}
+
+.simple-events-calendar-month__events {
+    position: relative;
+    .se-event-modal {
+        position: absolute;
+        z-index: 1000;
+        border: 1px solid #808080;
+        padding: 10px;
+        border-radius: 5px;
+        width: 300px;
+        top: 0;
+        background-color: var(--wp--preset--color--primary, #fff);
+        color: var(--wp--preset--color--secondary, #000);
+        $parent: &;
+        &.hidden {
+            display: none;
+        }
+        &__image img {
+            width: 100%;
+            height: fit-content;
+            max-height: 250px;
+            object-fit: contain;
+            border-radius: 5px;
+        }
+        &__flex {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            &:last-of-type {
+                margin-bottom: 5px;
+            }
+            .se-event-modal__date {
+                font-size: 12px;
+                margin: 10px 0;
+                line-height: 1.5;
+            }
+            ul {
+                list-style: none;
+                padding: 0;
+                margin: 0;
+            }
+            .se-event-modal__title {
+                font-size: 15px;
+                margin: 0;
+            }
+        }
+        &__excerpt {
+            margin: 5px 0 0 8px;
+            font-size: 14px;
+        }
+    }
+}

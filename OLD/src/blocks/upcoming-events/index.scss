@@ -1,0 +1,71 @@
+@import '../common.scss';
+
+.wp-block-se-upcoming-events {
+	ul {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+
+		.se-event-date {
+			font-weight: bold;
+		}
+
+		.se-event-location {
+			margin-bottom: 1rem;
+		}
+
+		li {
+			h2.entry-title {
+				font-size: max( 2.5rem, 28px );
+
+				a {
+					color: var(--wp--preset--color--primary, #28303d);
+
+					&:hover {
+						text-decoration: underline;
+					}
+				}
+			}
+
+			> a {
+				background: var(--wp--preset--color--primary, #28303d);
+				color: var(--wp--preset--color--white, #fff);
+				padding: 1rem 1.5rem;
+				display: inline-block;
+				font-size: max( 1rem, 16px );
+				text-transform: uppercase;
+				text-decoration: none;
+				letter-spacing: 0.05em;
+				font-weight: bold;
+
+				&:hover {
+					background: var(--wp--preset--color--black, #000);
+				}
+			}
+		}
+	}
+
+	&-view-grid {
+		ul {
+			display: grid;
+			grid-template-columns: 1fr;
+			gap: 20px;
+		}
+		@include tablet {
+			&.wp-block-se-upcoming-events-columns-2 ul,
+			&.wp-block-se-upcoming-events-columns-3 ul,
+			&.wp-block-se-upcoming-events-columns-4 ul {
+				grid-template-columns: 1fr 1fr;
+			}
+		}
+		@include desktop-medium {
+			&.wp-block-se-upcoming-events-columns-3 ul {
+				grid-template-columns: 1fr 1fr 1fr;
+			}
+
+			&.wp-block-se-upcoming-events-columns-4 ul {
+				grid-template-columns: 1fr 1fr 1fr 1fr;
+			}
+		}
+	}
+}

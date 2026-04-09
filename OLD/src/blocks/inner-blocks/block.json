@@ -1,0 +1,15 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 2,
+	"name": "simple-events/inner-blocks",
+	"title": "Event Blocks",
+	"category": "simple-events",
+	"supports": {
+		"inserter": false,
+		"multiple": true,
+		"reusable": false,
+    		"align": ["wide", "full"],
+    		"layout": true
+	},
+	"editorScript": "file:./index.js"
+}

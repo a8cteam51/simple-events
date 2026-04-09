@@ -1,0 +1,60 @@
+/**
+ * #.# Common SCSS
+ *
+ * Can include things like variables and mixins
+ * that are used across the project.
+*/
+
+// Colors.
+$black: rgb(41, 41, 41);
+$white: #f4f4f4;
+$gray: #dedede;
+$green: #bada55;
+$red: orangered;
+
+// Breakpoints
+$breakpoint-mobile: 480px;
+$breakpoint-tablet: 768px;
+$breakpoint-desktop: 1024px;
+
+// Fonts Sizes
+$font-size-xxs: 12px;
+$font-size-xs: 14px;
+$font-size-sm: 16px;
+$font-size-md: 18px;
+$font-size-lg: 20px;
+$font-size-xl: 24px;
+$font-size-xxl: 32px;
+
+// Spacer
+$spacer-xxs: 4px;
+$spacer-xs: 8px;
+$spacer-sm: 12px;
+$spacer-md: 16px;
+$spacer-lg: 20px;
+$spacer-xl: 24px;
+$spacer-xxl: 32px;
+
+@mixin tablet {
+	@media (min-width: $breakpoint-tablet) {
+		@content;
+	}
+}
+
+@mixin desktop-medium {
+	@media (min-width: $breakpoint-desktop) {
+		@content;
+	}
+}
+
+@mixin max-tablet {
+  @media (max-width: $breakpoint-desktop) {
+	@content;
+  }
+}
+
+@mixin max-mobile {
+  @media (max-width: $breakpoint-tablet) {
+	@content;
+  }
+}

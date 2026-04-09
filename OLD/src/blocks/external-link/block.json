@@ -1,0 +1,22 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 2,
+	"name": "simple-events/external-link",
+	"title": "External Tickets",
+	"description": "Add a link to an external ticket website.",
+	"icon": "admin-links",
+	"category": "simple-events",
+	"keywords": ["event info", "tickets", "link", "Simple Events", "meta"],
+	"usesContext": ["postId"],
+	"attributes": {
+		"thePostId": {
+			"type": "integer",
+			"default": 0
+		}
+	},
+	"supports": {
+		"html": false
+	},
+	"editorScript": "file:./index.js",
+	"editorStyle": "file:./index.css"
+}

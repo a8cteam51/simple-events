@@ -1,0 +1,42 @@
+.wp-block-se-event-tickets {
+	&__heading {
+		margin: 0 0 32px;
+	}
+
+	&__ticket-row {
+		display: flex;
+		flex-direction: row;
+		flex-wrap: wrap;
+		align-items: center;
+		width: 100%;
+		margin: 0 0 16px;
+	}
+
+	&__ticket-column {
+		display: flex;
+		flex-direction: column;
+		flex-basis: 100%;
+
+		&--title {
+			flex: 3;
+		}
+
+		&--price {
+			flex: 2;
+		}
+
+		&--buy {
+			flex: 1;
+		}
+	}
+
+	&__ticket-stock {
+		display: block;
+		opacity: 0.6;
+		font-size: .75em;
+	}
+
+	&__button {
+		text-align: center;
+	}
+}

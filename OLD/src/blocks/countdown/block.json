@@ -1,0 +1,28 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 2,
+	"name": "simple-events/countdown",
+	"title": "Countdown",
+	"description": "Display a countdown to your next upcoming event.",
+	"icon": "clock",
+	"category": "simple-events",
+	"keywords": [
+		"countdown",
+		"event",
+		"upcoming",
+		"Simple Events"
+	],
+	"attributes": {
+		"className": {
+			"type": "string",
+			"default": ""
+		}
+	},
+	"supports": {
+		"html": false,
+		"multiple": false
+	},
+	"editorScript": "file:./index.js",
+	"style": "file:./style-index.css",
+	"viewScript": "file:./view.js"
+}

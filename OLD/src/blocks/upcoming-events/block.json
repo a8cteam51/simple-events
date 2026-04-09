@@ -1,0 +1,67 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+    "apiVersion": 2,
+	"name": "simple-events/upcoming-events",
+	"title": "Events Feed",
+	"description": "Display upcoming events, past events or events between a date range.",
+	"icon": "layout",
+	"category": "simple-events",
+	"keywords": [
+		"event",
+		"upcoming",
+		"Simple Events"
+	],
+	"attributes": {
+		"className": {
+			"type": "string",
+			"default": ""
+		},
+		"count": {
+			"type": "number",
+			"default": 10
+		},
+		"columns": {
+			"type": "number",
+			"default": 3
+		},
+		"layout": {
+			"type": "string",
+			"default": "list"
+		},
+		"align": {
+			"type": "string",
+			"default": ""
+		},
+		"feedType": {
+			"type": "string",
+			"default": "upcoming",
+			"enum": [ "upcoming", "past", "mixed", "range" ]
+		},
+        "showYearDividers": {
+            "type": "boolean",
+            "default": false
+        },
+         "overrideFeedOrder": {
+            "type": "boolean",
+            "default": false
+        },
+		"feedOrder": {
+			"type": "string",
+			"default": "ASC",
+			"enum": [ "ASC", "DESC" ]
+		},
+		"dateRange": {
+			"type": "object",
+			"default": {
+				"from": "",
+				"to": ""
+			}
+		}
+	},
+	"supports": {
+		"html": false,
+		"align": [ "wide", "full" ]
+	},
+	"editorScript": "file:./index.js",
+	"style": "file:./index.css"
+}
