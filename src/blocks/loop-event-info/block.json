@@ -36,6 +36,14 @@
         "order": {
             "type": "string",
             "default": "asc"
+        },
+        "dateFormat": {
+            "type": "string",
+            "default": ""
+        },
+        "timeFormat": {
+            "type": "string",
+            "default": ""
         }
     },
     "supports": {

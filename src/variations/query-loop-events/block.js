@@ -92,6 +92,9 @@ const FeedTypeControl = ({ attributes, setAttributes, clientId }) => {
 	const [eventsPerPage, setEventsPerPage] = useState(
 		query.perPage || 6
 	);
+	const [eventsOffset, setEventsOffset] = useState(
+		query.offset || 0
+	);
 
 	// Store the query data so child blocks can access it
 	useEffect(() => {
@@ -180,6 +183,29 @@ let feedOrderOptions = getFeedOrderOptions(feedType);
 					});
 				}}
 				min={1}
+				max={100}
+				step={1}
+				__nextHasNoMarginBottom
+			/>
+			<RangeControl
+				label={__('Offset', 'simple-events')}
+				help={__(
+					'Number of events to skip from the start of the query.',
+					'simple-events'
+				)}
+				value={eventsOffset}
+				onChange={(value) => {
+					const nextOffset = value || 0;
+					setEventsOffset(nextOffset);
+					setAttributes({
+						query: {
+							...query,
+							offset: nextOffset,
+							_cacheBuster: Date.now()
+						},
+					});
+				}}
+				min={0}
 				max={100}
 				step={1}
 				__nextHasNoMarginBottom

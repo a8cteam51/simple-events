@@ -2,7 +2,7 @@ import './index.scss';
 import './editor.scss';
 import metadata from './block.json';
 
-import { __ } from '@wordpress/i18n';
+import { __, sprintf } from '@wordpress/i18n';
 import { registerBlockType } from '@wordpress/blocks';
 import {
 	PanelBody,
@@ -19,9 +19,27 @@ import {
 } from '@wordpress/block-editor';
 import { useSelect } from '@wordpress/data';
 import { useEffect } from '@wordpress/element';
+import { dateI18n, getSettings as getDateSettings } from '@wordpress/date';
 
 registerBlockType(metadata, {
-	edit: ({ attributes: { metaName, metaPrefix, thePostId, textAlign, addCalendarLinks, feedType, order }, setAttributes, context: { postId }, clientId }) => {
+	edit: ({ attributes: { metaName, metaPrefix, thePostId, textAlign, addCalendarLinks, feedType, order, dateFormat, timeFormat }, setAttributes, context: { postId }, clientId }) => {
+
+		const siteFormats = getDateSettings().formats;
+		const siteDateFormat = siteFormats.date;
+		const siteTimeFormat = siteFormats.time;
+		const showDateFormat = metaName === 'dates' || metaName === 'date';
+		const showTimeFormat = metaName === 'dates' || metaName === 'time';
+
+		const formatPreview = (format) => {
+			if (!format) {
+				return '';
+			}
+			try {
+				return dateI18n(format, new Date());
+			} catch (e) {
+				return '';
+			}
+		};
 
 		// Get query loop data from our custom store
 		const queryData = useSelect((select) => {
@@ -87,6 +105,54 @@ registerBlockType(metadata, {
 								setAttributes({ addCalendarLinks: value } )
 							}
 						/>
+						{ showDateFormat && (
+							<TextControl
+								label={__('Date format override', 'simple-events')}
+								help={
+									dateFormat
+										? sprintf(
+											/* translators: %s: rendered date example. */
+											__('Preview: %s', 'simple-events'),
+											formatPreview(dateFormat)
+										)
+										: sprintf(
+											/* translators: %s: site default date format. */
+											__('Leave empty to use the site default (%s).', 'simple-events'),
+											siteDateFormat
+										)
+								}
+								placeholder={siteDateFormat}
+								value={dateFormat}
+								onChange={(value) =>
+									setAttributes({ dateFormat: value })
+								}
+								__nextHasNoMarginBottom
+							/>
+						) }
+						{ showTimeFormat && (
+							<TextControl
+								label={__('Time format override', 'simple-events')}
+								help={
+									timeFormat
+										? sprintf(
+											/* translators: %s: rendered time example. */
+											__('Preview: %s', 'simple-events'),
+											formatPreview(timeFormat)
+										)
+										: sprintf(
+											/* translators: %s: site default time format. */
+											__('Leave empty to use the site default (%s).', 'simple-events'),
+											siteTimeFormat
+										)
+								}
+								placeholder={siteTimeFormat}
+								value={timeFormat}
+								onChange={(value) =>
+									setAttributes({ timeFormat: value })
+								}
+								__nextHasNoMarginBottom
+							/>
+						) }
 					</PanelBody>
 				</InspectorControls>
 				<BlockControls group="block">
@@ -108,6 +174,8 @@ registerBlockType(metadata, {
 							addCalendarLinks,
 							feedType, // Use block attribute values
 							order, // Use block attribute values
+							dateFormat,
+							timeFormat,
 						}}
 					/>
 				</div>

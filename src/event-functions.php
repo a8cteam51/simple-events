@@ -159,10 +159,12 @@ function se_event_get_dates( $event_id, $event_dates = null ) { // phpcs:ignore
  * @param boolean      $date_only     Whether to return only the date.
  * @param boolean      $time_only     Whether to return only the time.
  * @param array        $event_dates   Event dates.
+ * @param string       $date_format   Optional date format override. Empty string uses the site default.
+ * @param string       $time_format   Optional time format override. Empty string uses the site default.
  *
  * @return string
  */
-function se_event_get_future_dates( $event_id, $event_date_id = null, $date_only = false, $time_only = false, $event_dates = null ) {
+function se_event_get_future_dates( $event_id, $event_date_id = null, $date_only = false, $time_only = false, $event_dates = null, $date_format = '', $time_format = '' ) {
 	$date_display_formatter = new SE_Date_Display_Formatter( $event_id );
 	$now                    = SE_Calendar::get_instance()->create_date_time( 'now' )->format( 'U' );
 
@@ -171,6 +173,13 @@ function se_event_get_future_dates( $event_id, $event_date_id = null, $date_only
 		$date_display_formatter->set_date_only( true );
 	} elseif ( $time_only ) {
 		$date_display_formatter->set_time_only( true );
+	}
+
+	if ( '' !== $date_format ) {
+		$date_display_formatter->set_date_format( $date_format );
+	}
+	if ( '' !== $time_format ) {
+		$date_display_formatter->set_time_format( $time_format );
 	}
 
 	// If we dont have any dates.
@@ -214,10 +223,12 @@ function se_event_get_future_dates( $event_id, $event_date_id = null, $date_only
  * @param boolean      $date_only     Whether to return only the date.
  * @param boolean      $time_only     Whether to return only the time.
  * @param array        $event_dates   Event dates.
+ * @param string       $date_format   Optional date format override. Empty string uses the site default.
+ * @param string       $time_format   Optional time format override. Empty string uses the site default.
  *
  * @return string
  */
-function se_event_get_past_dates( $event_id, $event_date_id = null, $date_only = false, $time_only = false, $event_dates = null ) {
+function se_event_get_past_dates( $event_id, $event_date_id = null, $date_only = false, $time_only = false, $event_dates = null, $date_format = '', $time_format = '' ) {
 
 	// Match the se_event_get_future_dates but for past dates
 	$date_display_formatter = new SE_Date_Display_Formatter( $event_id );
@@ -227,6 +238,13 @@ function se_event_get_past_dates( $event_id, $event_date_id = null, $date_only =
 		$date_display_formatter->set_date_only( true );
 	} elseif ( $time_only ) {
 		$date_display_formatter->set_time_only( true );
+	}
+
+	if ( '' !== $date_format ) {
+		$date_display_formatter->set_date_format( $date_format );
+	}
+	if ( '' !== $time_format ) {
+		$date_display_formatter->set_time_format( $time_format );
 	}
 
 	// If we dont have any dates.
@@ -268,10 +286,12 @@ function se_event_get_past_dates( $event_id, $event_date_id = null, $date_only =
  * @param boolean      $date_only     Whether to return only the date.
  * @param boolean      $time_only     Whether to return only the time.
  * @param array        $event_dates   Event dates.
+ * @param string       $date_format   Optional date format override. Empty string uses the site default.
+ * @param string       $time_format   Optional time format override. Empty string uses the site default.
  *
  * @return string
  */
-function se_event_get_formatted_dates( $event_id, $event_date_id = null, $date_only = false, $time_only = false, $event_dates = null ) {
+function se_event_get_formatted_dates( $event_id, $event_date_id = null, $date_only = false, $time_only = false, $event_dates = null, $date_format = '', $time_format = '' ) {
 
 	$date_display_formatter = new SE_Date_Display_Formatter( $event_id );
 
@@ -297,6 +317,13 @@ function se_event_get_formatted_dates( $event_id, $event_date_id = null, $date_o
 		$date_display_formatter->set_date_only( true );
 	} elseif ( $time_only ) {
 		$date_display_formatter->set_time_only( true );
+	}
+
+	if ( '' !== $date_format ) {
+		$date_display_formatter->set_date_format( $date_format );
+	}
+	if ( '' !== $time_format ) {
+		$date_display_formatter->set_time_format( $time_format );
 	}
 
 	return $date_display_formatter->format_dates( $event_dates );
