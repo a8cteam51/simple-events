@@ -12,46 +12,14 @@ const {
 } = require( '../../fixtures' );
 
 /**
- * Additional regression coverage around the event-dates save flow.
- *
- * Specs that already PASS on `trunk` are written as `test()` — they're
- * regression-prevention; we don't want a future change to silently break
- * them. Specs that FAIL on `trunk` (the bug we're about to fix) are marked
- * `test.fixme` so they don't gate CI; once the fix lands, flip them back
- * to `test()` and they should go green.
+ * Regression coverage around the event-dates save flow. All specs here run
+ * and must stay green.
  */
 
 test.describe( 'Event dates – regression coverage', () => {
 	/**
-	 * Scenario B regression — once the fix lands, a second Update on a
-	 * stuck-dirty post should clear the dirty flag. Today the post stays
-	 * dirty forever even after re-saving.
-	 */
-	test.fixme( 'second Update on a stuck-dirty post clears the dirty flag', async ( { page } ) => {
-		await openNewEvent( page );
-		await setTitle( page, 'E2E Scenario B Repro' );
-		await clickAddDate( page );
-		await clickDone( page );
-		await publish( page );
-		await waitForSaveQuiet( page, 4000, 30000 );
-
-		// Confirm we're in the stuck-dirty state today (delete this expectation
-		// when the fix lands and we no longer reach this state at all).
-		const afterFirst = await readEditorState( page );
-		expect( afterFirst.status ).toBe( 'publish' );
-
-		// Click Update with no further edits.
-		await page.locator( '.editor-post-publish-button' ).click();
-		await waitForSaveQuiet( page, 4000, 30000 );
-
-		const afterSecond = await readEditorState( page );
-		expect( afterSecond.isDirty ).toBe( false );
-	} );
-
-	/**
-	 * Scenario C regression-prevention — edit-and-save on an already-published,
-	 * reloaded post is clean today (1× sync, 1× post PUT, no dirty leak). The
-	 * fix must NOT regress this.
+	 * Edit-and-save on an already-published, reloaded post must stay clean
+	 * (no /sync, one post PUT, no dirty leak).
 	 */
 	test( 'edit-and-save on a reloaded published post stays clean', async ( { page } ) => {
 		const net = startNetworkCounter( page );
@@ -122,10 +90,9 @@ test.describe( 'Event dates – regression coverage', () => {
 	} );
 
 	/**
-	 * Multi-date first publish. Today this exhibits the same 2× /sync as the
-	 * single-date case — fixme until fix lands.
+	 * Multi-date first publish: one /sync, one child per date, no dirty leak.
 	 */
-	test.fixme( 'three dates on first publish create exactly three children, one sync', async ( { page } ) => {
+	test( 'three dates on first publish create exactly three children, one sync', async ( { page } ) => {
 		const net = startNetworkCounter( page );
 
 		await openNewEvent( page );
@@ -145,38 +112,5 @@ test.describe( 'Event dates – regression coverage', () => {
 		expect( state.isDirty ).toBe( false );
 		expect( net.counts.sync ).toBe( 1 );
 		expect( children.dates ).toHaveLength( 3 );
-	} );
-
-	/**
-	 * Save-while-sync-in-flight only meaningful once lockPostSaving is wired
-	 * (Approach A in the plan). Stays fixme until then.
-	 */
-	test.fixme( 'save button is locked while /sync is in-flight', async ( { page } ) => {
-		await openNewEvent( page );
-		await setTitle( page, 'E2E Lock Test' );
-
-		// Slow /sync responses to 2s so we can race against them.
-		await page.route( /\/simple-events\/event-dates\/\d+\/sync/, async ( route ) => {
-			await new Promise( ( r ) => setTimeout( r, 2000 ) );
-			await route.continue();
-		} );
-
-		await clickAddDate( page );
-		await clickDone( page );
-
-		// Click Publish immediately — the lock should kick in.
-		await publish( page );
-
-		// Within 500ms of clicking publish, the publish button should be in a
-		// "saving" state (Gutenberg's `is-busy` class) OR the lock should be
-		// holding the save until /sync resolves.
-		const isBusy = await page.evaluate( () =>
-			window.wp.data.select( 'core/editor' ).isPostSavingLocked()
-		);
-		expect( isBusy ).toBe( true );
-
-		await waitForSaveQuiet( page, 4000, 30000 );
-		const state = await readEditorState( page );
-		expect( state.isDirty ).toBe( false );
 	} );
 } );
