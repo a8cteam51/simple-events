@@ -58,6 +58,7 @@ class SE_Event_Post_Type {
 		add_filter( 'get_the_archive_title', array( __CLASS__, 'the_archive_title' ) );
 		register_activation_hook( __FILE__, array( __CLASS__, 'flush_rewrite_rules' ) );
 		add_action( 'save_post', array( __CLASS__, 'delete_event_dates_if_no_event_info_block' ) );
+		add_action( 'transition_post_status', array( __CLASS__, 'stamp_version_on_new_event' ), 10, 3 );
 		add_action( 'before_delete_post', array( __CLASS__, 'delete_child_event_dates' ) );
 		add_action( 'wp_trash_post', array( __CLASS__, 'trash_child_event_dates' ) );
 		add_action( 'untrashed_post', array( __CLASS__, 'untrash_child_event_dates' ) );
@@ -704,6 +705,46 @@ class SE_Event_Post_Type {
 	public static function flush_rewrite_rules() {
 		self::register_post_type();
 		flush_rewrite_rules();
+	}
+
+	/**
+	 * Stamp the current migration version on a brand-new event.
+	 *
+	 * The migration system flags any event whose `se_event_version` meta is
+	 * missing, empty, or below the current version. That meta was previously
+	 * only ever written by the date `/sync` endpoint, so an event saved
+	 * without a date sync ever firing would be wrongly flagged for migration.
+	 *
+	 * This stamps the current version the moment a genuinely new event leaves
+	 * `auto-draft`/`new` status. An existing (legacy) event being re-saved
+	 * transitions from `publish`/`draft`, never from `auto-draft`/`new`, so it
+	 * is deliberately left unstamped and continues to be picked up by the
+	 * migration system.
+	 *
+	 * @param string  $new_status The new post status.
+	 * @param string  $old_status The old post status.
+	 * @param WP_Post $post       The post object.
+	 *
+	 * @return void
+	 */
+	public static function stamp_version_on_new_event( $new_status, $old_status, $post ) {
+		if ( ! $post instanceof \WP_Post || self::$post_type !== $post->post_type ) {
+			return;
+		}
+
+		// Only stamp when the event is genuinely new — i.e. it is leaving the
+		// initial auto-draft/new state. Legacy events re-saved later transition
+		// from publish/draft and must stay unstamped so migration still runs.
+		if ( ! in_array( $old_status, array( 'new', 'auto-draft' ), true ) ) {
+			return;
+		}
+
+		// Never overwrite an existing version (e.g. a draft re-published).
+		if ( '' !== get_post_meta( $post->ID, 'se_event_version', true ) ) {
+			return;
+		}
+
+		update_post_meta( $post->ID, 'se_event_version', SE_MIGRATION_VERSION );
 	}
 
 	/**

@@ -23,12 +23,9 @@
     },
     "require-dev": {
         "a8cteam51/team51-configs": "dev-trunk",
-
         "wp-coding-standards/wpcs": "3.1.*",
         "phpcompatibility/phpcompatibility-wp": "*",
-
         "roave/security-advisories": "dev-latest",
-
         "phpunit/phpunit": "^9.6",
         "yoast/phpunit-polyfills": "^2.0"
     },
@@ -38,7 +35,6 @@
 
         "format:php": "phpcbf --basepath=. . -v",
         "lint:php": "phpcs --basepath=. . -v",
-
         "packages-install": "@composer install --ignore-platform-reqs --no-interaction",
         "packages-update": [
             "@composer clear-cache",
@@ -46,6 +42,9 @@
         ]
     },
     "config": {
+        "platform": {
+            "php": "8.3"
+        },
         "allow-plugins": {
             "composer/*": true,
             "dealerdirect/phpcodesniffer-composer-installer": true,
