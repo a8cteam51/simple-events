@@ -16,9 +16,11 @@
         "npm": ">=10.2"
     },
     "devDependencies": {
+        "@playwright/test": "^1.50.0",
         "@woocommerce/components": "^12.3.0",
         "@wordpress/env": "^10.0.0",
         "@wordpress/scripts": "^29.0.0",
+        "dotenv": "^16.4.0",
         "md5": "^2.3.0",
         "npm-run-all": "^4.1.5"
     },
@@ -45,7 +47,10 @@
         "lint:md:js": "wp-scripts lint-md-js",
         "lint:pkg-json": "wp-scripts lint-pkg-json",
         "packages-update": "wp-scripts packages-update",
-        "test:e2e": "wp-scripts test-e2e",
+        "test:e2e": "playwright test --config=tests/e2e/playwright.config.js",
+        "test:e2e:ui": "playwright test --config=tests/e2e/playwright.config.js --ui",
+        "test:e2e:headed": "playwright test --config=tests/e2e/playwright.config.js --headed",
+        "test:e2e:debug": "playwright test --config=tests/e2e/playwright.config.js --debug",
         "test:php": "wp-env run tests-cli --env-cwd='wp-content/plugins/simple-events' -- vendor/bin/phpunit --configuration phpunit.xml.dist",
         "test:unit": "wp-scripts test-unit-js",
         "wp-env": "wp-env",

@@ -38,7 +38,6 @@ import {
 	useBlockProps,
 } from '@wordpress/block-editor';
 import { useEntityProp } from '@wordpress/core-data';
-import { useSelect, useDispatch } from '@wordpress/data';
 
 // Import date utilities
 import {
@@ -178,11 +177,10 @@ export const autoSaveEventDates = async (dates, dateManagerInstance = null) => {
 };
 
 /**
- * Saves event dates when the post is being saved.
+ * Saves event dates as part of a user-initiated save.
  *
- * Handles saving event dates during WordPress post save operations.
- * Also updates block attributes to ensure the saved dates with IDs
- * are properly persisted in the block editor.
+ * Thin wrapper around `saveEventDates`; the Save-click interceptor in `edit()`
+ * handles the attribute write before `savePost`.
  *
  * @since 2.0.0
  *
@@ -191,33 +189,7 @@ export const autoSaveEventDates = async (dates, dateManagerInstance = null) => {
  * @return {Promise<Object>} Promise that resolves to the saved event dates response.
  */
 export const saveEventDatesOnPostSave = async (dates, dateManagerInstance = null) => {
-	try {
-		// Save to REST API
-		const savedDates = await saveEventDates(dates, dateManagerInstance);
-
-		// Update the post meta to ensure the updated dates (with IDs) are persisted
-		const postId = window?.wp?.data?.select('core/editor')?.getCurrentPostId();
-		if (postId && savedDates) {
-
-			// Update the block attributes to ensure the updated dates (with IDs) are persisted
-			const blocks = window.wp.data.select('core/block-editor').getBlocks();
-			const eventInfoBlock = blocks.find(block => block.name === 'simple-events/event-info');
-
-			if (eventInfoBlock) {
-				window.wp.data.dispatch('core/block-editor').updateBlockAttributes(
-					eventInfoBlock.clientId,
-					{
-						eventDates: savedDates.dates || savedDates,
-					}
-				);
-			}
-		}
-
-		return savedDates;
-	} catch (error) {
-		console.error('Error saving event dates on post save:', error);
-		throw error;
-	}
+	return saveEventDates(dates, dateManagerInstance);
 };
 
 
@@ -314,75 +286,71 @@ registerBlockType('simple-events/event-info', {
 		// Add refresh counter to force re-renders when dateManager state changes
 		const [refreshCounter, setRefreshCounter] = useState(0);
 
-		// Watch for post save events
-		const { isSavingPost, isAutosavingPost } = useSelect((select) => {
-			const { isSavingPost, isAutosavingPost } = select('core/editor');
-			return {
-				isSavingPost: isSavingPost(),
-				isAutosavingPost: isAutosavingPost(),
-			};
-		}, []);
-
-		// Save dates before post save begins
+		// Sync dates before the post PUT, not after — a post-save setAttributes races Gutenberg and pins isEditedPostDirty() true forever.
 		useEffect(() => {
-			let wasSaving = false;
-			let dateSavePromise = null;
-
-			const unsubscribe = window.wp.data.subscribe(() => {
-				const { isSavingPost, isAutosavingPost } = window.wp.data.select('core/editor');
-				const currentSaving = isSavingPost();
-				const currentAutosaving = isAutosavingPost();
-
-				// Detect when save is about to start (transition from false to true)
-				if (currentSaving && !currentAutosaving && !wasSaving && dateManagerState?.getCurrentDates()?.dates) {
-					// Save dates immediately before post save continues
-					dateSavePromise = saveEventDatesOnPostSave(dateManagerState.getCurrentDates().dates, dateManagerState)
-						.then((savedDates) => {
-							if (savedDates && savedDates.dates) {
-								setAttributes({
-									eventDates: savedDates.dates
-								});
-							}
-							dateSavePromise = null;
-						})
-						.catch((error) => {
-							console.error('Failed to save event dates before post save:', error);
-							dateSavePromise = null;
-						});
-				}
-
-				// Detect when save finishes but date sync is still in progress
-				if (!currentSaving && wasSaving && dateSavePromise) {
-					// Wait for date sync to complete, then save again
-					dateSavePromise.then(() => {
-						// Trigger another post save to include the updated dates
-						window.wp.data.dispatch('core/editor').savePost();
-					});
-				}
-
-				wasSaving = currentSaving;
-			});
-
-			return () => unsubscribe();
-		}, [dateManagerState, setAttributes]);
-
-		// Sync dateManagerState dates to block attributes
-		useEffect(() => {
-			if (dateManagerState?.getCurrentDates()?.dates) {
-				// Get current block attributes
-				const currentEventDates = attributes.eventDates || [];
-				const newEventDates = dateManagerState.getCurrentDates().dates;
-
-				// Compare the dates to see if they're actually different
-				const datesChanged = JSON.stringify(currentEventDates) !== JSON.stringify(newEventDates);
-
-				if (datesChanged) {
-					setAttributes({
-						eventDates: newEventDates
-					});
-				}
+			if (!dateManagerState) {
+				return;
 			}
-		}, [dateManagerState, refreshCounter, setAttributes, attributes.eventDates]);
+
+			let inflightSync = null;
+
+			const runSyncThenSave = async (event) => {
+				if (!dateManagerState.getCurrentDates().isDirty) {
+					return;
+				}
+
+				event.preventDefault();
+				event.stopImmediatePropagation();
+
+				const isPanelConfirm = !!event.target.closest('.editor-post-publish-panel');
+
+				try {
+					if (!inflightSync) {
+						inflightSync = saveEventDates(
+							dateManagerState.getCurrentDates().dates,
+							dateManagerState
+						);
+					}
+					const savedDates = await inflightSync;
+					inflightSync = null;
+
+					if (savedDates && savedDates.dates) {
+						setAttributes({ eventDates: savedDates.dates });
+					}
+
+					// Panel confirm needs the status flip too; an Update click on a published post just needs savePost.
+					if (isPanelConfirm) {
+						window.wp.data.dispatch('core/editor').editPost({ status: 'publish' });
+					}
+					window.wp.data.dispatch('core/editor').savePost();
+				} catch (error) {
+					inflightSync = null;
+					console.error('Failed to sync event dates before save:', error);
+				}
+			};
+
+			const onClickCapture = (event) => {
+				const button = event.target.closest('.editor-post-publish-button');
+				if (!button) {
+					return;
+				}
+				// Skip the toolbar Publish click that only opens the panel; intercept the real save (panel confirm, or Update on a published post).
+				const status = window.wp.data
+					.select('core/editor')
+					.getCurrentPostAttribute('status');
+				const isPublished = ['publish', 'private', 'future'].includes(status);
+				const isInPanel = !!event.target.closest('.editor-post-publish-panel');
+				if (!isPublished && !isInPanel) {
+					return;
+				}
+				runSyncThenSave(event);
+			};
+
+			document.addEventListener('click', onClickCapture, true);
+			return () => {
+				document.removeEventListener('click', onClickCapture, true);
+			};
+		}, [dateManagerState, setAttributes]);
 
 		// Check if we should be in edit mode based on missing data
 		useEffect(() => {
