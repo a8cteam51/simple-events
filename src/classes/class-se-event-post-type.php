@@ -710,16 +710,10 @@ class SE_Event_Post_Type {
 	/**
 	 * Stamp the current migration version on a brand-new event.
 	 *
-	 * The migration system flags any event whose `se_event_version` meta is
-	 * missing, empty, or below the current version. That meta was previously
-	 * only ever written by the date `/sync` endpoint, so an event saved
-	 * without a date sync ever firing would be wrongly flagged for migration.
-	 *
-	 * This stamps the current version the moment a genuinely new event leaves
-	 * `auto-draft`/`new` status. An existing (legacy) event being re-saved
-	 * transitions from `publish`/`draft`, never from `auto-draft`/`new`, so it
-	 * is deliberately left unstamped and continues to be picked up by the
-	 * migration system.
+	 * Without this, an event saved before any date /sync fired had no
+	 * se_event_version meta and was wrongly flagged for migration. Legacy
+	 * events transition from publish/draft (never auto-draft/new) so they
+	 * stay unstamped and migration still picks them up.
 	 *
 	 * @param string  $new_status The new post status.
 	 * @param string  $old_status The old post status.
@@ -732,9 +726,7 @@ class SE_Event_Post_Type {
 			return;
 		}
 
-		// Only stamp when the event is genuinely new — i.e. it is leaving the
-		// initial auto-draft/new state. Legacy events re-saved later transition
-		// from publish/draft and must stay unstamped so migration still runs.
+		// Only stamp genuinely new events (leaving auto-draft/new); legacy re-saves transition from publish/draft and must stay unstamped.
 		if ( ! in_array( $old_status, array( 'new', 'auto-draft' ), true ) ) {
 			return;
 		}

@@ -179,12 +179,8 @@ export const autoSaveEventDates = async (dates, dateManagerInstance = null) => {
 /**
  * Saves event dates as part of a user-initiated save.
  *
- * Thin wrapper around `saveEventDates`. Historically this also wrote the
- * returned IDs back into block attributes via `updateBlockAttributes`, but
- * that write landed AFTER Gutenberg's post PUT had settled and caused a
- * permanent dirty-state leak. The Save-click interceptor in `edit()` now
- * handles the `setAttributes` call BEFORE invoking `savePost`, so this
- * wrapper just performs the REST call.
+ * Thin wrapper around `saveEventDates`; the Save-click interceptor in `edit()`
+ * handles the attribute write before `savePost`.
  *
  * @since 2.0.0
  *
@@ -290,12 +286,7 @@ registerBlockType('simple-events/event-info', {
 		// Add refresh counter to force re-renders when dateManager state changes
 		const [refreshCounter, setRefreshCounter] = useState(0);
 
-		// Intercept Save/Publish/Update button clicks so that `/sync` runs and
-		// the returned server-issued date IDs are written to block attributes
-		// BEFORE Gutenberg's post PUT goes out. This keeps `post_content`
-		// serialised with valid IDs (needed for ?event_date_id=X URLs) and
-		// avoids the previous race where a post-save `setAttributes` flipped
-		// `isEditedPostDirty()` to true forever.
+		// Sync dates before the post PUT, not after — a post-save setAttributes races Gutenberg and pins isEditedPostDirty() true forever.
 		useEffect(() => {
 			if (!dateManagerState) {
 				return;
@@ -327,10 +318,7 @@ registerBlockType('simple-events/event-info', {
 						setAttributes({ eventDates: savedDates.dates });
 					}
 
-					// Replicate Gutenberg's publish dance when the click came
-					// from the pre-publish panel's confirm button: status flip
-					// then savePost. For an already-published post (toolbar
-					// "Update" click) we only need savePost.
+					// Panel confirm needs the status flip too; an Update click on a published post just needs savePost.
 					if (isPanelConfirm) {
 						window.wp.data.dispatch('core/editor').editPost({ status: 'publish' });
 					}
@@ -346,11 +334,7 @@ registerBlockType('simple-events/event-info', {
 				if (!button) {
 					return;
 				}
-				// For draft / auto-draft posts the toolbar Publish click just
-				// opens the pre-publish panel — don't intercept that. Only
-				// the actual save trigger should run sync-then-save: either
-				// the panel's confirm button OR a click on an already-published
-				// post's Update button.
+				// Skip the toolbar Publish click that only opens the panel; intercept the real save (panel confirm, or Update on a published post).
 				const status = window.wp.data
 					.select('core/editor')
 					.getCurrentPostAttribute('status');
