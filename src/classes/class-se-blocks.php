@@ -893,9 +893,15 @@ class SE_Blocks {
 			$output .= se_template_calendar_links( false );
 		}
 
+		$allowed_tags = array( 'div', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6' );
+		$tag_name     = isset( $attributes['tagName'] ) && in_array( $attributes['tagName'], $allowed_tags, true )
+			? $attributes['tagName']
+			: 'div';
+
 		// Add gutenberg generated wrapper atts.
 		$output = sprintf(
-			'<div %s>%s%s</div>',
+			'<%1$s %2$s>%3$s%4$s</%1$s>',
+			$tag_name,
 			get_block_wrapper_attributes(
 				array(
 					'class' => 'has-text-align-' . esc_attr( $attributes['textAlign'] ),

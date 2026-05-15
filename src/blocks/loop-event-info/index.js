@@ -22,7 +22,7 @@ import { useEffect } from '@wordpress/element';
 import { dateI18n, getSettings as getDateSettings } from '@wordpress/date';
 
 registerBlockType(metadata, {
-	edit: ({ attributes: { metaName, metaPrefix, thePostId, textAlign, addCalendarLinks, feedType, order, dateFormat, timeFormat }, setAttributes, context: { postId }, clientId }) => {
+	edit: ({ attributes: { metaName, metaPrefix, thePostId, textAlign, addCalendarLinks, feedType, order, dateFormat, timeFormat, tagName }, setAttributes, context: { postId }, clientId }) => {
 
 		const siteFormats = getDateSettings().formats;
 		const siteDateFormat = siteFormats.date;
@@ -75,6 +75,24 @@ registerBlockType(metadata, {
 					<PanelBody
 						title={__('Display Options', 'simple-events')}
 					>
+						<SelectControl
+							label={__('HTML element', 'simple-events')}
+							value={tagName}
+							options={[
+								{ label: __( 'Default (div)', 'simple-events' ), value: 'div' },
+								{ label: __( 'Paragraph (p)', 'simple-events' ), value: 'p' },
+								{ label: __( 'Heading 1 (h1)', 'simple-events' ), value: 'h1' },
+								{ label: __( 'Heading 2 (h2)', 'simple-events' ), value: 'h2' },
+								{ label: __( 'Heading 3 (h3)', 'simple-events' ), value: 'h3' },
+								{ label: __( 'Heading 4 (h4)', 'simple-events' ), value: 'h4' },
+								{ label: __( 'Heading 5 (h5)', 'simple-events' ), value: 'h5' },
+								{ label: __( 'Heading 6 (h6)', 'simple-events' ), value: 'h6' },
+							]}
+							onChange={(value) =>
+								setAttributes({ tagName: value })
+							}
+							__nextHasNoMarginBottom
+						/>
 						<SelectControl
 							label={__('Show what event info?', 'simple-events')}
 							value={metaName}
@@ -176,6 +194,7 @@ registerBlockType(metadata, {
 							order, // Use block attribute values
 							dateFormat,
 							timeFormat,
+							tagName,
 						}}
 					/>
 				</div>
