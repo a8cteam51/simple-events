@@ -129,6 +129,17 @@ class SE_Block_Variations {
 		$feed_type  = $request->get_param( 'feedType' );
 		$feed_order = $request->get_param( 'order' );
 
+		// This filter runs for EVERY rest_se-event_query request. `feedType`
+		// is a custom param only the events Query Loop variation sends; a
+		// plain /wp/v2/se-event request never has it. Bail untouched for
+		// those so generic REST consumers (post lists, integrations) aren't
+		// switched to the child post type. (`order` is a standard REST
+		// collection param present on every request, so it can't be the
+		// discriminator.)
+		if ( null === $feed_type ) {
+			return $args;
+		}
+
 		// Mirror build_query: run the events query against the child
 		// se-event-date posts (which carry se_event_date_start/end);
 		// modify_event_posts remaps them back to parent events. Without
