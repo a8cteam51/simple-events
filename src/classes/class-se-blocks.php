@@ -842,6 +842,9 @@ class SE_Blocks {
 				break;
 		}
 
+		$date_format = isset( $attributes['dateFormat'] ) ? (string) $attributes['dateFormat'] : '';
+		$time_format = isset( $attributes['timeFormat'] ) ? (string) $attributes['timeFormat'] : '';
+
 		// Generate output based on meta name.
 		if ( ! empty( $post_ID ) ) {
 			switch ( $attributes['metaName'] ) {
@@ -852,13 +855,13 @@ class SE_Blocks {
 					$output = se_event_get_venue( $post_ID );
 					break;
 				case 'dates':
-					$output = $get_date_function( $post_ID, $event_date_id );
+					$output = $get_date_function( $post_ID, $event_date_id, false, false, null, $date_format, $time_format );
 					break;
 				case 'date':
-					$output = $get_date_function( $post_ID, $event_date_id, true, false );
+					$output = $get_date_function( $post_ID, $event_date_id, true, false, null, $date_format, $time_format );
 					break;
 				case 'time':
-					$output = $get_date_function( $post_ID, $event_date_id, false, true );
+					$output = $get_date_function( $post_ID, $event_date_id, false, true, null, $date_format, $time_format );
 					break;
 			}
 		}
@@ -890,9 +893,15 @@ class SE_Blocks {
 			$output .= se_template_calendar_links( false );
 		}
 
+		$allowed_tags = array( 'div', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6' );
+		$tag_name     = isset( $attributes['tagName'] ) && in_array( $attributes['tagName'], $allowed_tags, true )
+			? $attributes['tagName']
+			: 'div';
+
 		// Add gutenberg generated wrapper atts.
 		$output = sprintf(
-			'<div %s>%s%s</div>',
+			'<%1$s %2$s>%3$s%4$s</%1$s>',
+			$tag_name,
 			get_block_wrapper_attributes(
 				array(
 					'class' => 'has-text-align-' . esc_attr( $attributes['textAlign'] ),

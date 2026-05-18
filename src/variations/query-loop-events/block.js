@@ -66,7 +66,6 @@ registerBlockVariation('core/query', {
 			inherit: false,
 			inheritTaxQuery: true,
 			feedType: 'default',
-			_cacheBuster: Date.now(),
 		},
 		eventsPerPage: 6,
 	},
@@ -91,6 +90,9 @@ const FeedTypeControl = ({ attributes, setAttributes, clientId }) => {
 	const feedOrder = query.order || 'asc';
 	const [eventsPerPage, setEventsPerPage] = useState(
 		query.perPage || 6
+	);
+	const [eventsOffset, setEventsOffset] = useState(
+		query.offset || 0
 	);
 
 	// Store the query data so child blocks can access it
@@ -145,7 +147,6 @@ let feedOrderOptions = getFeedOrderOptions(feedType);
 						query: {
 							...query,
 							feedType: value,
-							_cacheBuster: Date.now()
 						},
 					});
 				}}
@@ -160,7 +161,6 @@ let feedOrderOptions = getFeedOrderOptions(feedType);
 						query: {
 							...query,
 							order: value,
-							_cacheBuster: Date.now()
 						},
 					});
 				}}
@@ -175,11 +175,32 @@ let feedOrderOptions = getFeedOrderOptions(feedType);
 						query: {
 							...query,
 							perPage: value,
-							_cacheBuster: Date.now()
 						},
 					});
 				}}
 				min={1}
+				max={100}
+				step={1}
+				__nextHasNoMarginBottom
+			/>
+			<RangeControl
+				label={__('Offset', 'simple-events')}
+				help={__(
+					'Number of events to skip from the start of the query.',
+					'simple-events'
+				)}
+				value={eventsOffset}
+				onChange={(value) => {
+					const nextOffset = value || 0;
+					setEventsOffset(nextOffset);
+					setAttributes({
+						query: {
+							...query,
+							offset: nextOffset,
+						},
+					});
+				}}
+				min={0}
 				max={100}
 				step={1}
 				__nextHasNoMarginBottom

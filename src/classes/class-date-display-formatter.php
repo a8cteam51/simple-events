@@ -119,6 +119,20 @@ class SE_Date_Display_Formatter {
 	private $use_html_in_date_output = false;
 
 	/**
+	 * Override for the date format. Empty string means use the site option.
+	 *
+	 * @var string
+	 */
+	private $date_format = '';
+
+	/**
+	 * Override for the time format. Empty string means use the site option.
+	 *
+	 * @var string
+	 */
+	private $time_format = '';
+
+	/**
 	 * Create a new instance of the date display formatter.
 	 *
 	 * @param integer $event_id The event id.
@@ -167,6 +181,28 @@ class SE_Date_Display_Formatter {
 	 */
 	public function set_time_only( bool $time_only = true ) {
 		$this->time_only = $time_only;
+	}
+
+	/**
+	 * Override the date format used by format_date(). Empty string restores the site default.
+	 *
+	 * @param string $format A PHP date format string.
+	 *
+	 * @return void
+	 */
+	public function set_date_format( string $format ): void {
+		$this->date_format = $format;
+	}
+
+	/**
+	 * Override the time format used by format_time(). Empty string restores the site default.
+	 *
+	 * @param string $format A PHP date format string.
+	 *
+	 * @return void
+	 */
+	public function set_time_format( string $format ): void {
+		$this->time_format = $format;
 	}
 
 	/**
@@ -630,7 +666,8 @@ class SE_Date_Display_Formatter {
 	 * @return string
 	 */
 	public function format_date( $date_timestamp ) {
-		return wp_date( get_option( 'date_format' ), $date_timestamp, $this->get_timezone_instance() );
+		$format = '' !== $this->date_format ? $this->date_format : get_option( 'date_format' );
+		return wp_date( $format, $date_timestamp, $this->get_timezone_instance() );
 	}
 
 	/**
@@ -641,7 +678,8 @@ class SE_Date_Display_Formatter {
 	 * @return string
 	 */
 	public function format_time( $time_timestamp ) {
-		return wp_date( get_option( 'time_format' ), $time_timestamp, $this->get_timezone_instance() );
+		$format = '' !== $this->time_format ? $this->time_format : get_option( 'time_format' );
+		return wp_date( $format, $time_timestamp, $this->get_timezone_instance() );
 	}
 
 	/**

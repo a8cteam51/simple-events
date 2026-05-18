@@ -36,6 +36,19 @@
         "order": {
             "type": "string",
             "default": "asc"
+        },
+        "dateFormat": {
+            "type": "string",
+            "default": ""
+        },
+        "timeFormat": {
+            "type": "string",
+            "default": ""
+        },
+        "tagName": {
+            "enum": ["div", "p", "h1", "h2", "h3", "h4", "h5", "h6"],
+            "type": "string",
+            "default": "div"
         }
     },
     "supports": {
