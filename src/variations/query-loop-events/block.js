@@ -66,7 +66,6 @@ registerBlockVariation('core/query', {
 			inherit: false,
 			inheritTaxQuery: true,
 			feedType: 'default',
-			_cacheBuster: Date.now(),
 		},
 		eventsPerPage: 6,
 	},
@@ -148,7 +147,6 @@ let feedOrderOptions = getFeedOrderOptions(feedType);
 						query: {
 							...query,
 							feedType: value,
-							_cacheBuster: Date.now()
 						},
 					});
 				}}
@@ -163,7 +161,6 @@ let feedOrderOptions = getFeedOrderOptions(feedType);
 						query: {
 							...query,
 							order: value,
-							_cacheBuster: Date.now()
 						},
 					});
 				}}
@@ -178,7 +175,6 @@ let feedOrderOptions = getFeedOrderOptions(feedType);
 						query: {
 							...query,
 							perPage: value,
-							_cacheBuster: Date.now()
 						},
 					});
 				}}
@@ -201,7 +197,6 @@ let feedOrderOptions = getFeedOrderOptions(feedType);
 						query: {
 							...query,
 							offset: nextOffset,
-							_cacheBuster: Date.now()
 						},
 					});
 				}}

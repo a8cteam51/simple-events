@@ -186,3 +186,12 @@ Simple plugin to add a focal point control to the featured post image.
 **If you want to use this plugin extension**, you can find it at https://github.com/a8cteam51/bamberg-ua/tree/trunk/mu-plugins/team51-focal-point
 
 Copy the `team51-focal-point` folder to your `mu-plugins` directory.
+
+## Changelog
+
+### 2.1.1
+
+- **Loop Event Info block:** added a configurable HTML wrapper element (`div`/`p`/`h1`–`h6`), per-block date and time format overrides, and a query offset control.
+- **Query Loop Events:** the block-editor preview now matches the published front-end for every feed order. Previously, with "Newest to Oldest" the editor preview showed the oldest events while the front-end showed the newest.
+- Removed a redundant query cache-buster that wrote a timestamp into post content on every change.
+- Added Playwright end-to-end tests (run in CI) covering the event-dates save flow, the Query Loop editor/front-end parity, and the Loop Event Info rendering options.

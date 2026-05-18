@@ -41,7 +41,6 @@ jobs:
 
       - name: Run E2E tests
         env:
-          WP_BASE_URL: http://localhost:8888
           WP_USERNAME: admin
           WP_PASSWORD: password
         run: npm run test:e2e

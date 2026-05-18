@@ -48,6 +48,7 @@
         "lint:pkg-json": "wp-scripts lint-pkg-json",
         "packages-update": "wp-scripts packages-update",
         "test:e2e": "playwright test --config=tests/e2e/playwright.config.js",
+        "test:e2e:local": "wp-env start && playwright test --config=tests/e2e/playwright.config.js",
         "test:e2e:ui": "playwright test --config=tests/e2e/playwright.config.js --ui",
         "test:e2e:headed": "playwright test --config=tests/e2e/playwright.config.js --headed",
         "test:e2e:debug": "playwright test --config=tests/e2e/playwright.config.js --debug",

@@ -1,6 +1,9 @@
 build/*
 !build/index.php
 
+# wp-env local overrides (per-machine ports etc. — never commit)
+.wp-env.override.json
+
 # Playwright
 test-results/
 playwright-report/

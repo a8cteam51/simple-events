@@ -127,7 +127,16 @@ class SE_Block_Variations {
 	public function set_admin_query( $args, $request ) {
 
 		$feed_type  = $request->get_param( 'feedType' );
-		$feed_order = $request->get_param( 'order' );#
+		$feed_order = $request->get_param( 'order' );
+
+		// Mirror build_query: run the events query against the child
+		// se-event-date posts (which carry se_event_date_start/end);
+		// modify_event_posts remaps them back to parent events. Without
+		// this the editor REST preview queries se-event parents that lack
+		// the date meta, so the meta-order SQL never gets its `+0 ASC`
+		// form and fix_sort_order can't flip it — the editor preview was
+		// stuck oldest-first regardless of feed order.
+		$args['post_type'] = SE_Event_Post_Type::$event_date_post_type;
 
 		return $this->set_event_query_args( $args, $feed_type, $feed_order );
 	}
