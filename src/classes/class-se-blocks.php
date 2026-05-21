@@ -763,9 +763,8 @@ class SE_Blocks {
 	 * @return HTML Calendar Template.
 	 */
 	public static function calendar_render( $attributes = array() ) {
-		$current_date_time  = SE_Calendar::get_instance()->create_date_time( 'now' );
-		$previous_date_time = SE_Calendar::get_instance()->get_previous_month_with_events( $current_date_time );
-		$next_date_time     = SE_Calendar::get_instance()->get_next_month_with_events( $current_date_time );
+		$sequential_months = isset( $attributes['sequentialMonths'] ) ? (bool) $attributes['sequentialMonths'] : false;
+		$current_date_time = SE_Calendar::get_instance()->create_date_time( 'now' );
 
 		// If this being loaded on an archive page, ensure event query filters are removed.
 		if ( is_archive() && in_array( get_post_type(), array( SE_Event_Post_Type::$post_type, SE_Event_Post_Type::$event_date_post_type ), true ) ) {
@@ -775,15 +774,34 @@ class SE_Blocks {
 		$current_date = $current_date_time->format( 'Y-m-01' );
 		$month_data   = SE_Calendar::get_instance()->get_month_days( $current_date );
 
-		if ( ! $month_data['month_has_events'] ) {
+		if ( $sequential_months && ! $month_data['month_has_events'] ) {
+			$first_event_month = SE_Calendar::get_instance()->get_next_month_with_events( $current_date_time, false );
+			if ( $first_event_month ) {
+				$current_date      = $first_event_month->format( 'Y-m-01' );
+				$month_data        = SE_Calendar::get_instance()->get_month_days( $current_date );
+				$current_date_time = SE_Calendar::get_instance()->create_date_time( $current_date );
+			} else {
+				$first_event_month = SE_Calendar::get_instance()->get_previous_month_with_events( $current_date_time, false );
+				if ( $first_event_month ) {
+					$current_date      = $first_event_month->format( 'Y-m-01' );
+					$month_data        = SE_Calendar::get_instance()->get_month_days( $current_date );
+					$current_date_time = SE_Calendar::get_instance()->create_date_time( $current_date );
+				}
+			}
+		}
+
+		$previous_date_time = SE_Calendar::get_instance()->get_previous_month_with_events( $current_date_time, $sequential_months );
+		$next_date_time     = SE_Calendar::get_instance()->get_next_month_with_events( $current_date_time, $sequential_months );
+
+		if ( ! $sequential_months && ! $month_data['month_has_events'] ) {
 			if ( $next_date_time ) {
 				$current_date   = $next_date_time->format( 'Y-m-01' );
 				$month_data     = SE_Calendar::get_instance()->get_month_days( $current_date );
-				$next_date_time = SE_Calendar::get_instance()->get_next_month_with_events( $next_date_time );
+				$next_date_time = SE_Calendar::get_instance()->get_next_month_with_events( $next_date_time, false );
 			} elseif ( $previous_date_time ) {
 				$current_date       = $previous_date_time->format( 'Y-m-01' );
 				$month_data         = SE_Calendar::get_instance()->get_month_days( $current_date );
-				$previous_date_time = SE_Calendar::get_instance()->get_previous_month_with_events( $previous_date_time );
+				$previous_date_time = SE_Calendar::get_instance()->get_previous_month_with_events( $previous_date_time, false );
 			}
 		}
 

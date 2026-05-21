@@ -39,6 +39,20 @@ registerBlockType( 'simple-events/calendar', {
 				</BlockControls>
 				<InspectorControls>
 					<PanelBody title="Event Configuration" initialOpen={ true }>
+						<ToggleControl
+							label={ __(
+								'Show Months in Order',
+								'simple-events'
+							) }
+							help={ __(
+								'When enabled, months move one at a time and the calendar opens on the first month that has events (from today if the current month is empty). When disabled, navigation jumps only between months that have events.',
+								'simple-events'
+							) }
+							checked={ attributes?.sequentialMonths === true }
+							onChange={ ( value ) =>
+								setAttributes( { sequentialMonths: value } )
+							}
+						/>
 						<ToggleControl  
 							label={ __(
 								'Hide Events on Neighbouring Months',

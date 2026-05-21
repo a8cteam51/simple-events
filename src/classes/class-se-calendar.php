@@ -189,12 +189,11 @@ class SE_Calendar {
 			$request_date = 'now';
 		}
 
+		$request_attributes = isset( $request_body['attributes'] ) ? $request_body['attributes'] : array();
+		$sequential_months  = isset( $request_attributes['sequentialMonths'] ) ? (bool) $request_attributes['sequentialMonths'] : false;
 		$request_date_time  = $this->create_date_time( $request_date );
-		$previous_date_time = self::get_instance()->get_previous_month_with_events( $request_date_time );
-		$next_date_time     = self::get_instance()->get_next_month_with_events( $request_date_time );
-
-		// Retrieve attributes for template part.
-		$request_attributes = $request_body['attributes'];
+		$previous_date_time = self::get_instance()->get_previous_month_with_events( $request_date_time, $sequential_months );
+		$next_date_time     = self::get_instance()->get_next_month_with_events( $request_date_time, $sequential_months );
 
 		if ( ! $request_attributes ) {
 			$request_attributes = array( 'align' => 'wide' );
@@ -234,11 +233,21 @@ class SE_Calendar {
 	 * Get first previous event with events.
 	 *
 	 * @param DateTime $current_date Current date.
+	 * @param bool     $sequential   When true, returns the previous calendar month regardless of events.
 	 *
 	 * @return DateTime|null
 	 */
-	public function get_previous_month_with_events( $current_date ) {
+	public function get_previous_month_with_events( $current_date, $sequential = false ) {
 		global $wpdb;
+
+		if ( $sequential ) {
+			$previous_date_time = clone $current_date;
+			$previous_date_time->modify( 'first day of this month' );
+			$previous_date_time->modify( '-1 month' );
+			$previous_date_time->setTime( 0, 0, 0 );
+
+			return $previous_date_time;
+		}
 
 		$previous_date_time = clone $current_date;
 		$previous_date_time->modify( 'first day of this month' );
@@ -288,10 +297,19 @@ class SE_Calendar {
 	 * Get first next event with events.
 	 *
 	 * @param DateTime $current_date Current date.
+	 * @param bool     $sequential   When true, returns the next calendar month regardless of events.
 	 *
 	 * @return DateTime|null
 	 */
-	public function get_next_month_with_events( $current_date ) {
+	public function get_next_month_with_events( $current_date, $sequential = false ) {
+		if ( $sequential ) {
+			$next_date_time = clone $current_date;
+			$next_date_time->modify( 'first day of this month' );
+			$next_date_time->modify( '+1 month' );
+			$next_date_time->setTime( 0, 0, 0 );
+
+			return $next_date_time;
+		}
 
 		/**
 		 * Compile a shared set of query args.
