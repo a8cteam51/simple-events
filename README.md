@@ -85,6 +85,41 @@ add_filter('se_event_calendar_link_text', function( string $link_text ) {
 }, 10, 1);
 ```
 
+### Calendar Rendering
+
+#### Filter day events before calendar markup is built
+```php
+add_filter( 'simple_events_calendar_day_events', function( array $day_events, DateTime $date, int $start_timestamp, int $end_timestamp ) {
+	$unique_events = array();
+	$seen_keys     = array();
+
+	foreach ( $day_events as $event ) {
+		if ( ! is_object( $event ) || ! isset( $event->ID, $event->event_start_date, $event->event_end_date ) ) {
+			$unique_events[] = $event;
+			continue;
+		}
+
+		$key = implode(
+			'|',
+			array(
+				(string) $event->ID,
+				$event->event_start_date instanceof DateTime ? $event->event_start_date->format( 'U' ) : '',
+				$event->event_end_date instanceof DateTime ? $event->event_end_date->format( 'U' ) : '',
+			)
+		);
+
+		if ( isset( $seen_keys[ $key ] ) ) {
+			continue;
+		}
+
+		$seen_keys[ $key ] = true;
+		$unique_events[]   = $event;
+	}
+
+	return $unique_events;
+}, 10, 4 );
+```
+
 ### Cron Tasks for Event Start Date
 
 > When the cron task runs to update the event start date to a future date if its passed and future dates exist.

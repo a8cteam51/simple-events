@@ -367,7 +367,9 @@ class SE_Calendar {
 	private function get_events_by_date( $date ): array {
 		global $wpdb;
 
-		$day_events = array();
+		$day_events       = array();
+		$start_timestamp  = ( clone $date )->setTime( 0, 0, 0 )->getTimestamp();
+		$end_timestamp    = ( clone $date )->setTime( 23, 59, 59 )->getTimestamp();
 
 		$new_all = SE_Event_Dates::get_event_dates_for_date( $date->format( 'Y-m-d' ), true, false );
 		// If we new dates.
@@ -398,7 +400,25 @@ class SE_Calendar {
 			}
 		}
 
-		return $day_events;
+		/**
+		 * Filter the events shown on a single calendar day before rendering.
+		 *
+		 * Useful for deduping event-date rows that map to the same visible event entry.
+		 *
+		 * @param array    $day_events       Events prepared for this calendar day.
+		 * @param DateTime $date             Day being rendered.
+		 * @param int      $start_timestamp  Start of day timestamp in site timezone.
+		 * @param int      $end_timestamp    End of day timestamp in site timezone.
+		 */
+		$day_events = apply_filters(
+			'simple_events_calendar_day_events',
+			$day_events,
+			$date,
+			$start_timestamp,
+			$end_timestamp
+		);
+
+		return is_array( $day_events ) ? $day_events : array();
 	}
 
 
