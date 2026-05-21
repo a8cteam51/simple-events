@@ -5,6 +5,91 @@
  */
 
 @import '../common.scss';
+
+.simple-events-calendar-skeleton {
+	&--hidden {
+		display: none;
+	}
+
+	&:not(.simple-events-calendar-skeleton--hidden) {
+		.simple-events-calendar-skeleton__top-bar > span,
+		.simple-events-calendar-skeleton__header > span,
+		.simple-events-calendar-skeleton__day {
+			background: linear-gradient(90deg, #454545 25%, #515151 50%, #454545 75%);
+			background-size: 200% 100%;
+			animation: simple-events-skeleton-shimmer 2.5s ease-in-out infinite;
+			border-radius: 4px;
+		}
+	}
+
+	.simple-events-calendar-skeleton__top-bar {
+		display: flex;
+		flex-direction: row;
+		gap: 20px;
+		align-items: center;
+		margin-bottom: 20px;
+
+		> span {
+			&:first-child {
+				width: 50px;
+				height: 28px;
+			}
+			&:nth-child(2) {
+				flex: 1;
+				max-width: 200px;
+				height: 28px;
+			}
+			&:nth-child(3) {
+				width: 80px;
+				height: 28px;
+			}
+		}
+	}
+
+	.simple-events-calendar-skeleton__header {
+		display: flex;
+		gap: 4px;
+		margin-bottom: 12px;
+
+		> span {
+			flex: 1;
+			height: 20px;
+		}
+	}
+
+	.simple-events-calendar-skeleton__body {
+		min-height: 500px;
+	}
+
+	.simple-events-calendar-skeleton__week {
+		display: flex;
+		gap: 4px;
+		margin-bottom: 4px;
+	}
+
+	.simple-events-calendar-skeleton__day {
+		flex: 1;
+		min-height: 100px;
+
+		@include max-mobile {
+			min-height: 50px;
+		}
+	}
+}
+
+@keyframes simple-events-skeleton-shimmer {
+	0% {
+		background-position: 200% 0;
+	}
+	100% {
+		background-position: -200% 0;
+	}
+}
+
+.simple-events-calendar-content--hidden {
+	display: none;
+}
+
 .simple-events-calendar {
     margin-left: auto;
     margin-right: auto;

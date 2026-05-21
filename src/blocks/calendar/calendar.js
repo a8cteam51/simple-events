@@ -45,18 +45,14 @@ export default class Calendar {
 	/**
 	 * Check if mobile view
 	 *
-	 * @param  calendarItem
 	 * @return {boolean}
 	 */
-	isMobile( calendarItem ) {
-		const mobileElements = calendarItem.querySelectorAll( this.DOM.desktopElements );
-		if ( mobileElements.length ) {
-			if ( 'none' === window.getComputedStyle( mobileElements[ 0 ], null ).display ) {
-				return true;
-			}
+	isMobile() {
+		if ( window.matchMedia ) {
+			return window.matchMedia( '(max-width: 767px)' ).matches;
 		}
 
-		return false;
+		return window.innerWidth <= 767;
 	}
 
 	/**
@@ -70,7 +66,7 @@ export default class Calendar {
 		if ( calendarDays.length ) {
 			calendarDays.forEach( ( item ) => {
 				item.addEventListener( 'click', ( event ) => {
-					if ( ! this.isMobile( calendarItem ) ) {
+					if ( ! this.isMobile() ) {
 						return;
 					}
 
@@ -135,12 +131,79 @@ export default class Calendar {
 	}
 
 	/**
+	 * Show loading skeleton and hide current calendar content.
+	 *
+	 * @param {Element} calendarItem Calendar container element.
+	 */
+	showLoading( calendarItem ) {
+		const skeleton = calendarItem.querySelector(
+			'[data-js="simple-events-calendar-skeleton"]'
+		);
+		const content = calendarItem.querySelector(
+			'[data-js="simple-events-calendar-content"]'
+		);
+
+		if ( skeleton ) {
+			skeleton.classList.remove(
+				'simple-events-calendar-skeleton--hidden'
+			);
+		}
+
+		if ( content ) {
+			content.classList.add( 'simple-events-calendar-content--hidden' );
+		}
+	}
+
+	/**
+	 * Update the visible calendar markup after request completes.
+	 *
+	 * @param {Element} calendarItem Calendar container element.
+	 * @param {string}  html         Updated calendar main HTML.
+	 */
+	updateContent( calendarItem, html ) {
+		const content = calendarItem.querySelector(
+			'[data-js="simple-events-calendar-content"]'
+		);
+
+		if ( content ) {
+			content.innerHTML = html;
+			return;
+		}
+
+		calendarItem.innerHTML = html;
+	}
+
+	/**
+	 * Hide loading skeleton and re-show calendar content.
+	 *
+	 * @param {Element} calendarItem Calendar container element.
+	 */
+	hideLoading( calendarItem ) {
+		const skeleton = calendarItem.querySelector(
+			'[data-js="simple-events-calendar-skeleton"]'
+		);
+		const content = calendarItem.querySelector(
+			'[data-js="simple-events-calendar-content"]'
+		);
+
+		if ( skeleton ) {
+			skeleton.classList.add( 'simple-events-calendar-skeleton--hidden' );
+		}
+
+		if ( content ) {
+			content.classList.remove( 'simple-events-calendar-content--hidden' );
+		}
+	}
+
+	/**
 	 * Send calendar API request
 	 *
 	 * @param date
 	 * @param calendarItem
 	 */
 	sendCalendarRequest( date, calendarItem ) {
+		this.showLoading( calendarItem );
+
 		/**
 		 * Convert GET request to POST
 		 * Implemented to send block attributes in body instead of URL.
@@ -154,12 +217,18 @@ export default class Calendar {
 			},
 		} ).then( ( result ) => {
 			if ( result.html ) {
-				calendarItem.innerHTML = result.html;
-				this.initListeners( calendarItem );
+				this.updateContent( calendarItem, result.html );
 			} else {
 				console.log( result );
 			}
-		});
+		} )
+			.catch( () => {
+				// Keep the existing calendar content if request fails.
+			} )
+			.finally( () => {
+				this.hideLoading( calendarItem );
+				this.initListeners( calendarItem );
+			} );
 	}
 
 	/**
