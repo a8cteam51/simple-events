@@ -224,6 +224,12 @@ Copy the `team51-focal-point` folder to your `mu-plugins` directory.
 
 ## Changelog
 
+### 2.1.2
+
+- **Calendar loading UX:** added a loading skeleton while calendar month requests are in flight.
+- **Calendar mobile interaction:** fixed day selection logic on mobile breakpoints when themes customize hidden/mobile display rules.
+- **Calendar navigation:** added a "Show Months in Order" option for sequential month navigation (defaults to off for existing blocks).
+
 ### 2.1.1
 
 - **Loop Event Info block:** added a configurable HTML wrapper element (`div`/`p`/`h1`–`h6`), per-block date and time format overrides, and a query offset control.
