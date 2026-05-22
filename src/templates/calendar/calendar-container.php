@@ -29,9 +29,19 @@ $se_editor_screen = defined( 'REST_REQUEST' ) ? REST_REQUEST : false;
 
 	SE_Template_Loader::get_template_part(
 		'calendar/calendar',
-		'main',
+		'skeleton',
 		true,
 		$args
 	);
 	?>
+	<div class="simple-events-calendar-content" data-js="simple-events-calendar-content">
+		<?php
+		SE_Template_Loader::get_template_part(
+			'calendar/calendar',
+			'main',
+			true,
+			$args
+		);
+		?>
+	</div>
 </div>

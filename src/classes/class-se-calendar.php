@@ -189,12 +189,11 @@ class SE_Calendar {
 			$request_date = 'now';
 		}
 
+		$request_attributes = isset( $request_body['attributes'] ) ? $request_body['attributes'] : array();
+		$sequential_months  = isset( $request_attributes['sequentialMonths'] ) ? (bool) $request_attributes['sequentialMonths'] : false;
 		$request_date_time  = $this->create_date_time( $request_date );
-		$previous_date_time = self::get_instance()->get_previous_month_with_events( $request_date_time );
-		$next_date_time     = self::get_instance()->get_next_month_with_events( $request_date_time );
-
-		// Retrieve attributes for template part.
-		$request_attributes = $request_body['attributes'];
+		$previous_date_time = self::get_instance()->get_previous_month_with_events( $request_date_time, $sequential_months );
+		$next_date_time     = self::get_instance()->get_next_month_with_events( $request_date_time, $sequential_months );
 
 		if ( ! $request_attributes ) {
 			$request_attributes = array( 'align' => 'wide' );
@@ -234,11 +233,21 @@ class SE_Calendar {
 	 * Get first previous event with events.
 	 *
 	 * @param DateTime $current_date Current date.
+	 * @param boolean  $sequential   When true, returns the previous calendar month regardless of events.
 	 *
 	 * @return DateTime|null
 	 */
-	public function get_previous_month_with_events( $current_date ) {
+	public function get_previous_month_with_events( $current_date, $sequential = false ) {
 		global $wpdb;
+
+		if ( $sequential ) {
+			$previous_date_time = clone $current_date;
+			$previous_date_time->modify( 'first day of this month' );
+			$previous_date_time->modify( '-1 month' );
+			$previous_date_time->setTime( 0, 0, 0 );
+
+			return $previous_date_time;
+		}
 
 		$previous_date_time = clone $current_date;
 		$previous_date_time->modify( 'first day of this month' );
@@ -288,10 +297,19 @@ class SE_Calendar {
 	 * Get first next event with events.
 	 *
 	 * @param DateTime $current_date Current date.
+	 * @param boolean  $sequential   When true, returns the next calendar month regardless of events.
 	 *
 	 * @return DateTime|null
 	 */
-	public function get_next_month_with_events( $current_date ) {
+	public function get_next_month_with_events( $current_date, $sequential = false ) {
+		if ( $sequential ) {
+			$next_date_time = clone $current_date;
+			$next_date_time->modify( 'first day of this month' );
+			$next_date_time->modify( '+1 month' );
+			$next_date_time->setTime( 0, 0, 0 );
+
+			return $next_date_time;
+		}
 
 		/**
 		 * Compile a shared set of query args.
@@ -367,7 +385,9 @@ class SE_Calendar {
 	private function get_events_by_date( $date ): array {
 		global $wpdb;
 
-		$day_events = array();
+		$day_events      = array();
+		$start_timestamp = ( clone $date )->setTime( 0, 0, 0 )->getTimestamp();
+		$end_timestamp   = ( clone $date )->setTime( 23, 59, 59 )->getTimestamp();
 
 		$new_all = SE_Event_Dates::get_event_dates_for_date( $date->format( 'Y-m-d' ), true, false );
 		// If we new dates.
@@ -398,7 +418,25 @@ class SE_Calendar {
 			}
 		}
 
-		return $day_events;
+		/**
+		 * Filter the events shown on a single calendar day before rendering.
+		 *
+		 * Useful for deduping event-date rows that map to the same visible event entry.
+		 *
+		 * @param array    $day_events       Events prepared for this calendar day.
+		 * @param DateTime $date             Day being rendered.
+		 * @param int      $start_timestamp  Start of day timestamp in site timezone.
+		 * @param int      $end_timestamp    End of day timestamp in site timezone.
+		 */
+		$day_events = apply_filters(
+			'simple_events_calendar_day_events',
+			$day_events,
+			$date,
+			$start_timestamp,
+			$end_timestamp
+		);
+
+		return is_array( $day_events ) ? $day_events : array();
 	}
 
 
