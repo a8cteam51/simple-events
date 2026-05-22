@@ -233,7 +233,7 @@ class SE_Calendar {
 	 * Get first previous event with events.
 	 *
 	 * @param DateTime $current_date Current date.
-	 * @param bool     $sequential   When true, returns the previous calendar month regardless of events.
+	 * @param boolean  $sequential   When true, returns the previous calendar month regardless of events.
 	 *
 	 * @return DateTime|null
 	 */
@@ -297,7 +297,7 @@ class SE_Calendar {
 	 * Get first next event with events.
 	 *
 	 * @param DateTime $current_date Current date.
-	 * @param bool     $sequential   When true, returns the next calendar month regardless of events.
+	 * @param boolean  $sequential   When true, returns the next calendar month regardless of events.
 	 *
 	 * @return DateTime|null
 	 */
@@ -385,9 +385,9 @@ class SE_Calendar {
 	private function get_events_by_date( $date ): array {
 		global $wpdb;
 
-		$day_events       = array();
-		$start_timestamp  = ( clone $date )->setTime( 0, 0, 0 )->getTimestamp();
-		$end_timestamp    = ( clone $date )->setTime( 23, 59, 59 )->getTimestamp();
+		$day_events      = array();
+		$start_timestamp = ( clone $date )->setTime( 0, 0, 0 )->getTimestamp();
+		$end_timestamp   = ( clone $date )->setTime( 23, 59, 59 )->getTimestamp();
 
 		$new_all = SE_Event_Dates::get_event_dates_for_date( $date->format( 'Y-m-d' ), true, false );
 		// If we new dates.
