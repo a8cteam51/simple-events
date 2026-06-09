@@ -60,7 +60,7 @@ class SE_Calendar {
 	 * @param string $format The display format for the days of the week.
 	 *
 	 * @return array Days of the week.
-	 **@category Events
+	 * *@category Events
 	 */
 	public function simple_events_get_days_of_week( $format = null ) {
 		global $wp_locale;
@@ -444,8 +444,8 @@ class SE_Calendar {
 	/**
 	 * Get the first calendar cell for the month (weeks align to WordPress start of week).
 	 *
-	 * @param mixed $date          First day of the month to display.
-	 * @param int   $start_of_week `start_of_week` option: 0 = Sunday through 6 = Saturday.
+	 * @param mixed   $date          First day of the month to display.
+	 * @param integer $start_of_week Attribute `start_of_week` option: 0 = Sunday through 6 = Saturday.
 	 *
 	 * @return DateTime First grid day at 00:00:00.
 	 */
@@ -465,8 +465,8 @@ class SE_Calendar {
 	/**
 	 * Get the last day shown in the grid for the month (inclusive), at 23:59:59.
 	 *
-	 * @param mixed $date          Any day in the month (used to find last day of month).
-	 * @param int   $start_of_week `start_of_week` option: 0 = Sunday through 6 = Saturday.
+	 * @param mixed   $date          Any day in the month (used to find last day of month).
+	 * @param integer $start_of_week Attribute `start_of_week` option: 0 = Sunday through 6 = Saturday.
 	 *
 	 * @return DateTime End boundary for the period.
 	 */
