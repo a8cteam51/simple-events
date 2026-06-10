@@ -60,7 +60,7 @@ class SE_Calendar {
 	 * @param string $format The display format for the days of the week.
 	 *
 	 * @return array Days of the week.
-	 **@category Events
+	 * *@category Events
 	 */
 	public function simple_events_get_days_of_week( $format = null ) {
 		global $wp_locale;
@@ -442,56 +442,48 @@ class SE_Calendar {
 
 
 	/**
-	 * Get the start day based on the given date and start of the week.
+	 * Get the first calendar cell for the month (weeks align to WordPress start of week).
 	 *
-	 * @param mixed   $date          The date for which to calculate the start day.
-	 * @param integer $start_of_week The start of the week (0-6, where 0 is Sunday).
+	 * @param mixed   $date          First day of the month to display.
+	 * @param integer $start_of_week Attribute `start_of_week` option: 0 = Sunday through 6 = Saturday.
 	 *
-	 * @return DateTime The start day based on the given date and start of the week.
+	 * @return DateTime First grid day at 00:00:00.
 	 */
 	private function get_start_day( $date, $start_of_week ) {
-		$start_date         = clone $date;
-		$start_day_interval = 0;
+		$start_date = clone $date;
+		$start_date->setTime( 0, 0, 0 );
 
-		$start_day_week_position = $date->format( 'w' );
+		$w                = (int) $start_date->format( 'w' );
+		$days_back_to_sow = ( $w - (int) $start_of_week + 7 ) % 7;
 
-		if ( $start_of_week > 0 && 0 === intval( $start_day_week_position ) ) {
-			$start_day_week_position = 7;
-		}
-
-		if ( 0 !== intval( $start_day_week_position ) ) {
-			$start_day_interval = abs( 1 - $start_day_week_position );
-		}
-
-		return $start_date->sub( new DateInterval( 'P' . $start_day_interval . 'D' ) );
+		return 0 === $days_back_to_sow
+			? $start_date
+			: $start_date->sub( new DateInterval( 'P' . $days_back_to_sow . 'D' ) );
 	}
 
 
 	/**
-	 * Get the end day based on the given date and start of the week.
+	 * Get the last day shown in the grid for the month (inclusive), at 23:59:59.
 	 *
-	 * @param Date    $date          The date to calculate the end day from.
-	 * @param integer $start_of_week The start of the `week (0-6, where 0 is Sunday).
+	 * @param mixed   $date          Any day in the month (used to find last day of month).
+	 * @param integer $start_of_week Attribute `start_of_week` option: 0 = Sunday through 6 = Saturday.
 	 *
-	 * @return DateTime The end day based on the given date and start of the week.
+	 * @return DateTime End boundary for the period.
 	 */
 	private function get_end_day( $date, $start_of_week ) {
-		$end_date          = clone $date;
-		$last_day_interval = 0;
+		$end_date = clone $date;
+		$end_date->modify( 'last day of this month' );
+		$end_date->setTime( 0, 0, 0 );
 
-		$last_day_of_month      = $end_date->modify( 'last day of this month' );
-		$last_day_week_position = $last_day_of_month->format( 'w' );
+		$w             = (int) $end_date->format( 'w' );
+		$offset_in_row = ( $w - (int) $start_of_week + 7 ) % 7;
+		$days_to_add   = 6 - $offset_in_row;
 
-		if ( $start_of_week > 0 && 0 === intval( $last_day_week_position ) ) {
-			$last_day_week_position = 7;
+		if ( $days_to_add > 0 ) {
+			$end_date->add( new DateInterval( 'P' . $days_to_add . 'D' ) );
 		}
-
-		if ( 0 !== intval( $last_day_week_position ) ) {
-			$last_day_interval = 7 - $last_day_week_position;
-		}
-
 		$end_date->setTime( 23, 59, 59 );
 
-		return $end_date->add( new DateInterval( 'P' . $last_day_interval . 'D' ) );
+		return $end_date;
 	}
 }
