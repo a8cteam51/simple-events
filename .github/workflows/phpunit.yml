@@ -1,0 +1,47 @@
+name: PHPUnit Tests
+
+on:
+  pull_request:
+    branches: [ trunk, develop ]
+
+jobs:
+  phpunit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # Dev dependencies required: test:php runs vendor/bin/phpunit.
+      - name: Install Composer dependencies
+        run: composer install --no-progress --prefer-dist
+
+      - name: Install npm dependencies
+        run: npm ci --force
+
+      # Build so register_block_type finds build/blocks; phpunit.xml.dist sets
+      # convertWarningsToExceptions, so a missing build dir would fail activation.
+      - name: Build plugin assets
+        run: npm run build
+
+      - name: Start wp-env
+        run: npx wp-env start
+
+      - name: Run PHPUnit tests
+        run: npm run test:php
+
+      - name: Stop wp-env
+        if: always()
+        run: npx wp-env stop

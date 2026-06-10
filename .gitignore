@@ -4,6 +4,9 @@ build/*
 # wp-env local overrides (per-machine ports etc. — never commit)
 .wp-env.override.json
 
+# Local manual WP-CLI test-data seeder (run by hand, never committed)
+seed-test-events.php
+
 # Playwright
 test-results/
 playwright-report/
