@@ -280,7 +280,10 @@ class SE_Calendar {
 			'limit'      => 1,
 		);
 
+		// Only consider dates whose parent event is published.
+		add_filter( 'posts_where', array( 'SE_Event_Query_Utils', 'filter_event_dates_where' ), 10, 2 );
 		$query = new WP_Query( $args );
+		remove_filter( 'posts_where', array( 'SE_Event_Query_Utils', 'filter_event_dates_where' ), 10 );
 
 		if ( $query->have_posts() ) {
 			$previous_event = $query->posts[0];
@@ -354,6 +357,9 @@ class SE_Calendar {
 
 		$next_event = null;
 
+		// Only consider dates whose parent event is published.
+		add_filter( 'posts_where', array( 'SE_Event_Query_Utils', 'filter_event_dates_where' ), 10, 2 );
+
 		// At first try to get the next event with the start date.
 		$query = new WP_Query( $query_args( 'se_event_date_start' ) );
 		if ( $query->have_posts() ) {
@@ -365,6 +371,8 @@ class SE_Calendar {
 				$next_event = $query->posts[0];
 			}
 		}
+
+		remove_filter( 'posts_where', array( 'SE_Event_Query_Utils', 'filter_event_dates_where' ), 10 );
 
 		if ( empty( $next_event ) ) {
 			return null;

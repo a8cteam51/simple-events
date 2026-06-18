@@ -278,6 +278,9 @@ class SE_Event_Dates {
 			$start_date_time->setTime( 23, 59, 59 )->getTimestamp(),
 		);
 
+		// Only return dates whose parent event is published (same guard as archive/feed).
+		add_filter( 'posts_where', array( 'SE_Event_Query_Utils', 'filter_event_dates_where' ), 10, 2 );
+
 		// Query the event dates.
 		$query = new WP_Query(
 			array(
@@ -320,6 +323,8 @@ class SE_Event_Dates {
 				'post_status'    => 'publish',
 			)
 		);
+
+		remove_filter( 'posts_where', array( 'SE_Event_Query_Utils', 'filter_event_dates_where' ), 10 );
 
 		$mapped = self::map_events_dates_to_event_dates( $query->posts );
 
