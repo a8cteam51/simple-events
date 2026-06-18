@@ -2,10 +2,10 @@
 /**
  * Tests that calendar month navigation ignores events whose parent is not published.
  *
- * get_previous_month_with_events() / get_next_month_with_events() decide which month
- * the prev/next arrows jump to by querying se-event-date posts. Those date posts are
- * always 'publish', so without a parent-published guard a draft event still drives the
- * navigation.
+ * Both get_previous_month_with_events() and get_next_month_with_events() decide which
+ * month the prev/next arrows jump to by querying se-event-date posts. Those date posts
+ * are always 'publish', so without a parent-published guard a draft event still drives
+ * the navigation.
  *
  * @package Simple_Events
  */
@@ -17,7 +17,7 @@ class CalendarMonthNavDraftTest extends WP_UnitTestCase {
 	 * @param string $parent_status Parent se-event post_status.
 	 * @param string $start_day     Date in 'Y-m-d' form for the event date.
 	 *
-	 * @return int The parent event ID.
+	 * @return integer The parent event ID.
 	 */
 	private function make_event( $parent_status, $start_day ) {
 		$event_id = $this->factory->post->create(

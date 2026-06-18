@@ -49,7 +49,7 @@ class UpcomingEventsDraftTest extends WP_UnitTestCase {
 	 * @param string $parent_status Parent se-event post_status.
 	 * @param string $start_day     Date in 'Y-m-d' form for the event date.
 	 *
-	 * @return int The parent event ID.
+	 * @return integer The parent event ID.
 	 */
 	private function make_event( $parent_status, $start_day ) {
 		$event_id = $this->factory->post->create(
