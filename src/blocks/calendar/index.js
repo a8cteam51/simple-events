@@ -263,6 +263,36 @@ registerBlockType( 'simple-events/calendar', {
 							] }
 						/>
 					</PanelBody>
+					<PanelBody
+						title={ __( 'Loading Skeleton', 'simple-events' ) }
+						initialOpen={ false }
+					>
+						<PanelColorSettings
+							colorSettings={ [
+								{
+									label: __( 'Base Color', 'simple-events' ),
+									value: attributes.skeletonBaseColor,
+									onChange: ( value ) =>
+										setAttributes( {
+											skeletonBaseColor: value,
+										} ),
+									clearable: true,
+								},
+								{
+									label: __(
+										'Highlight Color',
+										'simple-events'
+									),
+									value: attributes.skeletonHighlightColor,
+									onChange: ( value ) =>
+										setAttributes( {
+											skeletonHighlightColor: value,
+										} ),
+									clearable: true,
+								},
+							] }
+						/>
+					</PanelBody>
 				</InspectorControls>
 				<div { ...useBlockProps() }>
 					<ServerSideRender

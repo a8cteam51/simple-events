@@ -15,7 +15,7 @@
 		.simple-events-calendar-skeleton__top-bar > span,
 		.simple-events-calendar-skeleton__header > span,
 		.simple-events-calendar-skeleton__day {
-			background: linear-gradient(90deg, #454545 25%, #515151 50%, #454545 75%);
+			background: linear-gradient(90deg, var(--se-skeleton-base, #454545) 25%, var(--se-skeleton-highlight, #515151) 50%, var(--se-skeleton-base, #454545) 75%);
 			background-size: 200% 100%;
 			animation: simple-events-skeleton-shimmer 2.5s ease-in-out infinite;
 			border-radius: 4px;
@@ -60,10 +60,13 @@
 
 	.simple-events-calendar-skeleton__body {
 		min-height: 500px;
+		display: flex;
+		flex-direction: column;
 	}
 
 	.simple-events-calendar-skeleton__week {
 		display: flex;
+		flex: 1;
 		gap: 4px;
 		margin-bottom: 4px;
 	}
