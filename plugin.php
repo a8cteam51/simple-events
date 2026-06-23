@@ -3,7 +3,7 @@
  * Simple Events Plugin bootstrap file.
  *
  * @since       1.0.0
- * @version     2.1.3
+ * @version     2.1.4
  * @author      WordPress.com Special Projects
  * @license     GPL-3.0-or-later
  *
@@ -14,7 +14,7 @@
  * Description:             Event management frontend for WooCommerce Box Office.
  * Requires at least:       6.5
  * Tested up to:            6.9
- * Version:                 2.1.3
+ * Version:                 2.1.4
  * Requires PHP:            8.0
  * Author:                  WordPress.com Special Projects
  * Author URI:              https://wpspecialprojects.wordpress.com

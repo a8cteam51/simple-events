@@ -224,6 +224,10 @@ Copy the `team51-focal-point` folder to your `mu-plugins` directory.
 
 ## Changelog
 
+### 2.1.4
+
+- **Event date visibility:** fixed `find_event_dates()` so **Hide from calendar** and **Hide from feed** are applied independently based on the requesting context. Calendar day queries no longer exclude dates marked **Hide from feed**, allowing calendar-only entries (for example all-day closed markers) to appear on the calendar while remaining hidden from feed/list surfaces.
+
 ### 2.1.3
 
 - **Calendar grid alignment:** fixed month grid date placement when WordPress **Week Starts On** is set to Sunday (or any `start_of_week` other than Monday). Dates and events now appear under the correct weekday column.
