@@ -143,13 +143,19 @@ class SE_Calendar {
 		$start_day = $this->get_start_day( $current_date, $start_of_week );
 		$end_day   = $this->get_end_day( $current_date, $start_of_week );
 
+		// Fetch the whole visible grid in a single query, bucketed per day,
+		// instead of one query per calendar cell (the old N+1 hot spot).
+		$range_events = $this->bucket_event_dates_by_day(
+			SE_Event_Query_Utils::get_event_dates_for_range( $start_day->getTimestamp(), $end_day->getTimestamp() )
+		);
+
 		$period = new DatePeriod( $start_day, new DateInterval( 'P1D' ), $end_day );
 
 		foreach ( $period as $day ) {
 			$day->setTime( 0, 0, 0 );
 			$day_formatted = $day->format( 'Y-m-d' );
 			$day_month     = $day->format( 'n' );
-			$events        = $this->get_events_by_date( $day );
+			$events        = $this->get_events_by_date( $day, $range_events[ $day_formatted ] ?? array() );
 
 			if ( ! $data['month_has_events'] && ! empty( $events ) && $day_month === $current_month ) {
 				$data['month_has_events'] = true;
@@ -254,10 +260,13 @@ class SE_Calendar {
 		$previous_date_time->settime( 0, 0, 0 );
 
 		$args = array(
-			'post_type'  => SE_Event_Post_Type::$event_date_post_type,
-			'meta_query' => array(
-				'relation' => 'AND',
-				array(
+			'post_type'      => SE_Event_Post_Type::$event_date_post_type,
+			'post_status'    => 'publish',
+			'posts_per_page' => 1,
+			'no_found_rows'  => true,
+			'meta_query'     => array(
+				'relation'     => 'AND',
+				'start_clause' => array(
 					'key'     => 'se_event_date_start',
 					'value'   => $previous_date_time->getTimestamp(),
 					'compare' => '<',
@@ -275,15 +284,16 @@ class SE_Calendar {
 					),
 				),
 			),
-			'orderby'    => 'meta_value',
-			'order'      => 'DESC',
-			'limit'      => 1,
+			'orderby'        => array( 'start_clause' => 'DESC' ),
 		);
 
-		// Only consider dates whose parent event is published.
+		// Only consider dates whose parent event is published (same guard the grid uses).
 		add_filter( 'posts_where', array( 'SE_Event_Query_Utils', 'filter_event_dates_where' ), 10, 2 );
-		$query = new WP_Query( $args );
-		remove_filter( 'posts_where', array( 'SE_Event_Query_Utils', 'filter_event_dates_where' ), 10 );
+		try {
+			$query = new WP_Query( $args );
+		} finally {
+			remove_filter( 'posts_where', array( 'SE_Event_Query_Utils', 'filter_event_dates_where' ), 10 );
+		}
 
 		if ( $query->have_posts() ) {
 			$previous_event = $query->posts[0];
@@ -328,10 +338,13 @@ class SE_Calendar {
 			$next_date_time->settime( 23, 59, 59 );
 
 			return array(
-				'post_type'  => SE_Event_Post_Type::$event_date_post_type,
-				'meta_query' => array(
-					'relation' => 'AND',
-					array(
+				'post_type'      => SE_Event_Post_Type::$event_date_post_type,
+				'post_status'    => 'publish',
+				'posts_per_page' => 1,
+				'no_found_rows'  => true,
+				'meta_query'     => array(
+					'relation'    => 'AND',
+					'date_clause' => array(
 						'key'     => $meta_key,
 						'value'   => $next_date_time->getTimestamp(),
 						'compare' => '>',
@@ -349,30 +362,29 @@ class SE_Calendar {
 						),
 					),
 				),
-				'orderby'    => 'meta_value',
-				'order'      => 'ASC',
-				'limit'      => 1,
+				'orderby'        => array( 'date_clause' => 'ASC' ),
 			);
 		};
 
 		$next_event = null;
 
-		// Only consider dates whose parent event is published.
+		// Only consider dates whose parent event is published (same guard the grid uses).
 		add_filter( 'posts_where', array( 'SE_Event_Query_Utils', 'filter_event_dates_where' ), 10, 2 );
-
-		// At first try to get the next event with the start date.
-		$query = new WP_Query( $query_args( 'se_event_date_start' ) );
-		if ( $query->have_posts() ) {
-			$next_event = $query->posts[0];
-		} else {
-			// If we don't have a next event with the start date, try with the end date.
-			$query = new WP_Query( $query_args( 'se_event_date_end' ) );
+		try {
+			// At first try to get the next event with the start date.
+			$query = new WP_Query( $query_args( 'se_event_date_start' ) );
 			if ( $query->have_posts() ) {
 				$next_event = $query->posts[0];
+			} else {
+				// If we don't have a next event with the start date, try with the end date.
+				$query = new WP_Query( $query_args( 'se_event_date_end' ) );
+				if ( $query->have_posts() ) {
+					$next_event = $query->posts[0];
+				}
 			}
+		} finally {
+			remove_filter( 'posts_where', array( 'SE_Event_Query_Utils', 'filter_event_dates_where' ), 10 );
 		}
-
-		remove_filter( 'posts_where', array( 'SE_Event_Query_Utils', 'filter_event_dates_where' ), 10 );
 
 		if ( empty( $next_event ) ) {
 			return null;
@@ -384,23 +396,27 @@ class SE_Calendar {
 
 
 	/**
-	 * Retrieves events from the database for a given date.
+	 * Build the display events for a single calendar day from its bucketed dates.
 	 *
-	 * @param mixed $date The date to retrieve events for.
+	 * @param mixed $date   The day being rendered.
+	 * @param array $events Pre-bucketed event dates for this day (from get_month_days()).
 	 *
-	 * @return array The array of events for the given date.
+	 * @return array The enriched events for the day.
 	 */
-	private function get_events_by_date( $date ): array {
-		global $wpdb;
-
+	private function get_events_by_date( $date, array $events ): array {
 		$day_events      = array();
 		$start_timestamp = ( clone $date )->setTime( 0, 0, 0 )->getTimestamp();
 		$end_timestamp   = ( clone $date )->setTime( 23, 59, 59 )->getTimestamp();
 
-		$new_all = SE_Event_Dates::get_event_dates_for_date( $date->format( 'Y-m-d' ), true, false );
-		// If we new dates.
-		if ( ! empty( $new_all ) ) {
-			foreach ( $new_all as $event ) {
+		// If we have dates.
+		if ( ! empty( $events ) ) {
+			foreach ( $events as $event ) {
+
+				// The calendar hides dates flagged hide_from_calendar; feed hiding
+				// is the feed's concern, so a feed-only-hidden date still shows here.
+				if ( ! empty( $event['event_hide_from_calendar'] ) ) {
+					continue;
+				}
 
 				// Get the parent post.
 				$parent_post = get_post( $event['event_id'] );
@@ -448,6 +464,37 @@ class SE_Calendar {
 	}
 
 
+
+	/**
+	 * Group event dates by the calendar day they render on ('Y-m-d' => dates).
+	 *
+	 * All-day dates land on their start day; timed dates only if they end the
+	 * same day (a timed date crossing midnight lands on no day).
+	 *
+	 * @param array<int, array{event_id: int, event_date_id: int, event_start_date: string, event_end_date: string, event_all_day: bool, event_hide_from_calendar: bool, event_hide_from_feed: bool}> $event_dates Mapped dates from SE_Event_Query_Utils::get_event_dates_for_range().
+	 *
+	 * @return array<string, array<int, array>> Map of 'Y-m-d' day => event dates.
+	 */
+	private function bucket_event_dates_by_day( array $event_dates ): array {
+		$buckets = array();
+
+		foreach ( $event_dates as $event_date ) {
+			$start_day = se_create_date_time_from_timestamp( $event_date['event_start_date'] )->format( 'Y-m-d' );
+
+			if ( $event_date['event_all_day'] ) {
+				$buckets[ $start_day ][] = $event_date;
+				continue;
+			}
+
+			// Timed dates only render on their start day, and only if they end it.
+			$end_day = se_create_date_time_from_timestamp( $event_date['event_end_date'] )->format( 'Y-m-d' );
+			if ( $end_day === $start_day ) {
+				$buckets[ $start_day ][] = $event_date;
+			}
+		}
+
+		return $buckets;
+	}
 
 	/**
 	 * Get the first calendar cell for the month (weeks align to WordPress start of week).

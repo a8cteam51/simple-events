@@ -66,7 +66,10 @@ class EventDatesParentStatusTest extends WP_UnitTestCase {
 	 * @return int[]
 	 */
 	private function event_ids_for_day() {
-		$dates = SE_Event_Dates::get_event_dates_for_date( $this->day );
+		$tz    = wp_timezone();
+		$start = DateTime::createFromFormat( 'Y-m-d H:i:s', $this->day . ' 00:00:00', $tz )->getTimestamp();
+		$end   = DateTime::createFromFormat( 'Y-m-d H:i:s', $this->day . ' 23:59:59', $tz )->getTimestamp();
+		$dates = SE_Event_Query_Utils::get_event_dates_for_range( $start, $end );
 		return wp_list_pluck( $dates, 'event_id' );
 	}
 
