@@ -3,7 +3,7 @@
  * Simple Events Plugin bootstrap file.
  *
  * @since       1.0.0
- * @version     2.1.3
+ * @version     2.2.0
  * @author      WordPress.com Special Projects
  * @license     GPL-3.0-or-later
  *
@@ -14,7 +14,7 @@
  * Description:             Event management frontend for WooCommerce Box Office.
  * Requires at least:       6.5
  * Tested up to:            6.9
- * Version:                 2.1.3
+ * Version:                 2.2.0
  * Requires PHP:            8.0
  * Author:                  WordPress.com Special Projects
  * Author URI:              https://wpspecialprojects.wordpress.com
@@ -32,7 +32,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 function_exists( 'get_plugin_data' ) || require_once ABSPATH . 'wp-admin/includes/plugin.php';
 define( 'SE_METADATA', get_plugin_data( __FILE__, false, false ) );
 
-define( 'SE_VERSION', '2.1.3' );
+define( 'SE_VERSION', '2.2.0' );
 define( 'SE_BASENAME', plugin_basename( __FILE__ ) );
 define( 'SE_PLUGIN_DIR', untrailingslashit( plugin_dir_path( __FILE__ ) ) );
 define( 'SE_PLUGIN_URL', untrailingslashit( plugin_dir_url( __FILE__ ) ) );
