@@ -14,7 +14,8 @@ class CalendarHideFromCalendarTest extends WP_UnitTestCase {
 	 * Create a published event with one child date.
 	 *
 	 * @param array $date_args Args for se_event_create_event_date().
-	 * @return array{event_id:int, date_id:int}
+	 *
+	 * @return array{event_id: int, date_id: int}
 	 */
 	private function make_event_with_date( array $date_args ): array {
 		$event_id = $this->factory->post->create(
@@ -36,8 +37,9 @@ class CalendarHideFromCalendarTest extends WP_UnitTestCase {
 	/**
 	 * Timestamp for a wall-clock time in the site timezone.
 	 *
-	 * @param string $datetime e.g. '2026-06-15 12:00:00'.
-	 * @return int
+	 * @param string $datetime Wall-clock time, e.g. '2026-06-15 12:00:00'.
+	 *
+	 * @return integer
 	 */
 	private function ts( string $datetime ): int {
 		return ( new DateTime( $datetime, wp_timezone() ) )->getTimestamp();
@@ -46,8 +48,9 @@ class CalendarHideFromCalendarTest extends WP_UnitTestCase {
 	/**
 	 * Grid days (Y-m-d) a given event-date id renders on.
 	 *
-	 * @param string $month   First of the month, e.g. '2026-06-01'.
-	 * @param int    $date_id The se-event-date post id.
+	 * @param string  $month   First of the month, e.g. '2026-06-01'.
+	 * @param integer $date_id The se-event-date post id.
+	 *
 	 * @return string[]
 	 */
 	private function days_for_date( string $month, int $date_id ): array {
@@ -65,6 +68,8 @@ class CalendarHideFromCalendarTest extends WP_UnitTestCase {
 
 	/**
 	 * A normal published, timed event shows on its start day.
+	 *
+	 * @return void
 	 */
 	public function test_published_timed_event_shows_on_its_day() {
 		$fixture = $this->make_event_with_date(
@@ -84,6 +89,8 @@ class CalendarHideFromCalendarTest extends WP_UnitTestCase {
 
 	/**
 	 * Headline: hide_from_calendar keeps the event off the grid entirely.
+	 *
+	 * @return void
 	 */
 	public function test_hide_from_calendar_removes_event_from_grid() {
 		$fixture = $this->make_event_with_date(
@@ -104,6 +111,8 @@ class CalendarHideFromCalendarTest extends WP_UnitTestCase {
 
 	/**
 	 * Current placement rule: a timed event crossing midnight shows on no day.
+	 *
+	 * @return void
 	 */
 	public function test_timed_event_crossing_midnight_shows_on_no_day() {
 		$fixture = $this->make_event_with_date(
@@ -123,6 +132,8 @@ class CalendarHideFromCalendarTest extends WP_UnitTestCase {
 
 	/**
 	 * An all-day event shows on its start day.
+	 *
+	 * @return void
 	 */
 	public function test_all_day_event_shows_on_start_day() {
 		$fixture = $this->make_event_with_date(
