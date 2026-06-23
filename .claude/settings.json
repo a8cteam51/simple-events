@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "WebFetch(domain:api.github.com)",
-      "Read(//media/glynn/2024/devilbox_public/keysjazzbistro/htdocs/wp-content/plugins/simple-events/src/classes/**)"
-    ]
-  }
-}

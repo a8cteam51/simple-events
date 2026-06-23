@@ -260,11 +260,13 @@ class SE_Calendar {
 		$previous_date_time->settime( 0, 0, 0 );
 
 		$args = array(
-			'post_type'   => SE_Event_Post_Type::$event_date_post_type,
-			'post_status' => 'publish',
-			'meta_query'  => array(
-				'relation' => 'AND',
-				array(
+			'post_type'      => SE_Event_Post_Type::$event_date_post_type,
+			'post_status'    => 'publish',
+			'posts_per_page' => 1,
+			'no_found_rows'  => true,
+			'meta_query'     => array(
+				'relation'     => 'AND',
+				'start_clause' => array(
 					'key'     => 'se_event_date_start',
 					'value'   => $previous_date_time->getTimestamp(),
 					'compare' => '<',
@@ -282,9 +284,7 @@ class SE_Calendar {
 					),
 				),
 			),
-			'orderby'     => 'meta_value',
-			'order'       => 'DESC',
-			'limit'       => 1,
+			'orderby'        => array( 'start_clause' => 'DESC' ),
 		);
 
 		// Only consider dates whose parent event is published (same guard the grid uses).
@@ -338,11 +338,13 @@ class SE_Calendar {
 			$next_date_time->settime( 23, 59, 59 );
 
 			return array(
-				'post_type'   => SE_Event_Post_Type::$event_date_post_type,
-				'post_status' => 'publish',
-				'meta_query'  => array(
-					'relation' => 'AND',
-					array(
+				'post_type'      => SE_Event_Post_Type::$event_date_post_type,
+				'post_status'    => 'publish',
+				'posts_per_page' => 1,
+				'no_found_rows'  => true,
+				'meta_query'     => array(
+					'relation'    => 'AND',
+					'date_clause' => array(
 						'key'     => $meta_key,
 						'value'   => $next_date_time->getTimestamp(),
 						'compare' => '>',
@@ -360,9 +362,7 @@ class SE_Calendar {
 						),
 					),
 				),
-				'orderby'     => 'meta_value',
-				'order'       => 'ASC',
-				'limit'       => 1,
+				'orderby'        => array( 'date_clause' => 'ASC' ),
 			);
 		};
 
