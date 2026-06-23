@@ -323,11 +323,19 @@ class SE_Event_Dates {
 
 		$mapped = self::map_events_dates_to_event_dates( $query->posts );
 
-		// Remove the event dates that are hidden from the calendar or feed.
+		// Remove event dates hidden from the requested contexts.
 		return array_filter(
 			$mapped,
 			function ( $event_date ) use ( $hide_from_calendar, $hide_from_feed ) {
-				return ! $event_date['event_hide_from_calendar'] && ! $event_date['event_hide_from_feed'];
+				if ( $hide_from_calendar && $event_date['event_hide_from_calendar'] ) {
+					return false;
+				}
+
+				if ( $hide_from_feed && $event_date['event_hide_from_feed'] ) {
+					return false;
+				}
+
+				return true;
 			}
 		);
 	}
