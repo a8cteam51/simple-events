@@ -72,6 +72,95 @@ class SE_Event_Query_Utils {
 	}
 
 	/**
+	 * Get published event dates (under a published parent) whose start is in a range.
+	 *
+	 * @param integer $start_timestamp Range start (inclusive) as a Unix timestamp.
+	 * @param integer $end_timestamp   Range end (inclusive) as a Unix timestamp.
+	 *
+	 * @return array
+	 */
+	public static function get_event_dates_for_range( $start_timestamp, $end_timestamp ): array {
+		$args = array(
+			'post_type'      => SE_Event_Post_Type::$event_date_post_type,
+			'post_status'    => 'publish',
+			'posts_per_page' => -1,
+			'no_found_rows'  => true,
+			'meta_query'     => array(
+				'start_clause' => array(
+					'key'     => 'se_event_date_start',
+					'value'   => array( $start_timestamp, $end_timestamp ),
+					'compare' => 'BETWEEN',
+					'type'    => 'NUMERIC',
+				),
+			),
+			'orderby'        => array( 'start_clause' => 'ASC' ),
+		);
+
+		// Only return dates whose parent event is published (reuse the shared filter).
+		add_filter( 'posts_where', array( __CLASS__, 'filter_event_dates_where' ), 10, 2 );
+		try {
+			$query = new \WP_Query( $args );
+		} finally {
+			remove_filter( 'posts_where', array( __CLASS__, 'filter_event_dates_where' ), 10 );
+		}
+
+		if ( empty( $query->posts ) ) {
+			return array();
+		}
+
+		// Prime parent post + meta caches so per-event enrichment stays cache-only.
+		$parent_ids = array_filter( wp_list_pluck( $query->posts, 'post_parent' ) );
+		if ( ! empty( $parent_ids ) ) {
+			_prime_post_caches( $parent_ids, false, true );
+		}
+
+		return self::map_events_dates_to_event_dates( $query->posts );
+	}
+
+	/**
+	 * Map event date posts to the shared event-date array shape.
+	 *
+	 * @param array $events_dates The event date posts.
+	 *
+	 * @return array{event_id: int, event_date_id: int, event_start_date: string, event_end_date: string, event_all_day: bool, event_hide_from_calendar: bool, event_hide_from_feed: bool}
+	 */
+	public static function map_events_dates_to_event_dates( $events_dates ): array {
+		$compiled_events = array();
+		foreach ( $events_dates as $event_date ) {
+			// Front end only ever surfaces a published date under a published parent.
+			if ( 'publish' !== get_post_status( $event_date ) ) {
+				continue;
+			}
+
+			$event = get_post( $event_date->post_parent );
+			if ( ! $event || 'publish' !== get_post_status( $event ) ) {
+				continue;
+			}
+
+			// Get the event date.
+			$start_date         = get_post_meta( $event_date->ID, 'se_event_date_start', true );
+			$end_date           = get_post_meta( $event_date->ID, 'se_event_date_end', true );
+			$all_day            = get_post_meta( $event_date->ID, 'se_event_all_day', true );
+			$hide_from_calendar = get_post_meta( $event_date->ID, 'se_event_hide_from_calendar', true );
+			$hide_from_feed     = get_post_meta( $event_date->ID, 'se_event_hide_from_feed', true );
+
+			// Add the event date to the compiled events.
+			$compiled_events[] = array(
+				'event_id'                 => absint( $event->ID ),
+				'event_date_id'            => absint( $event_date->ID ),
+				'event_start_date'         => esc_attr( $start_date ),
+				'event_end_date'           => esc_attr( $end_date ),
+				'event_all_day'            => boolval( $all_day ),
+				'event_hide_from_calendar' => boolval( $hide_from_calendar ),
+				'event_hide_from_feed'     => boolval( $hide_from_feed ),
+			);
+		}
+
+		// Return the compiled events.
+		return $compiled_events;
+	}
+
+	/**
 	 * Filter event date queries to ensure parent events are published,
 	 * and optionally include only the correct event date for each parent.
 	 *

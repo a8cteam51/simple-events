@@ -260,72 +260,25 @@ class SE_Event_Dates {
 	}
 
 	/**
-	 * Fiind event dates.
+	 * Find event dates.
+	 *
+	 * @deprecated 2.2.0 Use SE_Event_Query_Utils::get_event_dates_for_range() instead.
 	 *
 	 * @param string  $start_date         The start date as a timestamp.
 	 * @param string  $end_date           The end date as a timestamp.
-	 * @param boolean $hide_from_calendar Whether the event is hidden from the calendar.
-	 * @param boolean $hide_from_feed     Whether the event is hidden from the feed.
+	 * @param boolean $hide_from_calendar Legacy, no longer used.
+	 * @param boolean $hide_from_feed     Legacy, no longer used.
 	 *
 	 * @return array
 	 */
-	public static function find_event_dates( $start_date, $end_date, $hide_from_calendar, $hide_from_feed ): array {
-		// Create the timestamp for the start and end of the $start_date.
-		$start_date_time = se_create_date_time_from_timestamp( $start_date )->setTimezone( wp_timezone() );
+	public static function find_event_dates( $start_date, $end_date, $hide_from_calendar, $hide_from_feed ): array { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
+		_deprecated_function( __METHOD__, '2.2.0', 'SE_Event_Query_Utils::get_event_dates_for_range()' );
 
-		$start_date_range = array(
-			$start_date_time->setTime( 0, 0, 0 )->getTimestamp(),
-			$start_date_time->setTime( 23, 59, 59 )->getTimestamp(),
-		);
-
-		// Query the event dates.
-		$query = new WP_Query(
-			array(
-				'post_type'      => SE_Event_Post_Type::$event_date_post_type,
-				'meta_query'     => array(
-					'relation' => 'OR',
-					// Exact match for all conditions
-					array(
-						'relation' => 'AND',
-						array(
-							'key'     => 'se_event_date_start',
-							'value'   => $start_date,
-							'compare' => '>=',
-						),
-						array(
-							'key'     => 'se_event_date_end',
-							'value'   => $end_date,
-							'compare' => '<=',
-						),
-					),
-					// All day events with matching start date
-					array(
-						'relation' => 'AND',
-						array(
-							'key'     => 'se_event_date_start',
-							'value'   => $start_date_range,
-							'compare' => 'BETWEEN',
-						),
-						array(
-							'key'     => 'se_event_all_day',
-							'value'   => '1',
-							'compare' => '=',
-						),
-					),
-				),
-				'posts_per_page' => -1,
-				'orderby'        => 'meta_value',
-				'meta_key'       => 'se_event_date_start',
-				'order'          => 'ASC',
-				'post_status'    => 'publish',
-			)
-		);
-
-		$mapped = self::map_events_dates_to_event_dates( $query->posts );
+		$results = SE_Event_Query_Utils::get_event_dates_for_range( (int) $start_date, (int) $end_date );
 
 		// Remove the event dates that are hidden from the calendar or feed.
 		return array_filter(
-			$mapped,
+			$results,
 			function ( $event_date ) use ( $hide_from_calendar, $hide_from_feed ) {
 				return ! $event_date['event_hide_from_calendar'] && ! $event_date['event_hide_from_feed'];
 			}
@@ -335,69 +288,47 @@ class SE_Event_Dates {
 	/**
 	 * Get the events dates for a given date.
 	 *
+	 * @deprecated 2.2.0 Use SE_Event_Query_Utils::get_event_dates_for_range() instead (Returns all results, doesnt exclude hidden events).
+	 *
 	 * @param string  $date               The date to get the events for.
-	 * @param boolean $hide_from_calendar Whether the event is hidden from the calendar.
-	 * @param boolean $hide_from_feed     Whether the event is hidden from the feed.
+	 * @param boolean $hide_from_calendar Legacy flag, no longer used in replacement function.
+	 * @param boolean $hide_from_feed     Legacy flag, no longer used in replacement function.
 	 *
 	 * @return array
 	 */
-	public static function get_event_dates_for_date( $date, $hide_from_calendar = false, $hide_from_feed = false ): array {
-		// Create date explicitly in site timezone
+	public static function get_event_dates_for_date( $date, $hide_from_calendar = false, $hide_from_feed = false ): array { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
+		_deprecated_function( __METHOD__, '2.2.0', 'SE_Event_Query_Utils::get_event_dates_for_range()' );
+
 		$date_time = DateTime::createFromFormat( 'Y-m-d H:i:s', $date . ' 00:00:00', wp_timezone() );
+		if ( false === $date_time ) {
+			return array();
+		}
+		$results = SE_Event_Query_Utils::get_event_dates_for_range(
+			$date_time->setTime( 0, 0, 0 )->getTimestamp(),
+			$date_time->setTime( 23, 59, 59 )->getTimestamp()
+		);
 
-		// Set the time to the start of the day.
-		$date_time->setTime( 0, 0, 0 );
-		// set as a timestamp.
-		$start_date = $date_time->getTimestamp();
-
-		// Get the end of the day for the date.
-		$date_time->setTime( 23, 59, 59 );
-		$end_date = $date_time->getTimestamp();
-
-		// Get the events dates.
-		$events_dates = self::find_event_dates( $start_date, $end_date, $hide_from_calendar, $hide_from_feed );
-
-		// Return the events dates.
-		return $events_dates;
+		// Remove the event dates that are hidden from the calendar or feed.
+		return array_filter(
+			$results,
+			function ( $event_date ) use ( $hide_from_calendar, $hide_from_feed ) {
+				return ! $event_date['event_hide_from_calendar'] && ! $event_date['event_hide_from_feed'];
+			}
+		);
 	}
 
 	/**
 	 * Map the events dates to the event dates.
+	 *
+	 * @deprecated 2.2.0 Use SE_Event_Query_Utils::map_events_dates_to_event_dates() instead.
 	 *
 	 * @param array $events_dates The events dates.
 	 *
 	 * @return array{event_id: int, event_date_id: int, event_start_date: string, event_end_date: string, event_all_day: bool, event_hide_from_calendar: bool, event_hide_from_feed: bool}
 	 */
 	public static function map_events_dates_to_event_dates( $events_dates ): array {
-		$compiled_events = array();
-		foreach ( $events_dates as $event_date ) {
-			// Get the parent event.
-			$event = get_post( $event_date->post_parent );
-			if ( ! $event ) {
-				continue;
-			}
-
-			// Get the event date.
-			$start_date         = get_post_meta( $event_date->ID, 'se_event_date_start', true );
-			$end_date           = get_post_meta( $event_date->ID, 'se_event_date_end', true );
-			$all_day            = get_post_meta( $event_date->ID, 'se_event_all_day', true );
-			$hide_from_calendar = get_post_meta( $event_date->ID, 'se_event_hide_from_calendar', true );
-			$hide_from_feed     = get_post_meta( $event_date->ID, 'se_event_hide_from_feed', true );
-
-			// Add the event date to the compiled events.
-			$compiled_events[] = array(
-				'event_id'                 => absint( $event->ID ),
-				'event_date_id'            => absint( $event_date->ID ),
-				'event_start_date'         => esc_attr( $start_date ),
-				'event_end_date'           => esc_attr( $end_date ),
-				'event_all_day'            => boolval( $all_day ),
-				'event_hide_from_calendar' => boolval( $hide_from_calendar ),
-				'event_hide_from_feed'     => boolval( $hide_from_feed ),
-			);
-		}
-
-		// Return the compiled events.
-		return $compiled_events;
+		_deprecated_function( __METHOD__, '2.2.0', 'SE_Event_Query_Utils::map_events_dates_to_event_dates()' );
+		return SE_Event_Query_Utils::map_events_dates_to_event_dates( $events_dates );
 	}
 
 	/**
