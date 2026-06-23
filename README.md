@@ -224,6 +224,9 @@ Copy the `team51-focal-point` folder to your `mu-plugins` directory.
 
 ## Changelog
 
+### 2.2.0 
+- Improves the calendar event query process to reduce the number of queries and improve performance on sites with large numbers of events. Adds customisable colours to the calendars loading skeleton. Fixes a bug where events which are not published can still leak into calendar or next/previous queries.
+
 ### 2.1.3
 
 - **Calendar grid alignment:** fixed month grid date placement when WordPress **Week Starts On** is set to Sunday (or any `start_of_week` other than Monday). Dates and events now appear under the correct weekday column.
