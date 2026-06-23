@@ -404,8 +404,6 @@ class SE_Calendar {
 	 * @return array The enriched events for the day.
 	 */
 	private function get_events_by_date( $date, array $events ): array {
-		global $wpdb;
-
 		$day_events      = array();
 		$start_timestamp = ( clone $date )->setTime( 0, 0, 0 )->getTimestamp();
 		$end_timestamp   = ( clone $date )->setTime( 23, 59, 59 )->getTimestamp();

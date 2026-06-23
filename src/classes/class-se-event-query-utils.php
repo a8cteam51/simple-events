@@ -157,7 +157,7 @@ class SE_Event_Query_Utils {
 		}
 
 		// Return the compiled events.
-		return $compiled_events;
+		return array_values( $compiled_events );
 	}
 
 	/**
