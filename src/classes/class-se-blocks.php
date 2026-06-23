@@ -587,10 +587,10 @@ class SE_Blocks {
 			if ( ! se_event_treat_each_date_as_own_event() ) {
 				$events_query_args['unique_parents'] = true;
 				$events_query_args['feed_order']     = $feed_order;
-
-				// Add filter for unique parents WHERE clause
-				add_filter( 'posts_where', array( 'SE_Event_Query_Utils', 'filter_event_dates_where' ), 10, 2 );
 			}
+
+			// Always ensure the parent event is published (also enforces unique parents above when set).
+			add_filter( 'posts_where', array( 'SE_Event_Query_Utils', 'filter_event_dates_where' ), 10, 2 );
 
 			$show_year_dividers = ! empty( $attributes['showYearDividers'] );
 
@@ -631,8 +631,8 @@ class SE_Blocks {
 			}
 
 			// Clean up filters
+			remove_filter( 'posts_where', array( 'SE_Event_Query_Utils', 'filter_event_dates_where' ), 10 );
 			if ( ! se_event_treat_each_date_as_own_event() ) {
-				remove_filter( 'posts_where', array( 'SE_Event_Query_Utils', 'filter_event_dates_where' ), 10 );
 				remove_filter( 'the_posts', array( 'SE_Event_Query_Utils', 'modify_event_posts' ), 10 );
 			}
 
