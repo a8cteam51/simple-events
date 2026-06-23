@@ -288,5 +288,29 @@ function se_apply_customization( $attributes ): string {
 		);
 	}
 
+	// Customization for the loading skeleton shimmer colours.
+	$se_skeleton_vars = '';
+
+	if ( isset( $attributes['skeletonBaseColor'] ) && sanitize_hex_color( $attributes['skeletonBaseColor'] ) ) {
+		$se_skeleton_vars .= sprintf(
+			'--se-skeleton-base: %s;',
+			esc_attr( $attributes['skeletonBaseColor'] )
+		);
+	}
+
+	if ( isset( $attributes['skeletonHighlightColor'] ) && sanitize_hex_color( $attributes['skeletonHighlightColor'] ) ) {
+		$se_skeleton_vars .= sprintf(
+			'--se-skeleton-highlight: %s;',
+			esc_attr( $attributes['skeletonHighlightColor'] )
+		);
+	}
+
+	if ( '' !== $se_skeleton_vars ) {
+		$customized_css .= sprintf(
+			'.simple-events-calendar {%s}',
+			$se_skeleton_vars
+		);
+	}
+
 	return $customized_css;
 }

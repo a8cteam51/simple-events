@@ -143,6 +143,25 @@ export default class Calendar {
 			'[data-js="simple-events-calendar-content"]'
 		);
 
+		// Remember the outgoing calendar grid height so the skeleton grid
+		// fills the same space, avoiding a jarring jump when navigating months.
+		if ( skeleton && content ) {
+			const month = content.querySelector(
+				'.simple-events-calendar-month'
+			);
+			const skeletonBody = skeleton.querySelector(
+				'.simple-events-calendar-skeleton__body'
+			);
+
+			if ( month && skeletonBody ) {
+				const gridHeight = month.offsetHeight;
+
+				if ( gridHeight ) {
+					skeletonBody.style.minHeight = `${ gridHeight }px`;
+				}
+			}
+		}
+
 		if ( skeleton ) {
 			skeleton.classList.remove(
 				'simple-events-calendar-skeleton--hidden'
@@ -188,6 +207,14 @@ export default class Calendar {
 
 		if ( skeleton ) {
 			skeleton.classList.add( 'simple-events-calendar-skeleton--hidden' );
+			// Release the remembered height so the next load measures fresh.
+			const skeletonBody = skeleton.querySelector(
+				'.simple-events-calendar-skeleton__body'
+			);
+
+			if ( skeletonBody ) {
+				skeletonBody.style.minHeight = '';
+			}
 		}
 
 		if ( content ) {

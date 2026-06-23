@@ -118,6 +118,14 @@
 		"eventDotColor": {
 			"type": "string",
 			"default": ""
+		},
+		"skeletonBaseColor": {
+			"type": "string",
+			"default": ""
+		},
+		"skeletonHighlightColor": {
+			"type": "string",
+			"default": ""
 		}
 	},
 	"supports": {
