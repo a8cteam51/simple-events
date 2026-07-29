@@ -3,10 +3,10 @@
  * Tests that calendar event-date queries respect the parent event's publish status.
  *
  * Regression coverage: event-date posts are always created as 'publish', and the
- * calendar query (SE_Event_Dates::find_event_dates) filters only on the date post's
+ * calendar query (Simple_Events_Event_Dates::find_event_dates) filters only on the date post's
  * own status. Without a parent-published guard, a date whose parent se-event is in
  * draft/pending status still leaked into the calendar. find_event_dates() now applies
- * SE_Event_Query_Utils::filter_event_dates_where, matching the archive/feed behaviour.
+ * Simple_Events_Event_Query_Utils::filter_event_dates_where, matching the archive/feed behaviour.
  *
  * @package Simple_Events
  */
@@ -41,7 +41,7 @@ class EventDatesParentStatusTest extends WP_UnitTestCase {
 		$start = DateTime::createFromFormat( 'Y-m-d H:i:s', $this->day . ' 10:00:00', $tz )->getTimestamp();
 		$end   = DateTime::createFromFormat( 'Y-m-d H:i:s', $this->day . ' 11:00:00', $tz )->getTimestamp();
 
-		$date = se_event_create_event_date(
+		$date = simple_events_event_create_event_date(
 			$event_id,
 			array(
 				'start_date' => $start,
@@ -69,7 +69,7 @@ class EventDatesParentStatusTest extends WP_UnitTestCase {
 		$tz    = wp_timezone();
 		$start = DateTime::createFromFormat( 'Y-m-d H:i:s', $this->day . ' 00:00:00', $tz )->getTimestamp();
 		$end   = DateTime::createFromFormat( 'Y-m-d H:i:s', $this->day . ' 23:59:59', $tz )->getTimestamp();
-		$dates = SE_Event_Query_Utils::get_event_dates_for_range( $start, $end );
+		$dates = Simple_Events_Event_Query_Utils::get_event_dates_for_range( $start, $end );
 		return wp_list_pluck( $dates, 'event_id' );
 	}
 
@@ -144,7 +144,7 @@ class EventDatesParentStatusTest extends WP_UnitTestCase {
 		$published = $this->create_event_with_date( 'publish' );
 		$draft     = $this->create_event_with_date( 'draft' );
 
-		$days = SE_Calendar::get_instance()->get_month_days( '2030-06-01' )['days'];
+		$days = Simple_Events_Calendar::get_instance()->get_month_days( '2030-06-01' )['days'];
 
 		$event_ids_in_cell = array();
 		foreach ( $days as $day ) {

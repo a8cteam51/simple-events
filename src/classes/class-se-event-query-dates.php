@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Event Dates
  */
-class SE_Event_Query_Dates {
+class Simple_Events_Event_Query_Dates {
 	public const UPDATE_QUERY_DATES_HOOK = 'se_event_update_query_dates_cron';
 
 	/**
@@ -31,7 +31,7 @@ class SE_Event_Query_Dates {
 	 * @return string
 	 */
 	public static function get_cron_interval(): string {
-		return esc_attr( apply_filters( 'se_event_update_query_dates_interval', 'hourly' ) );
+		return esc_attr( apply_filters( 'simple_events_event_update_query_dates_interval', 'hourly' ) );
 	}
 
 	/**
@@ -109,20 +109,20 @@ class SE_Event_Query_Dates {
 		}
 
 		// Remove all hooks.
-		remove_action( 'pre_get_posts', array( SE_Event_Post_Type::class, 'pre_get_posts' ) );
+		remove_action( 'pre_get_posts', array( Simple_Events_Event_Post_Type::class, 'pre_get_posts' ) );
 
 		// Get all events where the end date is within the defined range.
-		$range  = apply_filters( 'se_event_update_dates_search_range', 48 * HOUR_IN_SECONDS );
+		$range  = apply_filters( 'simple_events_event_update_dates_search_range', 48 * HOUR_IN_SECONDS );
 		$events = new WP_Query(
 			array(
-				'post_type'      => SE_Event_Post_Type::$post_type,
+				'post_type'      => Simple_Events_Event_Post_Type::$post_type,
 				'posts_per_page' => -1,
 				'meta_query'     => array(
 					array(
 						'key'     => 'se_event_date_start',
 						'value'   => array(
-							SE_Calendar::get_instance()->create_date_time( 'now' )->modify( '-' . $range . ' seconds' )->format( 'U' ),
-							SE_Calendar::get_instance()->create_date_time( 'now' )->format( 'U' ),
+							Simple_Events_Calendar::get_instance()->create_date_time( 'now' )->modify( '-' . $range . ' seconds' )->format( 'U' ),
+							Simple_Events_Calendar::get_instance()->create_date_time( 'now' )->format( 'U' ),
 						),
 						'compare' => 'BETWEEN',
 					),
@@ -136,12 +136,12 @@ class SE_Event_Query_Dates {
 			while ( $events->have_posts() ) {
 				$events->the_post();
 				// Check if event should be updated.
-				if ( (bool) apply_filters( 'se_event_update_query_dates_skip', false, get_the_ID() ) ) {
+				if ( (bool) apply_filters( 'simple_events_event_update_query_dates_skip', false, get_the_ID() ) ) {
 					continue;
 				}
-				se_event_update_event_query_dates( get_the_ID() );
+				simple_events_event_update_event_query_dates( get_the_ID() );
 
-				do_action( 'se_event_updated_query_dates', get_the_ID() );
+				do_action( 'simple_events_event_updated_query_dates', get_the_ID() );
 			}
 		}
 
@@ -149,9 +149,9 @@ class SE_Event_Query_Dates {
 		wp_reset_postdata();
 
 		// Add the hooks back.
-		add_action( 'pre_get_posts', array( SE_Event_Post_Type::class, 'pre_get_posts' ) );
+		add_action( 'pre_get_posts', array( Simple_Events_Event_Post_Type::class, 'pre_get_posts' ) );
 	}
 }
 
 // Self initialization.
-SE_Event_Query_Dates::init();
+Simple_Events_Event_Query_Dates::init();

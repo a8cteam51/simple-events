@@ -3,7 +3,7 @@
 /**
  * Class Calendar
  */
-class SE_Calendar {
+class Simple_Events_Calendar {
 
 	public const BASE_PATH           = 'simple-events';
 	public const REST_ROUTE_CALENDAR = 'calendar';
@@ -25,11 +25,11 @@ class SE_Calendar {
 	/**
 	 * Get singleton instance.
 	 *
-	 * @return SE_Calendar|null
+	 * @return Simple_Events_Calendar|null
 	 */
 	public static function get_instance() {
 		if ( null === self::$instance ) {
-			self::$instance = new SE_Calendar();
+			self::$instance = new Simple_Events_Calendar();
 		}
 
 		return self::$instance;
@@ -146,7 +146,7 @@ class SE_Calendar {
 		// Fetch the whole visible grid in a single query, bucketed per day,
 		// instead of one query per calendar cell (the old N+1 hot spot).
 		$range_events = $this->bucket_event_dates_by_day(
-			SE_Event_Query_Utils::get_event_dates_for_range( $start_day->getTimestamp(), $end_day->getTimestamp() )
+			Simple_Events_Event_Query_Utils::get_event_dates_for_range( $start_day->getTimestamp(), $end_day->getTimestamp() )
 		);
 
 		$period = new DatePeriod( $start_day, new DateInterval( 'P1D' ), $end_day );
@@ -207,7 +207,7 @@ class SE_Calendar {
 
 		$month_data = $this->get_month_days( $request_date );
 
-		$output = SE_Template_Loader::get_template_part(
+		$output = Simple_Events_Template_Loader::get_template_part(
 			'calendar/calendar',
 			'main',
 			true,
@@ -260,7 +260,7 @@ class SE_Calendar {
 		$previous_date_time->settime( 0, 0, 0 );
 
 		$args = array(
-			'post_type'      => SE_Event_Post_Type::$event_date_post_type,
+			'post_type'      => Simple_Events_Event_Post_Type::$event_date_post_type,
 			'post_status'    => 'publish',
 			'posts_per_page' => 1,
 			'no_found_rows'  => true,
@@ -288,11 +288,11 @@ class SE_Calendar {
 		);
 
 		// Only consider dates whose parent event is published (same guard the grid uses).
-		add_filter( 'posts_where', array( 'SE_Event_Query_Utils', 'filter_event_dates_where' ), 10, 2 );
+		add_filter( 'posts_where', array( 'Simple_Events_Event_Query_Utils', 'filter_event_dates_where' ), 10, 2 );
 		try {
 			$query = new WP_Query( $args );
 		} finally {
-			remove_filter( 'posts_where', array( 'SE_Event_Query_Utils', 'filter_event_dates_where' ), 10 );
+			remove_filter( 'posts_where', array( 'Simple_Events_Event_Query_Utils', 'filter_event_dates_where' ), 10 );
 		}
 
 		if ( $query->have_posts() ) {
@@ -300,7 +300,7 @@ class SE_Calendar {
 
 			// Get the start date of the previous event.
 			$previous_event_start_date = get_post_meta( $previous_event->ID, 'se_event_date_start', true );
-			return se_create_date_time_from_timestamp( $previous_event_start_date );
+			return simple_events_create_date_time_from_timestamp( $previous_event_start_date );
 		} else {
 			return null;
 		}
@@ -338,7 +338,7 @@ class SE_Calendar {
 			$next_date_time->settime( 23, 59, 59 );
 
 			return array(
-				'post_type'      => SE_Event_Post_Type::$event_date_post_type,
+				'post_type'      => Simple_Events_Event_Post_Type::$event_date_post_type,
 				'post_status'    => 'publish',
 				'posts_per_page' => 1,
 				'no_found_rows'  => true,
@@ -369,7 +369,7 @@ class SE_Calendar {
 		$next_event = null;
 
 		// Only consider dates whose parent event is published (same guard the grid uses).
-		add_filter( 'posts_where', array( 'SE_Event_Query_Utils', 'filter_event_dates_where' ), 10, 2 );
+		add_filter( 'posts_where', array( 'Simple_Events_Event_Query_Utils', 'filter_event_dates_where' ), 10, 2 );
 		try {
 			// At first try to get the next event with the start date.
 			$query = new WP_Query( $query_args( 'se_event_date_start' ) );
@@ -383,7 +383,7 @@ class SE_Calendar {
 				}
 			}
 		} finally {
-			remove_filter( 'posts_where', array( 'SE_Event_Query_Utils', 'filter_event_dates_where' ), 10 );
+			remove_filter( 'posts_where', array( 'Simple_Events_Event_Query_Utils', 'filter_event_dates_where' ), 10 );
 		}
 
 		if ( empty( $next_event ) ) {
@@ -391,7 +391,7 @@ class SE_Calendar {
 		}
 		// Get the start date of the next event.
 		$next_event_start_date = get_post_meta( $next_event->ID, 'se_event_date_start', true );
-		return se_create_date_time_from_timestamp( $next_event_start_date );
+		return simple_events_create_date_time_from_timestamp( $next_event_start_date );
 	}
 
 
@@ -432,8 +432,8 @@ class SE_Calendar {
 				$event['post_date_gmt'] = $parent_post->post_date_gmt;
 				$event['post_modified'] = $parent_post->post_modified;
 				// Add the meta.
-				$event['event_start_date']   = se_create_date_time_from_timestamp( $event['event_start_date'] );
-				$event['event_end_date']     = se_create_date_time_from_timestamp( $event['event_end_date'] );
+				$event['event_start_date']   = simple_events_create_date_time_from_timestamp( $event['event_start_date'] );
+				$event['event_end_date']     = simple_events_create_date_time_from_timestamp( $event['event_end_date'] );
 				$event['hide_start_time']    = '1' === get_post_meta( $parent_post->ID, 'se_event_hide_start_time', true );
 				$event['hide_end_time']      = '1' === get_post_meta( $parent_post->ID, 'se_event_hide_end_time', true );
 				$event['open_in_new_window'] = (bool) get_post_meta( $parent_post->ID, 'se_event_open_in_new_window', true );
@@ -471,7 +471,7 @@ class SE_Calendar {
 	 * All-day dates land on their start day; timed dates only if they end the
 	 * same day (a timed date crossing midnight lands on no day).
 	 *
-	 * @param array<int, array{event_id: int, event_date_id: int, event_start_date: string, event_end_date: string, event_all_day: bool, event_hide_from_calendar: bool, event_hide_from_feed: bool}> $event_dates Mapped dates from SE_Event_Query_Utils::get_event_dates_for_range().
+	 * @param array<int, array{event_id: int, event_date_id: int, event_start_date: string, event_end_date: string, event_all_day: bool, event_hide_from_calendar: bool, event_hide_from_feed: bool}> $event_dates Mapped dates from Simple_Events_Event_Query_Utils::get_event_dates_for_range().
 	 *
 	 * @return array<string, array<int, array>> Map of 'Y-m-d' day => event dates.
 	 */
@@ -479,7 +479,7 @@ class SE_Calendar {
 		$buckets = array();
 
 		foreach ( $event_dates as $event_date ) {
-			$start_day = se_create_date_time_from_timestamp( $event_date['event_start_date'] )->format( 'Y-m-d' );
+			$start_day = simple_events_create_date_time_from_timestamp( $event_date['event_start_date'] )->format( 'Y-m-d' );
 
 			if ( $event_date['event_all_day'] ) {
 				$buckets[ $start_day ][] = $event_date;
@@ -487,7 +487,7 @@ class SE_Calendar {
 			}
 
 			// Timed dates only render on their start day, and only if they end it.
-			$end_day = se_create_date_time_from_timestamp( $event_date['event_end_date'] )->format( 'Y-m-d' );
+			$end_day = simple_events_create_date_time_from_timestamp( $event_date['event_end_date'] )->format( 'Y-m-d' );
 			if ( $end_day === $start_day ) {
 				$buckets[ $start_day ][] = $event_date;
 			}

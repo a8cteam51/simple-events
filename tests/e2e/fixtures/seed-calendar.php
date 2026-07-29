@@ -61,7 +61,7 @@ $event_id = wp_insert_post(
 // Date today (noon, to stay safely inside the current month) so the current
 // month has an event and the grid renders.
 $ts = strtotime( 'today noon' );
-se_event_create_event_date(
+simple_events_event_create_event_date(
 	$event_id,
 	array(
 		'start_date' => $ts,

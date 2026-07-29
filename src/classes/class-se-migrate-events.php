@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Migrate Events
  */
-class SE_Migrate_Events {
+class Simple_Events_Migrate_Events {
 
 	/**
 	 * The map of commands to run
@@ -85,7 +85,7 @@ class SE_Migrate_Events {
 		// Get all events.
 		return get_posts(
 			array(
-				'post_type'      => SE_Event_Post_Type::$post_type,
+				'post_type'      => Simple_Events_Event_Post_Type::$post_type,
 				// only results that have a version lower that the max version.
 				'meta_query'     => array(
 					'relation' => 'OR',
@@ -344,7 +344,7 @@ class SE_Migrate_Events {
 			$end     = $date['datetime_end'] ?? '';
 			$all_day = $date['all_day'] ?? false;
 
-			se_event_create_event_date(
+			simple_events_event_create_event_date(
 				$event_id,
 				array(
 					'all_day'    => $all_day,
@@ -356,4 +356,4 @@ class SE_Migrate_Events {
 	}
 }
 
-SE_Migrate_Events::init();
+Simple_Events_Migrate_Events::init();

@@ -12,7 +12,7 @@ class SampleTest extends WP_UnitTestCase {
 	 * @return void
 	 */
 	public function test_plugin_loaded() {
-		$this->assertTrue( defined( 'SE_VERSION' ) );
+		$this->assertTrue( defined( 'SIMPLE_EVENTS_VERSION' ) );
 	}
 
 	/**

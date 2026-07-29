@@ -24,7 +24,7 @@ use Eluceo\iCal\Domain\ValueObject\DateTime as ICalDateTime;
 /**
  * Template Loader Class.
  */
-class SE_Calendar_Export {
+class Simple_Events_Calendar_Export {
 
 	/**
 	 * Initialize.
@@ -66,26 +66,26 @@ class SE_Calendar_Export {
 			$post_id = intval( $_REQUEST['id'] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		}
 
-		if ( ! empty( $post_id ) && get_post_type( $post_id ) === SE_Event_Post_Type::$post_type ) {
+		if ( ! empty( $post_id ) && get_post_type( $post_id ) === Simple_Events_Event_Post_Type::$post_type ) {
 			$events[] = $post_id;
 		}
 
 		// Get all events, if no event provided so far.
 		if ( empty( $events ) ) {
 			$events_query_args = array(
-				'post_type'      => SE_Event_Post_Type::$post_type,
+				'post_type'      => Simple_Events_Event_Post_Type::$post_type,
 				'post_status'    => 'publish',
 				'posts_per_page' => 10,
 				'fields'         => 'ids',
 			);
 
-			$events = get_posts( apply_filters( 'se_calendar_export_query_args', $events_query_args ) );
+			$events = get_posts( apply_filters( 'simple_events_calendar_export_query_args', $events_query_args ) );
 		}
 
 		// Get dates.
 		if ( ! empty( $events ) ) {
 			foreach ( $events as $event_id ) {
-				$event_dates = se_event_get_event_dates( $event_id );
+				$event_dates = simple_events_event_get_event_dates( $event_id );
 
 				foreach ( $event_dates as $event_date ) {
 					// If the date is hidden from the calendar, skip it.
@@ -138,12 +138,12 @@ class SE_Calendar_Export {
 					$location = get_post_meta( $event_id, 'se_event_location', true );
 					if ( ! empty( $location ) ) {
 						$location_object = new Location( $location );
-						$location_object = apply_filters( 'se_calendar_export_event_location', $location_object, $event_id, $event_date );
+						$location_object = apply_filters( 'simple_events_calendar_export_event_location', $location_object, $event_id, $event_date );
 						$event->setLocation( $location_object );
 					}
 
 					// Allow 3rd parties to modify the event.
-					$event = apply_filters( 'se_calendar_export_event', $event, $event_id, $event_date );
+					$event = apply_filters( 'simple_events_calendar_export_event', $event, $event_id, $event_date );
 
 					$v_events[] = $event;
 				}
@@ -154,7 +154,7 @@ class SE_Calendar_Export {
 		$calendar->addTimeZone( new TimeZone( 'UTC' ) );
 
 		// Allow 3rd parties to modify the calendar.
-		$calendar = apply_filters( 'se_calendar_export_calendar', $calendar );
+		$calendar = apply_filters( 'simple_events_calendar_export_calendar', $calendar );
 
 		// Create the presenter.
 		$calendar_presenter = new CalendarFactory();
@@ -165,11 +165,11 @@ class SE_Calendar_Export {
 		$renderable = (string) $calendar_presenter->createCalendar( $calendar );
 
 		// Allow 3rd parties to modify the output.
-		$renderable = apply_filters( 'se_calendar_export_rendered', $renderable );
+		$renderable = apply_filters( 'simple_events_calendar_export_rendered', $renderable );
 
 		echo $renderable; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		exit;
 	}
 }
 
-SE_Calendar_Export::init();
+Simple_Events_Calendar_Export::init();

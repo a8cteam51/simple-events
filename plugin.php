@@ -30,21 +30,21 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 // Define plugin constants.
 function_exists( 'get_plugin_data' ) || require_once ABSPATH . 'wp-admin/includes/plugin.php';
-define( 'SE_METADATA', get_plugin_data( __FILE__, false, false ) );
+define( 'SIMPLE_EVENTS_METADATA', get_plugin_data( __FILE__, false, false ) );
 
-define( 'SE_VERSION', '2.2.0' );
-define( 'SE_BASENAME', plugin_basename( __FILE__ ) );
-define( 'SE_PLUGIN_DIR', untrailingslashit( plugin_dir_path( __FILE__ ) ) );
-define( 'SE_PLUGIN_URL', untrailingslashit( plugin_dir_url( __FILE__ ) ) );
-define( 'SE_SRC_PATH', untrailingslashit( SE_PLUGIN_DIR . '/src' ) );
-define( 'SE_TEMPLATE_PATH', untrailingslashit( SE_SRC_PATH . '/templates' ) );
+define( 'SIMPLE_EVENTS_VERSION', '2.2.0' );
+define( 'SIMPLE_EVENTS_BASENAME', plugin_basename( __FILE__ ) );
+define( 'SIMPLE_EVENTS_PLUGIN_DIR', untrailingslashit( plugin_dir_path( __FILE__ ) ) );
+define( 'SIMPLE_EVENTS_PLUGIN_URL', untrailingslashit( plugin_dir_url( __FILE__ ) ) );
+define( 'SIMPLE_EVENTS_SRC_PATH', untrailingslashit( SIMPLE_EVENTS_PLUGIN_DIR . '/src' ) );
+define( 'SIMPLE_EVENTS_TEMPLATE_PATH', untrailingslashit( SIMPLE_EVENTS_SRC_PATH . '/templates' ) );
 
 // This should only be updated if there are changes to the way we handle dates and there are migration method to handle.
 // This is used to determine if we need to run migrations.
-define( 'SE_MIGRATION_VERSION', '2.0.0' );
+define( 'SIMPLE_EVENTS_MIGRATION_VERSION', '2.0.0' );
 
 // Load the autoloader.
-if ( ! is_file( SE_PLUGIN_DIR . '/vendor/autoload.php' ) ) {
+if ( ! is_file( SIMPLE_EVENTS_PLUGIN_DIR . '/vendor/autoload.php' ) ) {
 	add_action(
 		'admin_notices',
 		static function () {
@@ -55,36 +55,36 @@ if ( ! is_file( SE_PLUGIN_DIR . '/vendor/autoload.php' ) ) {
 	);
 	return;
 }
-require_once SE_PLUGIN_DIR . '/vendor/autoload.php';
+require_once SIMPLE_EVENTS_PLUGIN_DIR . '/vendor/autoload.php';
 
 
-require_once SE_SRC_PATH . '/classes/class-se-event-post-type.php';
-require_once SE_SRC_PATH . '/classes/class-se-event-query-utils.php';
-require_once SE_SRC_PATH . '/classes/class-se-blocks.php';
-require_once SE_SRC_PATH . '/classes/class-se-block-variations.php';
-require_once SE_SRC_PATH . '/classes/class-se-template-loader.php';
-require_once SE_SRC_PATH . '/classes/class-se-settings.php';
-require_once SE_SRC_PATH . '/classes/class-se-admin.php';
-require_once SE_SRC_PATH . '/classes/class-se-calendar-export.php';
-require_once SE_SRC_PATH . '/classes/class-se-calendar.php';
-require_once SE_SRC_PATH . '/classes/class-se-event-query-dates.php';
-require_once SE_SRC_PATH . '/classes/class-se-event-dates.php';
-require_once SE_SRC_PATH . '/classes/class-date-display-formatter.php';
-require_once SE_SRC_PATH . '/classes/class-se-migrate-events.php';
+require_once SIMPLE_EVENTS_SRC_PATH . '/classes/class-se-event-post-type.php';
+require_once SIMPLE_EVENTS_SRC_PATH . '/classes/class-se-event-query-utils.php';
+require_once SIMPLE_EVENTS_SRC_PATH . '/classes/class-se-blocks.php';
+require_once SIMPLE_EVENTS_SRC_PATH . '/classes/class-se-block-variations.php';
+require_once SIMPLE_EVENTS_SRC_PATH . '/classes/class-se-template-loader.php';
+require_once SIMPLE_EVENTS_SRC_PATH . '/classes/class-se-settings.php';
+require_once SIMPLE_EVENTS_SRC_PATH . '/classes/class-se-admin.php';
+require_once SIMPLE_EVENTS_SRC_PATH . '/classes/class-se-calendar-export.php';
+require_once SIMPLE_EVENTS_SRC_PATH . '/classes/class-se-calendar.php';
+require_once SIMPLE_EVENTS_SRC_PATH . '/classes/class-se-event-query-dates.php';
+require_once SIMPLE_EVENTS_SRC_PATH . '/classes/class-se-event-dates.php';
+require_once SIMPLE_EVENTS_SRC_PATH . '/classes/class-date-display-formatter.php';
+require_once SIMPLE_EVENTS_SRC_PATH . '/classes/class-se-migrate-events.php';
 
-require_once SE_SRC_PATH . '/calendar-functions.php';
-require_once SE_SRC_PATH . '/event-functions.php';
-require_once SE_SRC_PATH . '/template-functions.php';
-require_once SE_SRC_PATH . '/template-hooks.php';
-require_once SE_SRC_PATH . '/woocommerce-hooks.php';
-require_once SE_SRC_PATH . '/rest-api.php';
-require_once SE_SRC_PATH . '/back-compat.php';
+require_once SIMPLE_EVENTS_SRC_PATH . '/calendar-functions.php';
+require_once SIMPLE_EVENTS_SRC_PATH . '/event-functions.php';
+require_once SIMPLE_EVENTS_SRC_PATH . '/template-functions.php';
+require_once SIMPLE_EVENTS_SRC_PATH . '/template-hooks.php';
+require_once SIMPLE_EVENTS_SRC_PATH . '/woocommerce-hooks.php';
+require_once SIMPLE_EVENTS_SRC_PATH . '/rest-api.php';
+require_once SIMPLE_EVENTS_SRC_PATH . '/back-compat.php';
 
 // Instruct WordPress to fetch update information from GitHub.
 add_filter(
 	'update_plugins_github.com',
 	static function ( $update, array $plugin_data, string $plugin_file ) {
-		if ( SE_BASENAME !== $plugin_file || false !== $update ) {
+		if ( SIMPLE_EVENTS_BASENAME !== $plugin_file || false !== $update ) {
 			return $update;
 		}
 

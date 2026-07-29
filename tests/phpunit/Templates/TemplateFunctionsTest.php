@@ -13,11 +13,11 @@ class TemplateFunctionsTest extends WP_UnitTestCase {
 	 */
 	public function set_up() {
 		parent::set_up();
-		se_get_date_ids_for_non_published_events( true );
+		simple_events_get_date_ids_for_non_published_events( true );
 	}
 
 	/**
-	 * The se_event_get_next_event() function should not return an orphaned event-date
+	 * The simple_events_event_get_next_event() function should not return an orphaned event-date
 	 * whose parent event has been deleted.
 	 *
 	 * @return void
@@ -32,7 +32,7 @@ class TemplateFunctionsTest extends WP_UnitTestCase {
 		);
 
 		$now    = time();
-		$date_a = se_event_create_event_date(
+		$date_a = simple_events_event_create_event_date(
 			$event_a,
 			array(
 				'start_date' => $now,
@@ -51,7 +51,7 @@ class TemplateFunctionsTest extends WP_UnitTestCase {
 		);
 
 		$later  = $now + 86400;
-		$date_b = se_event_create_event_date(
+		$date_b = simple_events_event_create_event_date(
 			$event_b,
 			array(
 				'start_date' => $later,
@@ -70,7 +70,7 @@ class TemplateFunctionsTest extends WP_UnitTestCase {
 		);
 
 		$even_later = $now + 172800;
-		$date_c     = se_event_create_event_date(
+		$date_c     = simple_events_event_create_event_date(
 			$event_c,
 			array(
 				'start_date' => $even_later,
@@ -82,26 +82,26 @@ class TemplateFunctionsTest extends WP_UnitTestCase {
 
 		// Delete event B's parent, orphaning date_b.
 		// Remove the before_delete_post hook temporarily so the child survives.
-		remove_action( 'before_delete_post', array( 'SE_Event_Post_Type', 'delete_child_event_dates' ) );
+		remove_action( 'before_delete_post', array( 'Simple_Events_Event_Post_Type', 'delete_child_event_dates' ) );
 		wp_delete_post( $event_b, true );
-		add_action( 'before_delete_post', array( 'SE_Event_Post_Type', 'delete_child_event_dates' ) );
+		add_action( 'before_delete_post', array( 'Simple_Events_Event_Post_Type', 'delete_child_event_dates' ) );
 
 		// Verify date_b is orphaned.
 		$this->assertNull( get_post( $event_b ) );
 		$this->assertNotNull( get_post( $date_b->ID ) );
 
 		// Reset the cache so orphaned dates are detected.
-		se_get_date_ids_for_non_published_events( true );
+		simple_events_get_date_ids_for_non_published_events( true );
 
 		// Get the next event after event A — should skip orphaned date_b and return date_c.
-		$next = se_event_get_next_event( $event_a, $date_a->ID );
+		$next = simple_events_event_get_next_event( $event_a, $date_a->ID );
 
 		$this->assertNotNull( $next, 'Expected a next event to be returned.' );
 		$this->assertSame( $date_c->ID, $next->ID, 'Next event should be date_c, not the orphaned date_b.' );
 	}
 
 	/**
-	 * The se_event_get_previous_event() function should not return an orphaned event-date
+	 * The simple_events_event_get_previous_event() function should not return an orphaned event-date
 	 * whose parent event has been deleted.
 	 *
 	 * @return void
@@ -117,7 +117,7 @@ class TemplateFunctionsTest extends WP_UnitTestCase {
 
 		$now    = time();
 		$early  = $now - 172800;
-		$date_a = se_event_create_event_date(
+		$date_a = simple_events_event_create_event_date(
 			$event_a,
 			array(
 				'start_date' => $early,
@@ -136,7 +136,7 @@ class TemplateFunctionsTest extends WP_UnitTestCase {
 		);
 
 		$middle = $now - 86400;
-		$date_b = se_event_create_event_date(
+		$date_b = simple_events_event_create_event_date(
 			$event_b,
 			array(
 				'start_date' => $middle,
@@ -154,7 +154,7 @@ class TemplateFunctionsTest extends WP_UnitTestCase {
 			)
 		);
 
-		$date_c = se_event_create_event_date(
+		$date_c = simple_events_event_create_event_date(
 			$event_c,
 			array(
 				'start_date' => $now,
@@ -165,19 +165,19 @@ class TemplateFunctionsTest extends WP_UnitTestCase {
 		update_post_meta( $date_c->ID, 'se_event_hide_from_feed', 0 );
 
 		// Delete event B's parent, orphaning date_b (the immediate previous).
-		remove_action( 'before_delete_post', array( 'SE_Event_Post_Type', 'delete_child_event_dates' ) );
+		remove_action( 'before_delete_post', array( 'Simple_Events_Event_Post_Type', 'delete_child_event_dates' ) );
 		wp_delete_post( $event_b, true );
-		add_action( 'before_delete_post', array( 'SE_Event_Post_Type', 'delete_child_event_dates' ) );
+		add_action( 'before_delete_post', array( 'Simple_Events_Event_Post_Type', 'delete_child_event_dates' ) );
 
 		// Verify date_b is orphaned.
 		$this->assertNull( get_post( $event_b ) );
 		$this->assertNotNull( get_post( $date_b->ID ) );
 
 		// Reset the cache so orphaned dates are detected.
-		se_get_date_ids_for_non_published_events( true );
+		simple_events_get_date_ids_for_non_published_events( true );
 
 		// Get the previous event before event C — should skip orphaned date_b and return date_a.
-		$previous = se_event_get_previous_event( $event_c, $date_c->ID );
+		$previous = simple_events_event_get_previous_event( $event_c, $date_c->ID );
 
 		$this->assertNotNull( $previous, 'Expected a previous event to be returned.' );
 		$this->assertSame( $date_a->ID, $previous->ID, 'Previous event should be date_a, not the orphaned date_b.' );

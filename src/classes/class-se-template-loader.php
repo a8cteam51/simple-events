@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Template Loader Class.
  */
-class SE_Template_Loader {
+class Simple_Events_Template_Loader {
 
 	/**
 	 * Initialize.
@@ -35,7 +35,7 @@ class SE_Template_Loader {
 		}
 
 		// Check if we are looking for a single event or event date template.
-		if ( is_single() && get_post_type() === SE_Event_Post_Type::$post_type ) {
+		if ( is_single() && get_post_type() === Simple_Events_Event_Post_Type::$post_type ) {
 			// Attempt to look for the single event template in themes etc.
 			$theme_templates = array(
 				'single-se-event.php',
@@ -47,7 +47,7 @@ class SE_Template_Loader {
 				$plugins_own = self::locate_template( array( 'single.php' ) );
 				if ( $plugins_own ) {
 					// Allow filters to override the template.
-					$plugins_own = apply_filters( 'se_single_event_template', $plugins_own );
+					$plugins_own = apply_filters( 'simple_events_single_event_template', $plugins_own );
 					if ( $plugins_own ) {
 						return $plugins_own;
 					}
@@ -124,7 +124,7 @@ class SE_Template_Loader {
 
 		if ( '' !== $fallback_template ) {
 			// Allow filters to override the template.
-			$fallback_template = apply_filters( 'se_event_archive_template_legacy', $fallback_template );
+			$fallback_template = apply_filters( 'simple_events_event_archive_template_legacy', $fallback_template );
 			return $fallback_template;
 		}
 
@@ -150,8 +150,8 @@ class SE_Template_Loader {
 				continue;
 			}
 
-			if ( file_exists( SE_TEMPLATE_PATH . '/' . $template_name ) ) {
-				$located = SE_TEMPLATE_PATH . '/' . $template_name;
+			if ( file_exists( SIMPLE_EVENTS_TEMPLATE_PATH . '/' . $template_name ) ) {
+				$located = SIMPLE_EVENTS_TEMPLATE_PATH . '/' . $template_name;
 				break;
 			}
 		}
@@ -194,4 +194,4 @@ class SE_Template_Loader {
 	}
 }
 
-SE_Template_Loader::init();
+Simple_Events_Template_Loader::init();

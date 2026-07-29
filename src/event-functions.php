@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @return array|void
  */
-function se_event_get_tickets( $event_id ) {
+function simple_events_event_get_tickets( $event_id ) {
 	$event = get_post( $event_id );
 
 	if ( ! $event ) {
@@ -50,10 +50,10 @@ function se_event_get_tickets( $event_id ) {
  *
  * @return mixed
  */
-function se_event_get_ticket_prices( $event_id ) {
+function simple_events_event_get_ticket_prices( $event_id ) {
 	$prices = array();
 
-	$tickets = se_event_get_tickets( $event_id );
+	$tickets = simple_events_event_get_tickets( $event_id );
 
 	if ( ! empty( $tickets ) ) {
 		// Get prices.
@@ -85,11 +85,11 @@ function se_event_get_ticket_prices( $event_id ) {
  *
  * @return mixed
  */
-function se_event_get_tickets_stock( $event_id ) {
+function simple_events_event_get_tickets_stock( $event_id ) {
 	$stock_total = 0;
 
 	// Get ticket products.
-	$tickets = se_event_get_tickets( $event_id );
+	$tickets = simple_events_event_get_tickets( $event_id );
 
 	if ( ! empty( $tickets ) ) {
 		foreach ( $tickets as $ticket ) {
@@ -120,14 +120,14 @@ function se_event_get_tickets_stock( $event_id ) {
  * @param integer $event_id    Event id.
  * @param array   $event_dates Event dates, not used.
  *
- * @deprecated 2.0.0 Please use the new se_event_get_event_dates() instead.
+ * @deprecated 2.0.0 Please use the new simple_events_event_get_event_dates() instead.
  *
  * @return array<int, array{datetime_start:int, datetime_end:int, all_day:boolean}> Event dates.
  */
-function se_event_get_dates( $event_id, $event_dates = null ) { // phpcs:ignore
+function simple_events_event_get_dates( $event_id, $event_dates = null ) { // phpcs:ignore
 
 	// Get dates in new format.
-	$dates = se_event_get_event_dates( $event_id );
+	$dates = simple_events_event_get_event_dates( $event_id );
 
 	// Map to old format.
 	$dates = array_map(
@@ -142,7 +142,7 @@ function se_event_get_dates( $event_id, $event_dates = null ) { // phpcs:ignore
 	);
 
 	return apply_filters(
-		'se_event_get_dates',
+		'simple_events_event_get_dates',
 		$dates,
 		$event_id
 	);
@@ -164,9 +164,9 @@ function se_event_get_dates( $event_id, $event_dates = null ) { // phpcs:ignore
  *
  * @return string
  */
-function se_event_get_future_dates( $event_id, $event_date_id = null, $date_only = false, $time_only = false, $event_dates = null, $date_format = '', $time_format = '' ) {
-	$date_display_formatter = new SE_Date_Display_Formatter( $event_id );
-	$now                    = SE_Calendar::get_instance()->create_date_time( 'now' )->format( 'U' );
+function simple_events_event_get_future_dates( $event_id, $event_date_id = null, $date_only = false, $time_only = false, $event_dates = null, $date_format = '', $time_format = '' ) {
+	$date_display_formatter = new Simple_Events_Date_Display_Formatter( $event_id );
+	$now                    = Simple_Events_Calendar::get_instance()->create_date_time( 'now' )->format( 'U' );
 
 	// If dateonly is true, we need to return the date only.
 	if ( $date_only ) {
@@ -184,11 +184,11 @@ function se_event_get_future_dates( $event_id, $event_date_id = null, $date_only
 
 	// If we dont have any dates.
 	if ( ! $event_dates ) {
-		$event_dates = se_event_get_event_dates( $event_id );
+		$event_dates = simple_events_event_get_event_dates( $event_id );
 	}
 
 	// Filter out only the current event date, if set.
-	if ( se_event_treat_each_date_as_own_event() && $event_date_id ) {
+	if ( simple_events_event_treat_each_date_as_own_event() && $event_date_id ) {
 		$event_dates = array_filter(
 			$event_dates,
 			function ( $date ) use ( $event_date_id ) {
@@ -228,11 +228,11 @@ function se_event_get_future_dates( $event_id, $event_date_id = null, $date_only
  *
  * @return string
  */
-function se_event_get_past_dates( $event_id, $event_date_id = null, $date_only = false, $time_only = false, $event_dates = null, $date_format = '', $time_format = '' ) {
+function simple_events_event_get_past_dates( $event_id, $event_date_id = null, $date_only = false, $time_only = false, $event_dates = null, $date_format = '', $time_format = '' ) {
 
-	// Match the se_event_get_future_dates but for past dates
-	$date_display_formatter = new SE_Date_Display_Formatter( $event_id );
-	$now                    = SE_Calendar::get_instance()->create_date_time( 'now' )->format( 'U' );
+	// Match the simple_events_event_get_future_dates but for past dates
+	$date_display_formatter = new Simple_Events_Date_Display_Formatter( $event_id );
+	$now                    = Simple_Events_Calendar::get_instance()->create_date_time( 'now' )->format( 'U' );
 
 	if ( $date_only ) {
 		$date_display_formatter->set_date_only( true );
@@ -249,11 +249,11 @@ function se_event_get_past_dates( $event_id, $event_date_id = null, $date_only =
 
 	// If we dont have any dates.
 	if ( ! $event_dates ) {
-		$event_dates = se_event_get_event_dates( $event_id );
+		$event_dates = simple_events_event_get_event_dates( $event_id );
 	}
 
 	// Filter out only the current event date, if set.
-	if ( se_event_treat_each_date_as_own_event() && $event_date_id ) {
+	if ( simple_events_event_treat_each_date_as_own_event() && $event_date_id ) {
 		$event_dates = array_filter(
 			$event_dates,
 			function ( $date ) use ( $event_date_id ) {
@@ -291,16 +291,16 @@ function se_event_get_past_dates( $event_id, $event_date_id = null, $date_only =
  *
  * @return string
  */
-function se_event_get_formatted_dates( $event_id, $event_date_id = null, $date_only = false, $time_only = false, $event_dates = null, $date_format = '', $time_format = '' ) {
+function simple_events_event_get_formatted_dates( $event_id, $event_date_id = null, $date_only = false, $time_only = false, $event_dates = null, $date_format = '', $time_format = '' ) {
 
-	$date_display_formatter = new SE_Date_Display_Formatter( $event_id );
+	$date_display_formatter = new Simple_Events_Date_Display_Formatter( $event_id );
 
 	// if we dont have any dates.
 	if ( ! $event_dates ) {
-		$event_dates = se_event_get_event_dates( $event_id );
+		$event_dates = simple_events_event_get_event_dates( $event_id );
 	}
 	// Filter out only the current event date, if set.
-	if ( se_event_treat_each_date_as_own_event() && $event_date_id ) {
+	if ( simple_events_event_treat_each_date_as_own_event() && $event_date_id ) {
 		$event_dates = array_filter(
 			$event_dates,
 			function ( $date ) use ( $event_date_id ) {
@@ -349,7 +349,7 @@ function se_event_format_dates( $event_dates, $timezone, $hide_end_time, $hide_s
 	_deprecated_function( __FUNCTION__, 'Please use the new dateFormatter class instead.', '2.0.0' );
 
 	// Attempt to get the event date id from url.
-	$event_date_id = se_template_get_event_date_id();
+	$event_date_id = simple_events_template_get_event_date_id();
 
 	$dates_count = is_array( $event_dates ) ? count( $event_dates ) : 1;
 
@@ -471,7 +471,7 @@ function se_event_format_dates( $event_dates, $timezone, $hide_end_time, $hide_s
  *
  * @return mixed
  */
-function se_event_get_title( $event_id ) {
+function simple_events_event_get_title( $event_id ) {
 	return get_the_title( $event_id );
 }
 
@@ -482,7 +482,7 @@ function se_event_get_title( $event_id ) {
  *
  * @return mixed
  */
-function se_event_get_location( $event_id ) {
+function simple_events_event_get_location( $event_id ) {
 	$event_location = get_post_meta( $event_id, 'se_event_location', true );
 
 	if ( ! empty( $event_location ) ) {
@@ -499,7 +499,7 @@ function se_event_get_location( $event_id ) {
  *
  * @return mixed
  */
-function se_event_get_venue( $event_id ) {
+function simple_events_event_get_venue( $event_id ) {
 	$event_venue = get_post_meta( $event_id, 'se_event_venue', true );
 
 	if ( ! empty( $event_venue ) ) {
@@ -516,8 +516,8 @@ function se_event_get_venue( $event_id ) {
  *
  * @return boolean
  */
-function se_event_is_expired( $event_id ) {
-	$event_dates = se_event_get_event_dates( $event_id );
+function simple_events_event_is_expired( $event_id ) {
+	$event_dates = simple_events_event_get_event_dates( $event_id );
 
 	$latest_date = null;
 	foreach ( $event_dates as $date ) {
@@ -526,7 +526,7 @@ function se_event_is_expired( $event_id ) {
 
 		// If the event is all day, get the start date.
 		if ( $date['all_day'] ) {
-			$temp     = se_create_date_time_from_timestamp( $date['start_date'] );
+			$temp     = simple_events_create_date_time_from_timestamp( $date['start_date'] );
 			$end_date = $temp->setTime( 23, 59, 59 )->getTimestamp();
 		}
 
@@ -540,7 +540,7 @@ function se_event_is_expired( $event_id ) {
 		return false;
 	}
 
-	return $latest_date < SE_Calendar::get_instance()->create_date_time( 'now' )->format( 'U' );
+	return $latest_date < Simple_Events_Calendar::get_instance()->create_date_time( 'now' )->format( 'U' );
 }
 
 /**
@@ -551,7 +551,7 @@ function se_event_is_expired( $event_id ) {
  *
  * @return string
  */
-function se_event_get_calendar_link( $event_id, $event_date_id = null ) {
+function simple_events_event_get_calendar_link( $event_id, $event_date_id = null ) {
 	// Set the link.
 	$external_link      = esc_url( get_post_meta( $event_id, 'se_event_external_link', true ) );
 	$open_external_link = (bool) get_post_meta( $event_id, 'se_open_external_link', true );
@@ -581,7 +581,7 @@ function se_event_get_calendar_link( $event_id, $event_date_id = null ) {
  *
  * @return boolean
  */
-function se_event_show_next_previous(): bool {
+function simple_events_event_show_next_previous(): bool {
 	$options = (array) get_option( 'se_options', array() );
 
 	// If is not set, return as false.
@@ -597,7 +597,7 @@ function se_event_show_next_previous(): bool {
  *
  * @return string|null
  */
-function se_event_get_calendar_page_link(): ?string {
+function simple_events_event_get_calendar_page_link(): ?string {
 	$options = (array) get_option( 'se_options', array() );
 
 	// If is not set, return as false.
@@ -615,7 +615,7 @@ function se_event_get_calendar_page_link(): ?string {
  *
  * @return boolean
  */
-function se_event_show_links_above_content(): bool {
+function simple_events_event_show_links_above_content(): bool {
 	$options = (array) get_option( 'se_options', array() );
 
 	// If is not set, return as false.
@@ -636,8 +636,8 @@ function se_event_show_links_above_content(): bool {
  *
  * @return void
  */
-function se_event_update_event_query_dates( $event_id ) {
-	$now         = SE_Calendar::get_instance()->create_date_time( 'now' )->format( 'U' );
+function simple_events_event_update_event_query_dates( $event_id ) {
+	$now         = Simple_Events_Calendar::get_instance()->create_date_time( 'now' )->format( 'U' );
 	$event_dates = get_post_meta( $event_id, 'se_event_dates', true );
 
 	$start_date = null;
@@ -690,7 +690,7 @@ function se_event_update_event_query_dates( $event_id ) {
 	 *
 	 * @return \WP_Post|null
 	 */
-function se_event_create_event_date( $event_id, $event_dates ) {
+function simple_events_event_create_event_date( $event_id, $event_dates ) {
 	$default_args = array(
 		'start_date'         => 0,
 		'end_date'           => 0,
@@ -720,7 +720,7 @@ function se_event_create_event_date( $event_id, $event_dates ) {
 		),
 		'post_content' => '',
 		'post_status'  => 'publish',
-		'post_type'    => SE_Event_Post_Type::$event_date_post_type,
+		'post_type'    => Simple_Events_Event_Post_Type::$event_date_post_type,
 		'post_parent'  => $event_id,
 	);
 
@@ -758,14 +758,14 @@ function se_event_create_event_date( $event_id, $event_dates ) {
  *
  * @since 2.0.0
  */
-function se_event_get_event_dates( $event_id ): array {
+function simple_events_event_get_event_dates( $event_id ): array {
 	if ( ! is_numeric( $event_id ) || $event_id <= 0 ) {
 		throw new \Exception( esc_html( __( 'Invalid event ID provided.', 'simple-events' ) ) );
 	}
 
 	$event_dates = get_posts(
 		array(
-			'post_type'      => SE_Event_Post_Type::$event_date_post_type,
+			'post_type'      => Simple_Events_Event_Post_Type::$event_date_post_type,
 			'post_status'    => 'publish',
 			'posts_per_page' => -1,
 			'post_parent'    => $event_id,
@@ -794,7 +794,7 @@ function se_event_get_event_dates( $event_id ): array {
 		$event_dates
 	);
 
-	return apply_filters( 'se_event_get_event_dates', $dates, $event_id );
+	return apply_filters( 'simple_events_event_get_event_dates', $dates, $event_id );
 }
 
 /**
@@ -805,7 +805,7 @@ function se_event_get_event_dates( $event_id ): array {
  *
  * @return DateTime The created DateTime object.
  */
-function se_create_date_time_from_timestamp( $timestamp, $timezone = null ): DateTime {
+function simple_events_create_date_time_from_timestamp( $timestamp, $timezone = null ): DateTime {
 	// If we have a timezone instance, get its name.
 	if ( $timezone instanceof DateTimeZone ) {
 		$timezone = $timezone->getName();
@@ -838,7 +838,7 @@ function se_create_date_time_from_timestamp( $timestamp, $timezone = null ): Dat
  *
  * @return boolean
  */
-function se_event_treat_each_date_as_own_event(): bool {
+function simple_events_event_treat_each_date_as_own_event(): bool {
 	$settings = get_option( 'se_options' );
 	return is_array( $settings )
 		&& array_key_exists( 'treat_each_date_as_own_event', $settings )

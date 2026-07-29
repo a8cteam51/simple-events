@@ -63,7 +63,7 @@ class UpcomingEventsDraftTest extends WP_UnitTestCase {
 		$start = DateTime::createFromFormat( 'Y-m-d H:i:s', $start_day . ' 10:00:00', $tz )->getTimestamp();
 		$end   = DateTime::createFromFormat( 'Y-m-d H:i:s', $start_day . ' 11:00:00', $tz )->getTimestamp();
 
-		$date = se_event_create_event_date(
+		$date = simple_events_event_create_event_date(
 			$event_id,
 			array(
 				'start_date' => $start,
@@ -82,7 +82,7 @@ class UpcomingEventsDraftTest extends WP_UnitTestCase {
 	 * @return string
 	 */
 	private function render() {
-		return SE_Blocks::upcoming_events_render(
+		return Simple_Events_Blocks::upcoming_events_render(
 			array(
 				'count'            => 10,
 				'feedType'         => 'upcoming',

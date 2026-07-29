@@ -13,16 +13,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 ?>
 <section class="simple-events-calendar-month-mobile-events" data-js="simple-events-calendar-month-mobile-events">
 
-	<?php foreach ( $args['days'] as $se_day ) { ?>
+	<?php foreach ( $args['days'] as $simple_events_day ) { ?>
 
 		<?php
-		if ( ! empty( $se_day['events'] ) ) {
-			SE_Template_Loader::get_template_part(
+		if ( ! empty( $simple_events_day['events'] ) ) {
+			Simple_Events_Template_Loader::get_template_part(
 				'calendar/mobile-events/day',
 				null,
 				true,
 				array(
-					'day'        => $se_day,
+					'day'        => $simple_events_day,
 					'attributes' => $args['attributes'],
 				)
 			);
@@ -33,7 +33,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	<?php } ?>
 
 	<?php
-	SE_Template_Loader::get_template_part(
+	Simple_Events_Template_Loader::get_template_part(
 		'calendar/mobile-events/nav',
 		null,
 		true,

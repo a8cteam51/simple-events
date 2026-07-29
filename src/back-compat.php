@@ -12,7 +12,7 @@
  *
  * @return string
  */
-function se_pre_gutenberg_14_3_0_compat( $classes ) {
+function simple_events_pre_gutenberg_14_3_0_compat( $classes ) {
 	global $wp_version;
 
 	if (
@@ -25,20 +25,20 @@ function se_pre_gutenberg_14_3_0_compat( $classes ) {
 	return $classes;
 }
 
-add_filter( 'admin_body_class', 'se_pre_gutenberg_14_3_0_compat' );
+add_filter( 'admin_body_class', 'simple_events_pre_gutenberg_14_3_0_compat' );
 
 /**
  * Adds an admin notice to say we have events that need to be migrated.
  *
  * @return void
  */
-function se_admin_notice_events_to_migrate() {
+function simple_events_admin_notice_events_to_migrate() {
 	if ( ! current_user_can( 'manage_options' ) ) {
 		return;
 	}
 
 	// Check if we have events that need to be migrated.
-	if ( SE_Migrate_Events::has_events_to_migrate() ) {
+	if ( Simple_Events_Migrate_Events::has_events_to_migrate() ) {
 		// Lets make the error large so it cant be ingnored with a link to the settings page.
 
 		?>
@@ -50,7 +50,7 @@ function se_admin_notice_events_to_migrate() {
 				<?php esc_html_e( 'We have events that need to be migrated to the new format. This must be completed before the events will function properly.', 'simple-events' ); ?>
 			</p>
 			<p style="margin: 20px 0 0 0;">
-				<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=' . SE_Event_Post_Type::$post_type . '&page=settings#migrate_events' ) ); ?>"
+				<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=' . Simple_Events_Event_Post_Type::$post_type . '&page=settings#migrate_events' ) ); ?>"
 					class="button button-primary button-large"
 					style="background: #dc3232; border-color: #dc3232; color: #fff; font-size: 16px; padding: 10px 20px; text-decoration: none;">
 					<?php esc_html_e( 'Go to Settings & Migrate Events', 'simple-events' ); ?>
@@ -60,4 +60,4 @@ function se_admin_notice_events_to_migrate() {
 		<?php
 	}
 }
-add_action( 'admin_notices', 'se_admin_notice_events_to_migrate' );
+add_action( 'admin_notices', 'simple_events_admin_notice_events_to_migrate' );

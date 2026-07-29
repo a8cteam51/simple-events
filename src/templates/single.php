@@ -13,7 +13,7 @@ get_header( 'events' );
 /**
  * Hook: simple_events_before_main_content.
  */
-do_action( 'se_before_main_content' );
+do_action( 'simple_events_before_main_content' );
 
 ?>
 
@@ -22,7 +22,7 @@ do_action( 'se_before_main_content' );
 		the_post();
 		?>
 
-		<?php SE_TEMPLATE_LOADER::get_template_part( 'content', 'single' ); ?>
+		<?php Simple_Events_Template_Loader::get_template_part( 'content', 'single' ); ?>
 
 	<?php endwhile; // end of the loop. ?>
 
@@ -31,6 +31,6 @@ do_action( 'se_before_main_content' );
 /**
  * Hook: simple_events_after_main_content.
  */
-do_action( 'se_after_main_content' );
+do_action( 'simple_events_after_main_content' );
 
 get_footer( 'events' );

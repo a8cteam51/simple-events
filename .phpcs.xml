@@ -19,7 +19,6 @@
 		<properties>
 			<property name="prefixes" type="array">
 				<element value="simple_events_" />
-				<element value="se_" />
 			</property>
 		</properties>
 	</rule>

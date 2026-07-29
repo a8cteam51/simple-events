@@ -4,7 +4,7 @@
  *
  * Shared utilities for event query filtering and post modification.
  * Consolidates functionality that was previously duplicated across
- * SE_Event_Post_Type, SE_Blocks, and SE_Block_Variations.
+ * Simple_Events_Event_Post_Type, Simple_Events_Blocks, and Simple_Events_Block_Variations.
  */
 
 // Exit if accessed directly.
@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Event Query Utilities Class.
  */
-class SE_Event_Query_Utils {
+class Simple_Events_Event_Query_Utils {
 
 		/**
 	 * Get all child date posts from a tax query.
@@ -34,7 +34,7 @@ class SE_Event_Query_Utils {
 		// Do a query of all se-event posts using the tax query.
 		$query = new \WP_Query(
 			array(
-				'post_type'      => SE_Event_Post_Type::$post_type,
+				'post_type'      => Simple_Events_Event_Post_Type::$post_type,
 				'post_status'    => 'publish',
 				'tax_query'      => $tax_query,
 				'fields'         => 'ids',
@@ -61,7 +61,7 @@ class SE_Event_Query_Utils {
 	public static function get_event_dates_from_events( array $events ): array {
 		$dates = array();
 		foreach ( $events as $event_id ) {
-			$event_dates = se_event_get_event_dates( $event_id );
+			$event_dates = simple_events_event_get_event_dates( $event_id );
 			if ( ! empty( $event_dates ) ) {
 				$dates = array_merge( $dates, wp_list_pluck( $event_dates, 'id' ) );
 			}
@@ -81,7 +81,7 @@ class SE_Event_Query_Utils {
 	 */
 	public static function get_event_dates_for_range( $start_timestamp, $end_timestamp ): array {
 		$args = array(
-			'post_type'      => SE_Event_Post_Type::$event_date_post_type,
+			'post_type'      => Simple_Events_Event_Post_Type::$event_date_post_type,
 			'post_status'    => 'publish',
 			'posts_per_page' => -1,
 			'no_found_rows'  => true,
@@ -171,7 +171,7 @@ class SE_Event_Query_Utils {
 	 */
 	public static function filter_event_dates_where( $where, $query ) {
 		// Only apply to event date queries.
-		if ( SE_Event_Post_Type::$event_date_post_type !== $query->get( 'post_type' ) ) {
+		if ( Simple_Events_Event_Post_Type::$event_date_post_type !== $query->get( 'post_type' ) ) {
 			return $where;
 		}
 
@@ -180,12 +180,12 @@ class SE_Event_Query_Utils {
 		// Always ensure the parent event post is published.
 		$where .= " AND {$wpdb->posts}.post_parent IN (
 			SELECT ID FROM {$wpdb->posts}
-			WHERE post_type = '" . SE_Event_Post_Type::$post_type . "'
+			WHERE post_type = '" . Simple_Events_Event_Post_Type::$post_type . "'
 			AND post_status = 'publish'
 		)";
 
 		// If treating each date as own event or unique_parents not set, skip the unique parents subquery.
-		if ( se_event_treat_each_date_as_own_event() || ! isset( $query->query_vars['unique_parents'] ) || ! isset( $query->query_vars['feed_order'] ) ) {
+		if ( simple_events_event_treat_each_date_as_own_event() || ! isset( $query->query_vars['unique_parents'] ) || ! isset( $query->query_vars['feed_order'] ) ) {
 			return $where;
 		}
 
@@ -223,7 +223,7 @@ class SE_Event_Query_Utils {
 				FROM {$wpdb->posts} p1
 				INNER JOIN {$wpdb->postmeta} pm1 ON p1.ID = pm1.post_id AND pm1.meta_key = '{$meta_key}'
 				INNER JOIN {$wpdb->posts} parent ON p1.post_parent = parent.ID AND parent.post_status = 'publish'
-				WHERE p1.post_type = '" . SE_Event_Post_Type::$event_date_post_type . "'
+				WHERE p1.post_type = '" . Simple_Events_Event_Post_Type::$event_date_post_type . "'
 				AND p1.post_status = 'publish'
 				AND pm1.meta_value = (
 					SELECT " . ( 'desc' === strtolower( $feed_order ) ? 'MAX' : 'MIN' ) . "(pm2.meta_value)
@@ -231,7 +231,7 @@ class SE_Event_Query_Utils {
 					INNER JOIN {$wpdb->postmeta} pm2 ON p2.ID = pm2.post_id AND pm2.meta_key = '{$meta_key}'
 					" . ( $time_filter ? "INNER JOIN {$wpdb->postmeta} pm3 ON p2.ID = pm3.post_id AND pm3.meta_key = 'se_event_date_end'" : '' ) . "
 					WHERE p2.post_parent = p1.post_parent
-					AND p2.post_type = '" . SE_Event_Post_Type::$event_date_post_type . "'
+					AND p2.post_type = '" . Simple_Events_Event_Post_Type::$event_date_post_type . "'
 					AND p2.post_status = 'publish'
 					{$time_filter}
 				)
@@ -256,7 +256,7 @@ class SE_Event_Query_Utils {
 	public static function modify_event_posts( $posts, $query, $context = 'archive' ) {
 
 		// If not an event or event date, bail.
-		if ( ! in_array( $query->get( 'post_type' ), array( SE_Event_Post_Type::$post_type, SE_Event_Post_Type::$event_date_post_type ), true ) ) {
+		if ( ! in_array( $query->get( 'post_type' ), array( Simple_Events_Event_Post_Type::$post_type, Simple_Events_Event_Post_Type::$event_date_post_type ), true ) ) {
 			return $posts;
 		}
 
@@ -265,7 +265,7 @@ class SE_Event_Query_Utils {
 		switch ( $context ) {
 			case 'archive':
 				// For archive: modify if unique_parents is set OR if treating each date as own event
-				$should_modify = isset( $query->query_vars['unique_parents'] ) || se_event_treat_each_date_as_own_event() || get_post_type() === SE_Event_Post_Type::$post_type;
+				$should_modify = isset( $query->query_vars['unique_parents'] ) || simple_events_event_treat_each_date_as_own_event() || get_post_type() === Simple_Events_Event_Post_Type::$post_type;
 				break;
 			case 'blocks':
 				// For blocks: modify if unique_parents is set
@@ -273,7 +273,7 @@ class SE_Event_Query_Utils {
 				break;
 			case 'variations':
 				// For variations: modify if sub-type is QUERY_LOOP_EVENTS
-				$should_modify = isset( $query->query_vars['sub-type'] ) && SE_Block_Variations::QUERY_LOOP_EVENTS === $query->query_vars['sub-type'];
+				$should_modify = isset( $query->query_vars['sub-type'] ) && Simple_Events_Block_Variations::QUERY_LOOP_EVENTS === $query->query_vars['sub-type'];
 				break;
 		}
 
@@ -349,7 +349,7 @@ class SE_Event_Query_Utils {
 	 */
 	public static function add_event_query_filters( $query, $feed_order, $context = 'archive' ) { // phpcs:ignore
 		// Add unique parents filtering if not treating each date as own event
-		if ( ! se_event_treat_each_date_as_own_event() ) {
+		if ( ! simple_events_event_treat_each_date_as_own_event() ) {
 			$query->set( 'unique_parents', true );
 			$query->set( 'feed_order', $feed_order );
 
@@ -377,7 +377,7 @@ class SE_Event_Query_Utils {
 	 */
 	public static function remove_event_query_filters( $context = 'archive' ) { // phpcs:ignore
 		// Remove filters based on context
-		if ( ! se_event_treat_each_date_as_own_event() ) {
+		if ( ! simple_events_event_treat_each_date_as_own_event() ) {
 			remove_filter( 'posts_where', array( __CLASS__, 'filter_event_dates_where' ), 10 );
 			remove_filter( 'posts_orderby', array( __CLASS__, 'fix_sort_order' ), 10 );
 		}

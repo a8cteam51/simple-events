@@ -16,20 +16,20 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 	<?php
 	if ( $args['month_has_events'] ) {
-		foreach ( array_chunk( $args['days'], 7, true ) as $se_week ) {
+		foreach ( array_chunk( $args['days'], 7, true ) as $simple_events_week ) {
 			?>
 
 			<div class="simple-events-calendar-month__week" role="row">
 
-				<?php foreach ( $se_week as $se_day ) { ?>
+				<?php foreach ( $simple_events_week as $simple_events_day ) { ?>
 
 					<?php
-					SE_Template_Loader::get_template_part(
+					Simple_Events_Template_Loader::get_template_part(
 						'calendar/day/day',
 						null,
 						true,
 						array(
-							'day'        => $se_day,
+							'day'        => $simple_events_day,
 							'attributes' => $args['attributes'],
 						)
 					);

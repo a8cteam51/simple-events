@@ -55,7 +55,7 @@ foreach ( $day_offsets as $i => $days ) {
 	);
 
 	$ts = strtotime( "{$days} days" );
-	se_event_create_event_date(
+	simple_events_event_create_event_date(
 		$event_id,
 		array(
 			'start_date' => $ts,

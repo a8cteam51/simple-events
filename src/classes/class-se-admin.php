@@ -8,20 +8,20 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-require_once SE_SRC_PATH . '/classes/class-se-event-post-type.php';
+require_once SIMPLE_EVENTS_SRC_PATH . '/classes/class-se-event-post-type.php';
 
 /**
  * Admin Panel Class.
  */
-class SE_Admin {
+class Simple_Events_Admin {
 	/**
 	 * Initialize.
 	 *
 	 * @return void
 	 */
 	public static function init() {
-		add_filter( 'manage_' . SE_Event_Post_Type::$post_type . '_posts_columns', array( __CLASS__, 'customize_event_columns' ), 11 );
-		add_filter( 'manage_' . SE_Event_Post_Type::$post_type . '_posts_custom_column', array( __CLASS__, 'customize_event_columns_data' ), 11, 2 );
+		add_filter( 'manage_' . Simple_Events_Event_Post_Type::$post_type . '_posts_columns', array( __CLASS__, 'customize_event_columns' ), 11 );
+		add_filter( 'manage_' . Simple_Events_Event_Post_Type::$post_type . '_posts_custom_column', array( __CLASS__, 'customize_event_columns_data' ), 11, 2 );
 
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'enqueue_admin_scripts' ) );
 	}
@@ -34,9 +34,9 @@ class SE_Admin {
 	public static function enqueue_admin_scripts() {
 		wp_register_script(
 			'se-admin',
-			SE_PLUGIN_URL . '/build/js/admin.js',
+			SIMPLE_EVENTS_PLUGIN_URL . '/build/js/admin.js',
 			array( 'jquery' ),
-			SE_VERSION,
+			SIMPLE_EVENTS_VERSION,
 			array(
 				'in_footer' => false,
 				'strategy'  => 'async',
@@ -78,14 +78,14 @@ class SE_Admin {
 	public static function customize_event_columns_data( $column, $post_id ) {
 		switch ( $column ) {
 			case 'event-date-time':
-				echo wp_kses_post( se_event_get_formatted_dates( $post_id ) );
+				echo wp_kses_post( simple_events_event_get_formatted_dates( $post_id ) );
 				break;
 			case 'event-location':
-				$location = se_event_get_location( $post_id );
+				$location = simple_events_event_get_location( $post_id );
 				echo esc_html( $location ? $location : '-' );
 				break;
 		}
 	}
 }
 
-SE_Admin::init();
+Simple_Events_Admin::init();

@@ -15,19 +15,19 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @var bool
  */
-$se_editor_screen = defined( 'REST_REQUEST' ) ? REST_REQUEST : false;
+$simple_events_editor_screen = defined( 'REST_REQUEST' ) ? REST_REQUEST : false;
 
 ?>
 
-<div class="simple-events-calendar <?php echo esc_attr( se_alignment( $args['attributes'] ) ); ?>">
+<div class="simple-events-calendar <?php echo esc_attr( simple_events_alignment( $args['attributes'] ) ); ?>">
 	<?php
 
 	// If it is an editor screen, add dynamic styles for real-time feedback in editor.
-	if ( $se_editor_screen ) {
-		printf( '<style>%s</style>', esc_html( se_apply_customization( $args['attributes'] ) ) );
+	if ( $simple_events_editor_screen ) {
+		printf( '<style>%s</style>', esc_html( simple_events_apply_customization( $args['attributes'] ) ) );
 	}
 
-	SE_Template_Loader::get_template_part(
+	Simple_Events_Template_Loader::get_template_part(
 		'calendar/calendar',
 		'skeleton',
 		true,
@@ -36,7 +36,7 @@ $se_editor_screen = defined( 'REST_REQUEST' ) ? REST_REQUEST : false;
 	?>
 	<div class="simple-events-calendar-content" data-js="simple-events-calendar-content">
 		<?php
-		SE_Template_Loader::get_template_part(
+		Simple_Events_Template_Loader::get_template_part(
 			'calendar/calendar',
 			'main',
 			true,
