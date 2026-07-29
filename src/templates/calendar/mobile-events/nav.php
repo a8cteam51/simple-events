@@ -23,8 +23,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 		<?php
 		echo wp_kses_post(
 			apply_filters(
-				'se_mobile_nav_arrows_text_template_name',
-				SE_Template_Loader::get_template_part(
+				'simple_events_mobile_nav_arrows_text_template_name',
+				Simple_Events_Template_Loader::get_template_part(
 					'calendar/mobile-events/today',
 					null,
 					true,

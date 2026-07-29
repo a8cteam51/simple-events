@@ -15,16 +15,16 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @return void
  */
-function se_register_rest_routes() {
+function simple_events_register_rest_routes() {
 
 	if ( class_exists( 'WooCommerce' ) ) {
-		require_once SE_SRC_PATH . '/classes/class-se-rest-ticket-products.php';
+		require_once SIMPLE_EVENTS_SRC_PATH . '/classes/class-se-rest-ticket-products.php';
 
-		$instance = new SE_REST_Ticket_Products();
+		$instance = new Simple_Events_REST_Ticket_Products();
 		$instance->register_routes();
 	}
 
-	SE_Calendar::get_instance()->register_routes();
+	Simple_Events_Calendar::get_instance()->register_routes();
 }
 
-add_action( 'rest_api_init', 'se_register_rest_routes', 10 );
+add_action( 'rest_api_init', 'simple_events_register_rest_routes', 10 );

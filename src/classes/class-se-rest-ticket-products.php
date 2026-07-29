@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * REST API Tickets controller class.
  */
-class SE_REST_Ticket_Products extends WC_REST_Products_Controller {
+class Simple_Events_REST_Ticket_Products extends WC_REST_Products_Controller {
 
 	/**
 	 * Endpoint namespace.

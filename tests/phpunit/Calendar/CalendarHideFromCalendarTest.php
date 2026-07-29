@@ -2,7 +2,7 @@
 /**
  * Characterisation tests for the calendar grid.
  *
- * Locks current behaviour of SE_Calendar::get_month_days(); in particular that
+ * Locks current behaviour of Simple_Events_Calendar::get_month_days(); in particular that
  * `hide_from_calendar` keeps an event off the calendar grid. No production code
  * is changed.
  *
@@ -13,7 +13,7 @@ class CalendarHideFromCalendarTest extends WP_UnitTestCase {
 	/**
 	 * Create a published event with one child date.
 	 *
-	 * @param array $date_args Args for se_event_create_event_date().
+	 * @param array $date_args Args for simple_events_event_create_event_date().
 	 *
 	 * @return array{event_id: int, date_id: int}
 	 */
@@ -25,7 +25,7 @@ class CalendarHideFromCalendarTest extends WP_UnitTestCase {
 			)
 		);
 
-		$date = se_event_create_event_date( $event_id, $date_args );
+		$date = simple_events_event_create_event_date( $event_id, $date_args );
 		$this->assertNotNull( $date, 'Failed to create the event date fixture.' );
 
 		return array(
@@ -54,7 +54,7 @@ class CalendarHideFromCalendarTest extends WP_UnitTestCase {
 	 * @return string[]
 	 */
 	private function days_for_date( string $month, int $date_id ): array {
-		$data = SE_Calendar::get_instance()->get_month_days( $month );
+		$data = Simple_Events_Calendar::get_instance()->get_month_days( $month );
 		$days = array();
 		foreach ( $data['days'] as $day ) {
 			foreach ( $day['events'] as $event ) {

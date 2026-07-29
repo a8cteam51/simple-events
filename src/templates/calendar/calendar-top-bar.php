@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 	<?php
 	if ( 'top' === $args['arrow_position'] ) {
-		SE_Template_Loader::get_template_part(
+		Simple_Events_Template_Loader::get_template_part(
 			'calendar/top-bar/nav',
 			null,
 			true,
@@ -26,11 +26,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 			)
 		);
 	}
-	SE_Template_Loader::get_template_part(
+	Simple_Events_Template_Loader::get_template_part(
 		'calendar/top-bar/today',
 	);
 
-	SE_Template_Loader::get_template_part(
+	Simple_Events_Template_Loader::get_template_part(
 		'calendar/top-bar/current-date',
 		null,
 		true,

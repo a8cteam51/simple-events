@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @return string The alignment string.
  */
-function se_alignment( $args ): string {
+function simple_events_alignment( $args ): string {
 	$align = '';
 
 	if ( ! empty( $args['align'] ) ) {
@@ -30,7 +30,7 @@ function se_alignment( $args ): string {
  *
  * @return string
  */
-function se_get_current_month_year_from_date( $date ): string {
+function simple_events_get_current_month_year_from_date( $date ): string {
 	try {
 		$date_time = new DateTime( $date );
 
@@ -47,7 +47,7 @@ function se_get_current_month_year_from_date( $date ): string {
  *
  * @return string
  */
-function se_get_day_element_classes( $day_data ): string {
+function simple_events_get_day_element_classes( $day_data ): string {
 	$classes = array( 'simple-events-calendar-month__day' );
 
 	if ( $day_data['is_other_month'] ) {
@@ -88,7 +88,7 @@ function se_get_day_element_classes( $day_data ): string {
  *
  * @return string
  */
-function se_get_day_mobile_classes( $day_data ): string {
+function simple_events_get_day_mobile_classes( $day_data ): string {
 
 	$classes = array( 'simple-events-calendar-month-mobile-events__mobile-day' );
 
@@ -106,7 +106,7 @@ function se_get_day_mobile_classes( $day_data ): string {
  *
  * @return string
  */
-function se_get_mobile_day_id( $day_data ): string {
+function simple_events_get_mobile_day_id( $day_data ): string {
 	return sprintf( 'simple-events-calendar-mobile__day-%s', $day_data['date_formatted'] );
 }
 
@@ -119,7 +119,7 @@ function se_get_mobile_day_id( $day_data ): string {
  *
  * @return boolean Returns true if the event should be hidden, false otherwise.
  */
-function se_hide_event( $attributes, $day ): bool {
+function simple_events_hide_event( $attributes, $day ): bool {
 	if ( ! $attributes['hideNeighbourEvents'] ) {
 		return false;
 	}
@@ -135,7 +135,7 @@ function se_hide_event( $attributes, $day ): bool {
  *
  * @return boolean Returns true if any of the attributes are valid colors, false otherwise.
  */
-function se_verify_attributes( $attributes, $prefix ): bool {
+function simple_events_verify_attributes( $attributes, $prefix ): bool {
 	$text_color_bool   = isset( $attributes[ $prefix . 'Color' ] ) && sanitize_hex_color( $attributes[ $prefix . 'Color' ] );
 	$bg_color_bool     = isset( $attributes[ $prefix . 'Bg' ] ) && sanitize_hex_color( $attributes[ $prefix . 'Bg' ] );
 	$border_color_bool = isset( $attributes[ $prefix . 'Border' ] ) && sanitize_hex_color( $attributes[ $prefix . 'Border' ] );
@@ -156,7 +156,7 @@ function se_verify_attributes( $attributes, $prefix ): bool {
  *
  * @return string The updated customized CSS string.
  */
-function se_generate_repeated_css( $attributes, $prefix, &$customized_css ): string {
+function simple_events_generate_repeated_css( $attributes, $prefix, &$customized_css ): string {
 
 	if ( isset( $attributes[ $prefix . 'Color' ] ) && sanitize_hex_color( $attributes[ $prefix . 'Color' ] ) ) {
 		$customized_css .= sprintf(
@@ -188,40 +188,40 @@ function se_generate_repeated_css( $attributes, $prefix, &$customized_css ): str
  *
  * @return string The customized CSS string.
  */
-function se_apply_customization( $attributes ): string {
+function simple_events_apply_customization( $attributes ): string {
 
 	$customized_css = '';
 
-	if ( se_verify_attributes( $attributes, 'upcomingDays' ) ) {
+	if ( simple_events_verify_attributes( $attributes, 'upcomingDays' ) ) {
 		// Customization for Upcoming Days
 		$customized_css .= '.simple-events-calendar {
 			.simple-events-calendar-month__day--upcoming {';
 
-		se_generate_repeated_css( $attributes, 'upcomingDays', $customized_css );
+		simple_events_generate_repeated_css( $attributes, 'upcomingDays', $customized_css );
 	}
 
-	if ( se_verify_attributes( $attributes, 'eventDays' ) ) {
+	if ( simple_events_verify_attributes( $attributes, 'eventDays' ) ) {
 		// Customization for Event Days
 		$customized_css .= '.simple-events-calendar {
 			.simple-events-calendar-month__day--has-events {';
 
-		se_generate_repeated_css( $attributes, 'eventDays', $customized_css );
+		simple_events_generate_repeated_css( $attributes, 'eventDays', $customized_css );
 	}
 
-	if ( se_verify_attributes( $attributes, 'presentDay' ) ) {
+	if ( simple_events_verify_attributes( $attributes, 'presentDay' ) ) {
 		// Customization for Present Day
 		$customized_css .= '.simple-events-calendar {
 			.simple-events-calendar-month__day--active {';
 
-		se_generate_repeated_css( $attributes, 'presentDay', $customized_css );
+		simple_events_generate_repeated_css( $attributes, 'presentDay', $customized_css );
 	}
 
-	if ( se_verify_attributes( $attributes, 'pastDays' ) ) {
+	if ( simple_events_verify_attributes( $attributes, 'pastDays' ) ) {
 		// Customization for Past Days
 		$customized_css .= '.simple-events-calendar {
 			.simple-events-calendar-month__day--past {';
 
-		se_generate_repeated_css( $attributes, 'pastDays', $customized_css );
+		simple_events_generate_repeated_css( $attributes, 'pastDays', $customized_css );
 	}
 
 	if ( isset( $attributes['monthYearColor'] ) && sanitize_hex_color( $attributes['monthYearColor'] ) ) {

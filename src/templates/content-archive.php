@@ -9,15 +9,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // If the post type is an event date, change post context to its parent.
-if ( get_post_type() === SE_Event_Post_Type::$event_date_post_type ) {
+if ( get_post_type() === Simple_Events_Event_Post_Type::$event_date_post_type ) {
 	global $post;
-	$se_post_event_date = get_post( get_the_ID() );
+	$simple_events_post_event_date = get_post( get_the_ID() );
 	// Validate that we have a valid event date post with a parent
-	if ( $se_post_event_date && $se_post_event_date->post_parent ) {
-		$se_parent_post = get_post( $se_post_event_date->post_parent );
-		if ( $se_parent_post ) {
-			$post                = $se_parent_post; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
-			$post->event_date_id = $se_post_event_date->ID;
+	if ( $simple_events_post_event_date && $simple_events_post_event_date->post_parent ) {
+		$simple_events_parent_post = get_post( $simple_events_post_event_date->post_parent );
+		if ( $simple_events_parent_post ) {
+			$post                = $simple_events_parent_post; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
+			$post->event_date_id = $simple_events_post_event_date->ID;
 		}
 	}
 }
@@ -26,8 +26,8 @@ if ( get_post_type() === SE_Event_Post_Type::$event_date_post_type ) {
 <li id="post-<?php the_ID(); ?>" <?php post_class(); ?>>
 	<?php
 		/**
-		 * Hook: se_archive_content.
+		 * Hook: simple_events_archive_content.
 		 */
-		do_action( 'se_archive_content' );
+		do_action( 'simple_events_archive_content' );
 	?>
 </li>

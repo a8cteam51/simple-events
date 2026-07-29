@@ -13,7 +13,7 @@ get_header( 'events' );
 /**
  * Hook: simple_events_before_main_content.
  */
-do_action( 'se_before_main_content' );
+do_action( 'simple_events_before_main_content' );
 
 ?>
 
@@ -27,7 +27,7 @@ do_action( 'se_before_main_content' );
 		/**
 		 * Hook: simple_events_archive_start.
 		 */
-		do_action( 'se_archive_start' );
+		do_action( 'simple_events_archive_start' );
 	?>
 
 	<ul class="simple-events-archive">
@@ -43,7 +43,7 @@ do_action( 'se_before_main_content' );
 		/**
 		 * Hook: simple_events_archive_end.
 		 */
-		do_action( 'se_archive_end' );
+		do_action( 'simple_events_archive_end' );
 	?>
 <?php else : ?>
 	<p><?php esc_html_e( 'No events were found matching your selection.', 'simple-events' ); ?></p>
@@ -54,6 +54,6 @@ do_action( 'se_before_main_content' );
 /**
  * Hook: simple_events_after_main_content.
  */
-do_action( 'se_after_main_content' );
+do_action( 'simple_events_after_main_content' );
 
 get_footer( 'events' );

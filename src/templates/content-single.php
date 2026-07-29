@@ -12,8 +12,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 <div id="post-<?php the_ID(); ?>" <?php post_class(); ?>>
 	<?php
 		/**
-		 * Hook: se_archive_content.
+		 * Hook: simple_events_archive_content.
 		 */
-		do_action( 'se_single_content' );
+		do_action( 'simple_events_single_content' );
 	?>
 </div>

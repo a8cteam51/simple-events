@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Event Date Class.
  */
-class SE_Event_Dates {
+class Simple_Events_Event_Dates {
 
 
 	/**
@@ -113,7 +113,7 @@ class SE_Event_Dates {
 		}
 
 		try {
-			$dates = se_event_get_event_dates( $event_id );
+			$dates = simple_events_event_get_event_dates( $event_id );
 		} catch ( \Throwable $th ) {
 			return new WP_REST_Response(
 				array(
@@ -166,7 +166,7 @@ class SE_Event_Dates {
 			function ( $date ) {
 				return $date['id'];
 			},
-			se_event_get_event_dates( $event_id )
+			simple_events_event_get_event_dates( $event_id )
 		);
 
 		// Iterate over the existing dates and delete any that are not in the new dates.
@@ -179,7 +179,7 @@ class SE_Event_Dates {
 		foreach ( $dates as $date ) {
 			// If we dont have a date ID, create a new date.
 			if ( ! isset( $date['id'] ) ) {
-				$event_date = se_event_create_event_date( $event_id, $date );
+				$event_date = simple_events_event_create_event_date( $event_id, $date );
 				// If we dont have a WP_Post object, return an error.
 				if ( ! $event_date ) {
 					return new WP_REST_Response(
@@ -203,11 +203,11 @@ class SE_Event_Dates {
 		}
 
 		// Update the event version.
-		update_post_meta( $event_id, 'se_event_version', SE_MIGRATION_VERSION );
+		update_post_meta( $event_id, 'se_event_version', SIMPLE_EVENTS_MIGRATION_VERSION );
 
 		// Re fetch the event dates.
 		try {
-			$dates = se_event_get_event_dates( $event_id );
+			$dates = simple_events_event_get_event_dates( $event_id );
 		} catch ( \Throwable $th ) {
 			return new WP_REST_Response(
 				array(
@@ -256,13 +256,13 @@ class SE_Event_Dates {
 		// Update the legacy meta values.
 		update_post_meta( $event_id, 'se_event_dates', $legacy_dates );
 
-		se_event_update_event_query_dates( $event_id );
+		simple_events_event_update_event_query_dates( $event_id );
 	}
 
 	/**
 	 * Find event dates.
 	 *
-	 * @deprecated 2.2.0 Use SE_Event_Query_Utils::get_event_dates_for_range() instead.
+	 * @deprecated 2.2.0 Use Simple_Events_Event_Query_Utils::get_event_dates_for_range() instead.
 	 *
 	 * @param string  $start_date         The start date as a timestamp.
 	 * @param string  $end_date           The end date as a timestamp.
@@ -272,9 +272,9 @@ class SE_Event_Dates {
 	 * @return array
 	 */
 	public static function find_event_dates( $start_date, $end_date, $hide_from_calendar, $hide_from_feed ): array { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
-		_deprecated_function( __METHOD__, '2.2.0', 'SE_Event_Query_Utils::get_event_dates_for_range()' );
+		_deprecated_function( __METHOD__, '2.2.0', 'Simple_Events_Event_Query_Utils::get_event_dates_for_range()' );
 
-		$results = SE_Event_Query_Utils::get_event_dates_for_range( (int) $start_date, (int) $end_date );
+		$results = Simple_Events_Event_Query_Utils::get_event_dates_for_range( (int) $start_date, (int) $end_date );
 
 		// Remove the event dates that are hidden from the calendar or feed.
 		return array_filter(
@@ -288,7 +288,7 @@ class SE_Event_Dates {
 	/**
 	 * Get the events dates for a given date.
 	 *
-	 * @deprecated 2.2.0 Use SE_Event_Query_Utils::get_event_dates_for_range() instead (Returns all results, doesnt exclude hidden events).
+	 * @deprecated 2.2.0 Use Simple_Events_Event_Query_Utils::get_event_dates_for_range() instead (Returns all results, doesnt exclude hidden events).
 	 *
 	 * @param string  $date               The date to get the events for.
 	 * @param boolean $hide_from_calendar Legacy flag, no longer used in replacement function.
@@ -297,13 +297,13 @@ class SE_Event_Dates {
 	 * @return array
 	 */
 	public static function get_event_dates_for_date( $date, $hide_from_calendar = false, $hide_from_feed = false ): array { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter
-		_deprecated_function( __METHOD__, '2.2.0', 'SE_Event_Query_Utils::get_event_dates_for_range()' );
+		_deprecated_function( __METHOD__, '2.2.0', 'Simple_Events_Event_Query_Utils::get_event_dates_for_range()' );
 
 		$date_time = DateTime::createFromFormat( 'Y-m-d H:i:s', $date . ' 00:00:00', wp_timezone() );
 		if ( false === $date_time ) {
 			return array();
 		}
-		$results = SE_Event_Query_Utils::get_event_dates_for_range(
+		$results = Simple_Events_Event_Query_Utils::get_event_dates_for_range(
 			$date_time->setTime( 0, 0, 0 )->getTimestamp(),
 			$date_time->setTime( 23, 59, 59 )->getTimestamp()
 		);
@@ -320,15 +320,15 @@ class SE_Event_Dates {
 	/**
 	 * Map the events dates to the event dates.
 	 *
-	 * @deprecated 2.2.0 Use SE_Event_Query_Utils::map_events_dates_to_event_dates() instead.
+	 * @deprecated 2.2.0 Use Simple_Events_Event_Query_Utils::map_events_dates_to_event_dates() instead.
 	 *
 	 * @param array $events_dates The events dates.
 	 *
 	 * @return array{event_id: int, event_date_id: int, event_start_date: string, event_end_date: string, event_all_day: bool, event_hide_from_calendar: bool, event_hide_from_feed: bool}
 	 */
 	public static function map_events_dates_to_event_dates( $events_dates ): array {
-		_deprecated_function( __METHOD__, '2.2.0', 'SE_Event_Query_Utils::map_events_dates_to_event_dates()' );
-		return SE_Event_Query_Utils::map_events_dates_to_event_dates( $events_dates );
+		_deprecated_function( __METHOD__, '2.2.0', 'Simple_Events_Event_Query_Utils::map_events_dates_to_event_dates()' );
+		return Simple_Events_Event_Query_Utils::map_events_dates_to_event_dates( $events_dates );
 	}
 
 	/**
@@ -341,7 +341,7 @@ class SE_Event_Dates {
 	public static function delete_all_event_dates( $event_id ): void {
 		// Get all the event dates.
 		try {
-			$event_dates = se_event_get_event_dates( $event_id );
+			$event_dates = simple_events_event_get_event_dates( $event_id );
 		} catch ( \Exception $e ) {
 			// If we can't get the dates, there's nothing to delete
 			return;
@@ -364,4 +364,4 @@ class SE_Event_Dates {
 		wp_delete_post( $event_date_id, true );
 	}
 }
-SE_Event_Dates::init();
+Simple_Events_Event_Dates::init();

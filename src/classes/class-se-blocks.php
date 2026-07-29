@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Blocks Class.
  */
-class SE_Blocks {
+class Simple_Events_Blocks {
 	/**
 	 * Blocks namespace.
 	 *
@@ -26,7 +26,7 @@ class SE_Blocks {
 	 */
 	public static function init() {
 		// Load assets if `build` folder exists.
-		if ( file_exists( SE_PLUGIN_DIR . '/build' ) ) {
+		if ( file_exists( SIMPLE_EVENTS_PLUGIN_DIR . '/build' ) ) {
 			add_action( 'block_categories_all', array( __CLASS__, 'block_categories' ), 10, 2 );
 			add_action( 'enqueue_block_editor_assets', array( __CLASS__, 'block_assets' ), 10 );
 			add_action( 'init', array( __CLASS__, 'register_block_type' ), 10 );
@@ -44,7 +44,7 @@ class SE_Blocks {
 								esc_html__( 'Your installation of the Simple Events plugin is incomplete. Please run %1$s and %2$s within the %3$s directory.', 'simple-events' ),
 								'<code>npm install</code>',
 								'<code>npm run build</code>',
-								'<code>' . esc_html( str_replace( ABSPATH, '', SE_PLUGIN_DIR ) ) . '</code>'
+								'<code>' . esc_html( str_replace( ABSPATH, '', SIMPLE_EVENTS_PLUGIN_DIR ) ) . '</code>'
 							);
 							?>
 						</p>
@@ -65,7 +65,7 @@ class SE_Blocks {
 		if ( has_block( 'simple-events/calendar', $post_id ) ) {
 			$all_blocks     = parse_blocks( get_the_content( $post_id ) );
 			$calendar_block = array_search( 'simple-events/calendar', array_column( $all_blocks, 'blockName' ), true );
-			wp_add_inline_style( 'simple-events-calendar-style', esc_html( se_apply_customization( $all_blocks[ $calendar_block ]['attrs'] ) ) );
+			wp_add_inline_style( 'simple-events-calendar-style', esc_html( simple_events_apply_customization( $all_blocks[ $calendar_block ]['attrs'] ) ) );
 		}
 	}
 
@@ -122,8 +122,8 @@ class SE_Blocks {
 		$block_settings['postType']         = get_post_type();
 
 		// Pass through new event data information.
-		$block_settings['eventVersion']      = SE_Event_Post_Type::$current_event_version;
-		$block_settings['eventDatePostType'] = SE_Event_Post_Type::$event_date_post_type;
+		$block_settings['eventVersion']      = Simple_Events_Event_Post_Type::$current_event_version;
+		$block_settings['eventDatePostType'] = Simple_Events_Event_Post_Type::$event_date_post_type;
 		$block_settings['syncDatesNonce']    = wp_create_nonce( 'se_event_nonce' );
 
 		wp_localize_script(
@@ -132,12 +132,12 @@ class SE_Blocks {
 			$block_settings
 		);
 
-		if ( file_exists( SE_PLUGIN_DIR . '/build/variations/index.asset.php' ) ) {
-			$variations = include_once SE_PLUGIN_DIR . '/build/variations/index.asset.php';
+		if ( file_exists( SIMPLE_EVENTS_PLUGIN_DIR . '/build/variations/index.asset.php' ) ) {
+			$variations = include_once SIMPLE_EVENTS_PLUGIN_DIR . '/build/variations/index.asset.php';
 
 			wp_enqueue_script(
 				'se-block-variations',
-				SE_PLUGIN_URL . '/build/variations/index.js',
+				SIMPLE_EVENTS_PLUGIN_URL . '/build/variations/index.js',
 				$variations['dependencies'],
 				$variations['version'],
 				true
@@ -153,7 +153,7 @@ class SE_Blocks {
 	public static function register_block_type() {
 		// Event Info.
 		register_block_type(
-			SE_PLUGIN_DIR . '/build/blocks/event-info',
+			SIMPLE_EVENTS_PLUGIN_DIR . '/build/blocks/event-info',
 			array(
 				'render_callback' => array( __CLASS__, 'event_info_render' ),
 			)
@@ -161,18 +161,18 @@ class SE_Blocks {
 
 		// Event Tickets.
 		register_block_type(
-			SE_PLUGIN_DIR . '/build/blocks/event-tickets',
+			SIMPLE_EVENTS_PLUGIN_DIR . '/build/blocks/event-tickets',
 			array(
 				'render_callback' => array( __CLASS__, 'event_tickets_render' ),
 			)
 		);
 
 		// Inner Blocks.
-		register_block_type( SE_PLUGIN_DIR . '/build/blocks/inner-blocks' );
+		register_block_type( SIMPLE_EVENTS_PLUGIN_DIR . '/build/blocks/inner-blocks' );
 
 		// Upcoming Events.
 		register_block_type(
-			SE_PLUGIN_DIR . '/build/blocks/upcoming-events',
+			SIMPLE_EVENTS_PLUGIN_DIR . '/build/blocks/upcoming-events',
 			array(
 				'render_callback' => array( __CLASS__, 'upcoming_events_render' ),
 			)
@@ -180,7 +180,7 @@ class SE_Blocks {
 
 		// Next Event Countdown.
 		register_block_type(
-			SE_PLUGIN_DIR . '/build/blocks/countdown',
+			SIMPLE_EVENTS_PLUGIN_DIR . '/build/blocks/countdown',
 			array(
 				'render_callback' => array( __CLASS__, 'countdown_render' ),
 			)
@@ -188,7 +188,7 @@ class SE_Blocks {
 
 		// Calendar View.
 		register_block_type(
-			SE_PLUGIN_DIR . '/build/blocks/calendar',
+			SIMPLE_EVENTS_PLUGIN_DIR . '/build/blocks/calendar',
 			array(
 				'render_callback' => array( __CLASS__, 'calendar_render' ),
 			)
@@ -196,7 +196,7 @@ class SE_Blocks {
 
 		// Event meta in query loop.
 		register_block_type(
-			SE_PLUGIN_DIR . '/build/blocks/loop-event-info',
+			SIMPLE_EVENTS_PLUGIN_DIR . '/build/blocks/loop-event-info',
 			array(
 				'render_callback' => array( __CLASS__, 'loop_event_info_render' ),
 			)
@@ -204,7 +204,7 @@ class SE_Blocks {
 
 		// Event external links.
 		register_block_type(
-			SE_PLUGIN_DIR . '/build/blocks/external-link',
+			SIMPLE_EVENTS_PLUGIN_DIR . '/build/blocks/external-link',
 			array(
 				'render_callback' => array( __CLASS__, 'loop_event_external_link_render' ),
 			)
@@ -212,7 +212,7 @@ class SE_Blocks {
 
 		// Past Events Notice
 		register_block_type(
-			SE_PLUGIN_DIR . '/build/blocks/past-events-notice',
+			SIMPLE_EVENTS_PLUGIN_DIR . '/build/blocks/past-events-notice',
 			array(
 				'render_callback' => array( __CLASS__, 'past_events_notice_render' ),
 			)
@@ -241,12 +241,12 @@ class SE_Blocks {
 
 		$post_ID = isset( $block->context['postId'] ) ? $block->context['postId'] : get_the_ID();
 
-		$date_display_formatter = new SE_Date_Display_Formatter( $post_ID );
+		$date_display_formatter = new Simple_Events_Date_Display_Formatter( $post_ID );
 
 		$output = '';
 
 		// Event time / date.
-		$event_dates = se_event_get_event_dates( $post_ID );
+		$event_dates = simple_events_event_get_event_dates( $post_ID );
 
 		// Previewing?
 		if ( ! empty( $attributes['eventDates'] ) ) {
@@ -274,7 +274,7 @@ class SE_Blocks {
 				$ts = null;
 			}
 
-			$now = se_create_date_time_from_timestamp( time(), $ts )->getTimestamp();
+			$now = simple_events_create_date_time_from_timestamp( time(), $ts )->getTimestamp();
 
 			// Remove any dates that have passed.
 			$event_dates = array_filter(
@@ -306,7 +306,7 @@ class SE_Blocks {
 			 * @param string $date_heading The HTML used to display the date heading.
 			 * @param int    $dates_count The number of event dates.
 			 */
-			$dates_output .= apply_filters( 'se_event_info_date_heading', $date_heading, $dates_count );
+			$dates_output .= apply_filters( 'simple_events_event_info_date_heading', $date_heading, $dates_count );
 			// If we have a header date and 2 or more dates, we need to exclude the current date from the list.
 			if ( ( $has_header_date && $dates_count > 1 ) || ! $has_header_date ) {
 				$dates_output .= $date_display_formatter->render_date_list( $event_dates, ( $has_header_date && $date_display_formatter->is_treating_each_date_as_own_event() ) );
@@ -356,7 +356,7 @@ class SE_Blocks {
 			}
 
 			if ( ! empty( $event_link ) ) {
-				$cta = apply_filters( 'se_event_external_link_text', $event_link_label, $event_link );
+				$cta = apply_filters( 'simple_events_event_external_link_text', $event_link_label, $event_link );
 
 				$output .= '<p><a class="wp-block-se-event-link" href="' . esc_url( $event_link ) . '" target="_blank" rel="nofollow">' . $cta . '</a></p>';
 			}
@@ -367,7 +367,7 @@ class SE_Blocks {
 		// Add "Add to calendar links" if the attribute is set to true.
 		$calendar_links = get_post_meta( $post_ID, 'se_event_add_calendar_links', true );
 		if ( $calendar_links ) {
-			$output .= se_template_calendar_links( false );
+			$output .= simple_events_template_calendar_links( false );
 		}
 
 		// Maybe show the event passes message.
@@ -523,7 +523,7 @@ class SE_Blocks {
 
 			// By default shows the "mixed" feed type (no meta_query).
 			$events_query_args = array(
-				'post_type'      => SE_Event_Post_Type::$event_date_post_type,
+				'post_type'      => Simple_Events_Event_Post_Type::$event_date_post_type,
 				'post_status'    => 'publish',
 				'posts_per_page' => absint( $attributes['count'] ),
 			);
@@ -584,21 +584,21 @@ class SE_Blocks {
 			$events_query_args['order']    = $feed_order;
 
 			// Add unique parents filtering if not treating each date as own event
-			if ( ! se_event_treat_each_date_as_own_event() ) {
+			if ( ! simple_events_event_treat_each_date_as_own_event() ) {
 				$events_query_args['unique_parents'] = true;
 				$events_query_args['feed_order']     = $feed_order;
 			}
 
 			// Always ensure the parent event is published (also enforces unique parents above when set).
-			add_filter( 'posts_where', array( 'SE_Event_Query_Utils', 'filter_event_dates_where' ), 10, 2 );
+			add_filter( 'posts_where', array( 'Simple_Events_Event_Query_Utils', 'filter_event_dates_where' ), 10, 2 );
 
 			$show_year_dividers = ! empty( $attributes['showYearDividers'] );
 
 			$events_query = new \WP_Query( $events_query_args );
 
 			// Add filter to modify posts for event_date_id if not treating each date as own event
-			if ( ! se_event_treat_each_date_as_own_event() ) {
-				add_filter( 'the_posts', array( 'SE_Event_Query_Utils', 'modify_event_posts' ), 10, 2 );
+			if ( ! simple_events_event_treat_each_date_as_own_event() ) {
+				add_filter( 'the_posts', array( 'Simple_Events_Event_Query_Utils', 'modify_event_posts' ), 10, 2 );
 			}
 
 			if ( $events_query->have_posts() ) {
@@ -631,9 +631,9 @@ class SE_Blocks {
 			}
 
 			// Clean up filters
-			remove_filter( 'posts_where', array( 'SE_Event_Query_Utils', 'filter_event_dates_where' ), 10 );
-			if ( ! se_event_treat_each_date_as_own_event() ) {
-				remove_filter( 'the_posts', array( 'SE_Event_Query_Utils', 'modify_event_posts' ), 10 );
+			remove_filter( 'posts_where', array( 'Simple_Events_Event_Query_Utils', 'filter_event_dates_where' ), 10 );
+			if ( ! simple_events_event_treat_each_date_as_own_event() ) {
+				remove_filter( 'the_posts', array( 'Simple_Events_Event_Query_Utils', 'modify_event_posts' ), 10 );
 			}
 
 			wp_reset_postdata();
@@ -647,7 +647,7 @@ class SE_Blocks {
 		 * @param array    $events_query_args The built args passed in to the query.
 		 * @param array    $attributes        The attributes passed to the block renderer.
 		 */
-		return apply_filters( 'se_upcoming_events_render', $output, $events_query, $events_query_args, $attributes );
+		return apply_filters( 'simple_events_upcoming_events_render', $output, $events_query, $events_query_args, $attributes );
 	}
 
 	/**
@@ -685,7 +685,7 @@ class SE_Blocks {
 
 		$events_query_args = array(
 			'se_countdown'   => true,
-			'post_type'      => SE_Event_Post_Type::$post_type,
+			'post_type'      => Simple_Events_Event_Post_Type::$post_type,
 			'post_status'    => 'publish',
 			'posts_per_page' => 1,
 			'orderby'        => 'meta_value',
@@ -718,7 +718,7 @@ class SE_Blocks {
 				/**
 				 * Adding filter to manage the use of countdown block in events single post (CPT).
 				 */
-				$start_date = apply_filters( 'se_countdown_start_date', $start_date, $event_id );
+				$start_date = apply_filters( 'simple_events_countdown_start_date', $start_date, $event_id );
 
 				$time_until_start = $start_date * 1000;
 				?>
@@ -764,51 +764,51 @@ class SE_Blocks {
 	 */
 	public static function calendar_render( $attributes = array() ) {
 		$sequential_months = isset( $attributes['sequentialMonths'] ) ? (bool) $attributes['sequentialMonths'] : false;
-		$current_date_time = SE_Calendar::get_instance()->create_date_time( 'now' );
+		$current_date_time = Simple_Events_Calendar::get_instance()->create_date_time( 'now' );
 
 		// If this being loaded on an archive page, ensure event query filters are removed.
-		if ( is_archive() && in_array( get_post_type(), array( SE_Event_Post_Type::$post_type, SE_Event_Post_Type::$event_date_post_type ), true ) ) {
-			SE_Event_Query_Utils::remove_event_query_filters();
+		if ( is_archive() && in_array( get_post_type(), array( Simple_Events_Event_Post_Type::$post_type, Simple_Events_Event_Post_Type::$event_date_post_type ), true ) ) {
+			Simple_Events_Event_Query_Utils::remove_event_query_filters();
 		}
 
 		$current_date = $current_date_time->format( 'Y-m-01' );
-		$month_data   = SE_Calendar::get_instance()->get_month_days( $current_date );
+		$month_data   = Simple_Events_Calendar::get_instance()->get_month_days( $current_date );
 
 		if ( $sequential_months && ! $month_data['month_has_events'] ) {
-			$first_event_month = SE_Calendar::get_instance()->get_next_month_with_events( $current_date_time, false );
+			$first_event_month = Simple_Events_Calendar::get_instance()->get_next_month_with_events( $current_date_time, false );
 			if ( $first_event_month ) {
 				$current_date      = $first_event_month->format( 'Y-m-01' );
-				$month_data        = SE_Calendar::get_instance()->get_month_days( $current_date );
-				$current_date_time = SE_Calendar::get_instance()->create_date_time( $current_date );
+				$month_data        = Simple_Events_Calendar::get_instance()->get_month_days( $current_date );
+				$current_date_time = Simple_Events_Calendar::get_instance()->create_date_time( $current_date );
 			} else {
-				$first_event_month = SE_Calendar::get_instance()->get_previous_month_with_events( $current_date_time, false );
+				$first_event_month = Simple_Events_Calendar::get_instance()->get_previous_month_with_events( $current_date_time, false );
 				if ( $first_event_month ) {
 					$current_date      = $first_event_month->format( 'Y-m-01' );
-					$month_data        = SE_Calendar::get_instance()->get_month_days( $current_date );
-					$current_date_time = SE_Calendar::get_instance()->create_date_time( $current_date );
+					$month_data        = Simple_Events_Calendar::get_instance()->get_month_days( $current_date );
+					$current_date_time = Simple_Events_Calendar::get_instance()->create_date_time( $current_date );
 				}
 			}
 		}
 
-		$previous_date_time = SE_Calendar::get_instance()->get_previous_month_with_events( $current_date_time, $sequential_months );
-		$next_date_time     = SE_Calendar::get_instance()->get_next_month_with_events( $current_date_time, $sequential_months );
+		$previous_date_time = Simple_Events_Calendar::get_instance()->get_previous_month_with_events( $current_date_time, $sequential_months );
+		$next_date_time     = Simple_Events_Calendar::get_instance()->get_next_month_with_events( $current_date_time, $sequential_months );
 
 		if ( ! $sequential_months && ! $month_data['month_has_events'] ) {
 			if ( $next_date_time ) {
 				$current_date   = $next_date_time->format( 'Y-m-01' );
-				$month_data     = SE_Calendar::get_instance()->get_month_days( $current_date );
-				$next_date_time = SE_Calendar::get_instance()->get_next_month_with_events( $next_date_time, false );
+				$month_data     = Simple_Events_Calendar::get_instance()->get_month_days( $current_date );
+				$next_date_time = Simple_Events_Calendar::get_instance()->get_next_month_with_events( $next_date_time, false );
 			} elseif ( $previous_date_time ) {
 				$current_date       = $previous_date_time->format( 'Y-m-01' );
-				$month_data         = SE_Calendar::get_instance()->get_month_days( $current_date );
-				$previous_date_time = SE_Calendar::get_instance()->get_previous_month_with_events( $previous_date_time, false );
+				$month_data         = Simple_Events_Calendar::get_instance()->get_month_days( $current_date );
+				$previous_date_time = Simple_Events_Calendar::get_instance()->get_previous_month_with_events( $previous_date_time, false );
 			}
 		}
 
 		// Passing Attributes to the calendar block. Required as the API request replaces the block attribute with default array
 		wp_add_inline_script( 'simple-events-calendar-view-script', 'const attributes = ' . wp_json_encode( $attributes ) . ';', 'before' );
 
-		$output = SE_Template_Loader::get_template_part(
+		$output = Simple_Events_Template_Loader::get_template_part(
 			'calendar/calendar',
 			'container',
 			true,
@@ -840,7 +840,7 @@ class SE_Blocks {
 		$output        = '';
 		$prefix        = '';
 		$post_ID       = ( isset( $attributes['thePostId'] ) && $attributes['thePostId'] > 0 ) ? $attributes['thePostId'] : $block->context['postId'];
-		$event_date_id = $post instanceof \WP_Post && property_exists( $post, 'event_date_id' ) && is_numeric( $post->event_date_id ) && se_event_treat_each_date_as_own_event()
+		$event_date_id = $post instanceof \WP_Post && property_exists( $post, 'event_date_id' ) && is_numeric( $post->event_date_id ) && simple_events_event_treat_each_date_as_own_event()
 			? absint( $post->event_date_id )
 			: null;
 
@@ -850,13 +850,13 @@ class SE_Blocks {
 		// Based on the feed type, set the get_date_function
 		switch ( $attributes['feedType'] ?? 'default' ) {
 			case 'upcoming':
-				$get_date_function = 'se_event_get_future_dates';
+				$get_date_function = 'simple_events_event_get_future_dates';
 				break;
 			case 'past':
-				$get_date_function = 'se_event_get_past_dates';
+				$get_date_function = 'simple_events_event_get_past_dates';
 				break;
 			default:
-				$get_date_function = 'se_event_get_formatted_dates';
+				$get_date_function = 'simple_events_event_get_formatted_dates';
 				break;
 		}
 
@@ -867,10 +867,10 @@ class SE_Blocks {
 		if ( ! empty( $post_ID ) ) {
 			switch ( $attributes['metaName'] ) {
 				case 'location':
-					$output = se_event_get_location( $post_ID );
+					$output = simple_events_event_get_location( $post_ID );
 					break;
 				case 'venue':
-					$output = se_event_get_venue( $post_ID );
+					$output = simple_events_event_get_venue( $post_ID );
 					break;
 				case 'dates':
 					$output = $get_date_function( $post_ID, $event_date_id, false, false, null, $date_format, $time_format );
@@ -908,7 +908,7 @@ class SE_Blocks {
 
 		// Add calendar links if the attribute is set to true.
 		if ( isset( $attributes['addCalendarLinks'] ) && $attributes['addCalendarLinks'] ) {
-			$output .= se_template_calendar_links( false );
+			$output .= simple_events_template_calendar_links( false );
 		}
 
 		$allowed_tags = array( 'div', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6' );
@@ -954,7 +954,7 @@ class SE_Blocks {
 		$has_meta    = get_post_meta( $post_ID, 'se_event_external_link', true );
 		$event_link  = $has_meta ? $has_meta : get_the_permalink( $post_ID );
 		$link_text   = $has_meta ? __( 'Tickets', 'simple-events' ) : __( 'Details', 'simple-events' );
-		$cta         = apply_filters( 'se_event_loop_external_link_text', $link_text, $has_meta );
+		$cta         = apply_filters( 'simple_events_event_loop_external_link_text', $link_text, $has_meta );
 		$link_target = $has_meta && ! strstr( wp_parse_url( $has_meta, PHP_URL_HOST ), wp_parse_url( get_site_url(), PHP_URL_HOST ) ) ? 'target="_blank" rel="nofollow"' : '';
 
 		if ( ! $event_link ) {
@@ -982,7 +982,7 @@ class SE_Blocks {
 	public static function past_events_notice_render( $attributes, $content ) {
 		if (
 			'se-event' !== get_post_type() || // If not an event.
-			! se_event_is_expired( get_the_ID() ) || // If event has expired.
+			! simple_events_event_is_expired( get_the_ID() ) || // If event has expired.
 			defined( 'REST_REQUEST' ) // If event is being edited.
 		) {
 			return;
@@ -1000,13 +1000,13 @@ class SE_Blocks {
 	 * @return array The asset file contents.
 	 */
 	public static function get_asset_file( $file_path ) {
-		$asset_path = SE_PLUGIN_DIR . $file_path . '.asset.php';
+		$asset_path = SIMPLE_EVENTS_PLUGIN_DIR . $file_path . '.asset.php';
 
 		return file_exists( $asset_path )
 			? include $asset_path
 			: array(
 				'dependencies' => array(),
-				'version'      => SE_VERSION,
+				'version'      => SIMPLE_EVENTS_VERSION,
 			);
 	}
 
@@ -1024,4 +1024,4 @@ class SE_Blocks {
 	}
 }
 
-SE_Blocks::init();
+Simple_Events_Blocks::init();

@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Blocks Class.
  */
-class SE_Block_Variations {
+class Simple_Events_Block_Variations {
 
 	/**
 	 * Parsed variation block.
@@ -31,7 +31,7 @@ class SE_Block_Variations {
 	 * @return void
 	 */
 	public function init() {
-		if ( file_exists( SE_PLUGIN_DIR . '/build' ) ) {
+		if ( file_exists( SIMPLE_EVENTS_PLUGIN_DIR . '/build' ) ) {
 			add_action( 'pre_render_block', array( $this, 'update_query' ), 10, 2 );
 			add_filter( 'rest_se-event_query', array( $this, 'set_admin_query' ), 10, 2 );
 		}
@@ -99,7 +99,7 @@ class SE_Block_Variations {
 		}
 
 		// Change the post type.
-		$query['post_type'] = SE_Event_Post_Type::$event_date_post_type;
+		$query['post_type'] = Simple_Events_Event_Post_Type::$event_date_post_type;
 
 		return $this->set_event_query_args( $query, $feed_type, $feed_order );
 	}
@@ -113,7 +113,7 @@ class SE_Block_Variations {
 	 * @return array
 	 */
 	public function modify_event_posts( $posts, $query ) {
-		return SE_Event_Query_Utils::modify_event_posts( $posts, $query, 'variations' );
+		return Simple_Events_Event_Query_Utils::modify_event_posts( $posts, $query, 'variations' );
 	}
 
 	/**
@@ -147,7 +147,7 @@ class SE_Block_Variations {
 		// the date meta, so the meta-order SQL never gets its `+0 ASC`
 		// form and fix_sort_order can't flip it — the editor preview was
 		// stuck oldest-first regardless of feed order.
-		$args['post_type'] = SE_Event_Post_Type::$event_date_post_type;
+		$args['post_type'] = Simple_Events_Event_Post_Type::$event_date_post_type;
 
 		return $this->set_event_query_args( $args, $feed_type, $feed_order );
 	}
@@ -202,7 +202,7 @@ class SE_Block_Variations {
 		// If we have any taxonomies, we need to ensure they are set correctly.
 		if ( ! empty( $args['tax_query'] ) && is_array( $args['tax_query'] ) ) {
 			// Ensure we only get the correct event date for each
-			$post_ids = SE_Event_Query_Utils::get_child_date_posts_from_tax_query( $args['tax_query'] );
+			$post_ids = Simple_Events_Event_Query_Utils::get_child_date_posts_from_tax_query( $args['tax_query'] );
 			if ( ! empty( $post_ids ) ) {
 				$args['post__in'] = $post_ids;
 			}
@@ -215,13 +215,13 @@ class SE_Block_Variations {
 		$args['unique_parents'] = true;
 		$args['feed_order']     = $feed_order; // Store feed order for use in the WHERE filter
 		// Ensure we only get the correct event date for each parent.
-		add_filter( 'posts_where', array( 'SE_Event_Query_Utils', 'filter_event_dates_where' ), 10, 2 );
+		add_filter( 'posts_where', array( 'Simple_Events_Event_Query_Utils', 'filter_event_dates_where' ), 10, 2 );
 
 		// Add a filter to modify the posts results.
-		add_filter( 'the_posts', array( 'SE_Event_Query_Utils', 'modify_event_posts' ), 10, 2 );
+		add_filter( 'the_posts', array( 'Simple_Events_Event_Query_Utils', 'modify_event_posts' ), 10, 2 );
 
 		// Add a custom order by.
-		add_filter( 'posts_orderby', array( 'SE_Event_Query_Utils', 'fix_sort_order' ), 10, 2 );
+		add_filter( 'posts_orderby', array( 'Simple_Events_Event_Query_Utils', 'fix_sort_order' ), 10, 2 );
 
 		/**
 		 * A filter to customize the args of the event query loop.
@@ -230,7 +230,7 @@ class SE_Block_Variations {
 		 * @param string|null    $feed_type        The feed type.
 		 * @param string|null    $feed_order       The feed order.
 		 */
-		return apply_filters( 'se_pre_set_event_query_loop_args', $args, $feed_type, $feed_order );
+		return apply_filters( 'simple_events_pre_set_event_query_loop_args', $args, $feed_type, $feed_order );
 	}
 
 	/**
@@ -244,8 +244,8 @@ class SE_Block_Variations {
 	 * @return string
 	 */
 	public function fix_editor_sort_order( $orderby, $query ) {
-		return SE_Event_Query_Utils::fix_sort_order( $orderby, $query );
+		return Simple_Events_Event_Query_Utils::fix_sort_order( $orderby, $query );
 	}
 }
 
-( new SE_Block_Variations() )->init();
+( new Simple_Events_Block_Variations() )->init();

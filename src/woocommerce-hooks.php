@@ -12,7 +12,7 @@
  *
  * @return void
  */
-function se_autocomplete_ticket_order( $order_id ) {
+function simple_events_autocomplete_ticket_order( $order_id ) {
 	$se_options           = get_option( 'se_options' );
 	$perform_autocomplete = isset( $se_options['autocomplete_ticket_order'] ) ? $se_options['autocomplete_ticket_order'] : false;
 
@@ -46,7 +46,7 @@ function se_autocomplete_ticket_order( $order_id ) {
 }
 
 
-add_action( 'woocommerce_thankyou', 'se_autocomplete_ticket_order' );
+add_action( 'woocommerce_thankyou', 'simple_events_autocomplete_ticket_order' );
 
 /**
  * Empty cart before adding tickets.
@@ -56,7 +56,7 @@ add_action( 'woocommerce_thankyou', 'se_autocomplete_ticket_order' );
  *
  * @return boolean
  */
-function se_empty_cart_before_adding_tickets( $passed, $product_id ) {
+function simple_events_empty_cart_before_adding_tickets( $passed, $product_id ) {
 	$se_options = get_option( 'se_options' );
 	$empty_cart = isset( $se_options['empty_cart_before_adding_tickets'] ) ? $se_options['empty_cart_before_adding_tickets'] : false;
 
@@ -71,7 +71,7 @@ function se_empty_cart_before_adding_tickets( $passed, $product_id ) {
 	return $passed;
 }
 
-add_filter( 'woocommerce_add_to_cart_validation', 'se_empty_cart_before_adding_tickets', 10, 2 );
+add_filter( 'woocommerce_add_to_cart_validation', 'simple_events_empty_cart_before_adding_tickets', 10, 2 );
 
 /**
  * Redirect to checkout if skip cart is enabled.
@@ -81,7 +81,7 @@ add_filter( 'woocommerce_add_to_cart_validation', 'se_empty_cart_before_adding_t
  *
  * @return string
  */
-function se_get_checkout_url( $url, $product ) {
+function simple_events_get_checkout_url( $url, $product ) {
 	$se_options = get_option( 'se_options' );
 	$skip_cart  = isset( $se_options['skip_cart'] ) ? $se_options['skip_cart'] : false;
 
@@ -92,4 +92,4 @@ function se_get_checkout_url( $url, $product ) {
 	return $url;
 }
 
-add_filter( 'woocommerce_add_to_cart_redirect', 'se_get_checkout_url', 10, 2 );
+add_filter( 'woocommerce_add_to_cart_redirect', 'simple_events_get_checkout_url', 10, 2 );

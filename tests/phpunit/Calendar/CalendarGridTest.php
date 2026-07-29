@@ -63,7 +63,7 @@ class CalendarGridTest extends WP_UnitTestCase {
 			update_option( 'start_of_week', $start_of_week );
 
 			foreach ( $months as $month ) {
-				$days = SE_Calendar::get_instance()->get_month_days( $month )['days'];
+				$days = Simple_Events_Calendar::get_instance()->get_month_days( $month )['days'];
 
 				$context = sprintf( 'start_of_week=%d month=%s', $start_of_week, $month );
 
@@ -103,7 +103,7 @@ class CalendarGridTest extends WP_UnitTestCase {
 		update_option( 'start_of_week', 1 );
 
 		$month         = '2026-06-01';
-		$days          = SE_Calendar::get_instance()->get_month_days( $month )['days'];
+		$days          = Simple_Events_Calendar::get_instance()->get_month_days( $month )['days'];
 		$days_in_month = (int) ( new DateTime( $month ) )->format( 't' );
 
 		$in_month = array();
@@ -135,7 +135,7 @@ class CalendarGridTest extends WP_UnitTestCase {
 		for ( $start_of_week = 0; $start_of_week <= 6; $start_of_week++ ) {
 			update_option( 'start_of_week', $start_of_week );
 
-			$days = SE_Calendar::get_instance()->get_month_days( $month )['days'];
+			$days = Simple_Events_Calendar::get_instance()->get_month_days( $month )['days'];
 
 			$column = null;
 			foreach ( $days as $index => $day ) {
@@ -165,7 +165,7 @@ class CalendarGridTest extends WP_UnitTestCase {
 		update_option( 'start_of_week', 0 );
 
 		// 1 Mar 2026 is a Sunday.
-		$days = SE_Calendar::get_instance()->get_month_days( '2026-03-01' )['days'];
+		$days = Simple_Events_Calendar::get_instance()->get_month_days( '2026-03-01' )['days'];
 
 		$this->assertSame( '2026-03-01', $days[0]['date']->format( 'Y-m-d' ), 'Grid should open on 1 Mar 2026 with no padding.' );
 		$this->assertFalse( $days[0]['is_other_month'], 'First cell should belong to the target month.' );

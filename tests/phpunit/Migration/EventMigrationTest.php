@@ -24,7 +24,7 @@ class EventMigrationTest extends WP_UnitTestCase {
 			static function ( $post ) {
 				return (int) $post->ID;
 			},
-			SE_Migrate_Events::get_events_to_migrate()
+			Simple_Events_Migrate_Events::get_events_to_migrate()
 		);
 	}
 
@@ -80,7 +80,7 @@ class EventMigrationTest extends WP_UnitTestCase {
 			'An event published from auto-draft should not be flagged for migration.'
 		);
 		$this->assertFalse(
-			SE_Migrate_Events::has_events_to_migrate(),
+			Simple_Events_Migrate_Events::has_events_to_migrate(),
 			'No events should require migration when only a fresh event exists.'
 		);
 	}

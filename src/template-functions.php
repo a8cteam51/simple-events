@@ -15,43 +15,43 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @return integer|null The event date id or null if not set.
  */
-function se_template_get_event_date_id() {
+function simple_events_template_get_event_date_id() {
 	$event_date_id = array_key_exists( 'se-date', $_GET ) ? sanitize_text_field( $_GET['se-date'] ) : null; // phpcs:ignore
 	return is_numeric( $event_date_id ) ? absint( $event_date_id ) : null;
 }
 
-if ( ! function_exists( 'se_template_content_wrapper_start' ) ) {
+if ( ! function_exists( 'simple_events_template_content_wrapper_start' ) ) {
 
 	/**
 	 * Output the start of the page wrapper.
 	 *
 	 * @return void
 	 */
-	function se_template_content_wrapper_start() {
+	function simple_events_template_content_wrapper_start() {
 		echo '<div id="primary" class="content-area"><main id="main" class="site-main" role="main">';
 	}
 }
 
-if ( ! function_exists( 'se_template_content_wrapper_end' ) ) {
+if ( ! function_exists( 'simple_events_template_content_wrapper_end' ) ) {
 
 	/**
 	 * Output the end of the page wrapper.
 	 *
 	 * @return void
 	 */
-	function se_template_content_wrapper_end() {
+	function simple_events_template_content_wrapper_end() {
 		echo '</main></div>';
 	}
 }
 
-if ( ! function_exists( 'se_template_event_archive_title' ) ) {
+if ( ! function_exists( 'simple_events_template_event_archive_title' ) ) {
 
 	/**
 	 * Output the event archive title.
 	 *
 	 * @return void
 	 */
-	function se_template_event_archive_title() {
+	function simple_events_template_event_archive_title() {
 		$permalink = get_permalink();
 
 		global $post;
@@ -64,27 +64,27 @@ if ( ! function_exists( 'se_template_event_archive_title' ) ) {
 	}
 }
 
-if ( ! function_exists( 'se_template_event_single_title' ) ) {
+if ( ! function_exists( 'simple_events_template_event_single_title' ) ) {
 
 	/**
 	 * Output the event single title and past event notice.
 	 *
 	 * @return void
 	 */
-	function se_template_event_single_title() {
+	function simple_events_template_event_single_title() {
 
 		the_title( '<h1 class="product_title entry-title">', '</h1>' );
 	}
 }
 
-if ( ! function_exists( 'se_template_event_thumbnail' ) ) {
+if ( ! function_exists( 'simple_events_template_event_thumbnail' ) ) {
 
 	/**
 	 * Output the event thumbnail.
 	 *
 	 * @return void
 	 */
-	function se_template_event_thumbnail() {
+	function simple_events_template_event_thumbnail() {
 		if ( ! has_post_thumbnail() ) {
 			return;
 		}
@@ -110,7 +110,7 @@ if ( ! function_exists( 'se_template_event_date' ) ) {
 	function se_template_event_date() {
 		_doing_it_wrong( __FUNCTION__, 'Please use the new date formatter class instead.', '2.0.0' );
 
-		$event_dates = se_event_get_dates( get_the_ID() );
+		$event_dates = simple_events_event_get_dates( get_the_ID() );
 
 		if ( ! empty( $event_dates ) ) {
 			$output = false;
@@ -137,15 +137,15 @@ if ( ! function_exists( 'se_template_event_date' ) ) {
 	}
 }
 
-if ( ! function_exists( 'se_template_event_location' ) ) {
+if ( ! function_exists( 'simple_events_template_event_location' ) ) {
 
 	/**
 	 * Output the event location.
 	 *
 	 * @return void
 	 */
-	function se_template_event_location() {
-		$event_location = apply_filters( 'se_archive_event_location', se_event_get_location( get_the_ID() ) );
+	function simple_events_template_event_location() {
+		$event_location = apply_filters( 'simple_events_archive_event_location', simple_events_event_get_location( get_the_ID() ) );
 
 		if ( $event_location ) {
 			echo wp_kses_post( sprintf( '<div class="se-event-location">%s</div>', $event_location ) );
@@ -153,18 +153,18 @@ if ( ! function_exists( 'se_template_event_location' ) ) {
 	}
 }
 
-if ( ! function_exists( 'se_template_event_price' ) ) {
+if ( ! function_exists( 'simple_events_template_event_price' ) ) {
 
 	/**
 	 * Output the event prices.
 	 *
 	 * @return void
 	 */
-	function se_template_event_price() {
+	function simple_events_template_event_price() {
 		$output = '';
 
 		// Get ticket products.
-		$prices = se_event_get_ticket_prices( get_the_ID() );
+		$prices = simple_events_event_get_ticket_prices( get_the_ID() );
 
 		if ( ! empty( $prices ) ) {
 			if ( count( $prices ) > 1 ) {
@@ -193,15 +193,15 @@ if ( ! function_exists( 'se_template_event_price' ) ) {
 	}
 }
 
-if ( ! function_exists( 'se_template_event_ticket_stock' ) ) {
+if ( ! function_exists( 'simple_events_template_event_ticket_stock' ) ) {
 
 	/**
 	 * Output the event stock (number of tickets available).
 	 *
 	 * @return void
 	 */
-	function se_template_event_ticket_stock() {
-		$stock_total = se_event_get_tickets_stock( get_the_ID() );
+	function simple_events_template_event_ticket_stock() {
+		$stock_total = simple_events_event_get_tickets_stock( get_the_ID() );
 
 		if ( ! empty( $stock_total ) ) {
 			echo wp_kses_post( sprintf( '<div class="se-event-stock">%s %s</div>', $stock_total, __( 'tickets left', 'simple-events' ) ) );
@@ -209,16 +209,16 @@ if ( ! function_exists( 'se_template_event_ticket_stock' ) ) {
 	}
 }
 
-if ( ! function_exists( 'se_template_event_more_info' ) ) {
+if ( ! function_exists( 'simple_events_template_event_more_info' ) ) {
 
 	/**
 	 * Output the event more info link.
 	 *
 	 * @return void
 	 */
-	function se_template_event_more_info() {
+	function simple_events_template_event_more_info() {
 		global $post;
-		if ( se_event_treat_each_date_as_own_event() && isset( $post->event_date_id ) ) {
+		if ( simple_events_event_treat_each_date_as_own_event() && isset( $post->event_date_id ) ) {
 			$permalink = get_permalink( $post->post_parent ) . '?se-date=' . $post->event_date_id;
 		} else {
 			$permalink = get_permalink();
@@ -229,14 +229,14 @@ if ( ! function_exists( 'se_template_event_more_info' ) ) {
 	}
 }
 
-if ( ! function_exists( 'se_template_archive_pagination' ) ) {
+if ( ! function_exists( 'simple_events_template_archive_pagination' ) ) {
 
 	/**
 	 * Output the archive paginaton.
 	 *
 	 * @return void
 	 */
-	function se_template_archive_pagination() {
+	function simple_events_template_archive_pagination() {
 		global $wp_query;
 
 		$big = 999999999; // need an unlikely integer.
@@ -257,7 +257,7 @@ if ( ! function_exists( 'se_template_archive_pagination' ) ) {
 }
 
 
-if ( ! function_exists( 'se_template_calendar_links' ) ) {
+if ( ! function_exists( 'simple_events_template_calendar_links' ) ) {
 
 	/**
 	 * Output the calendar export links.
@@ -266,7 +266,7 @@ if ( ! function_exists( 'se_template_calendar_links' ) ) {
 	 *
 	 * @return void|string
 	 */
-	function se_template_calendar_links( bool $echo_output = true ) {
+	function simple_events_template_calendar_links( bool $echo_output = true ) {
 		$event_id = get_the_ID();
 
 		$links = array();
@@ -294,7 +294,7 @@ if ( ! function_exists( 'se_template_calendar_links' ) ) {
 			);
 		}
 
-		$links = apply_filters( 'se_template_calendar_links', $links );
+		$links = apply_filters( 'simple_events_template_calendar_links', $links );
 
 		if ( ! empty( $links ) ) {
 			$links_output = array();
@@ -303,8 +303,8 @@ if ( ! function_exists( 'se_template_calendar_links' ) ) {
 				$links_output[] = sprintf( '<a href="%s" target="_blank" rel="nofollow">%s</a>', $link[1], $link[0] );
 			}
 
-			$separator = apply_filters( 'se_template_calendar_links_separator', '<span class="se-event-calendar-links-separator">,</span> ' );
-			$add_text  = apply_filters( 'se_template_calendar_add_text', esc_html__( 'Add this event to your calendar:', 'simple-events' ) );
+			$separator = apply_filters( 'simple_events_template_calendar_links_separator', '<span class="se-event-calendar-links-separator">,</span> ' );
+			$add_text  = apply_filters( 'simple_events_template_calendar_add_text', esc_html__( 'Add this event to your calendar:', 'simple-events' ) );
 
 			$output = wp_kses_post( sprintf( '<div class="se-event-calendar-export">%s %s</div>', $add_text, implode( $separator, $links_output ) ) );
 		}
@@ -319,38 +319,38 @@ if ( ! function_exists( 'se_template_calendar_links' ) ) {
 }
 
 
-if ( ! function_exists( 'se_template_event_next_previous' ) ) {
+if ( ! function_exists( 'simple_events_template_event_next_previous' ) ) {
 	/**
 	 * Renders the next and previous links for an event.
 	 *
 	 * @return void
 	 */
-	function se_template_event_next_previous(): void {
+	function simple_events_template_event_next_previous(): void {
 		// If we are not rendering the links, bail.
-		if ( ! se_event_show_next_previous() ) {
+		if ( ! simple_events_event_show_next_previous() ) {
 			return;
 		}
 		// Get the link to the calendar page.
-		$calendar_page = se_event_get_calendar_page_link();
+		$calendar_page = simple_events_event_get_calendar_page_link();
 
-		$previous_event = se_event_get_previous_event( get_the_ID(), se_template_get_event_date_id() );
+		$previous_event = simple_events_event_get_previous_event( get_the_ID(), simple_events_template_get_event_date_id() );
 		$previous_link  = null === $previous_event
 			? ''
 			: sprintf(
 				// translators: %1$s is the link to the previous event, %2$s is the title of the previous event.
 				'<a href="%1$s" class="se-event-previous-link">%2$s</a>',
 				esc_url( get_permalink( $previous_event->post_parent ) . '?se-date=' . $previous_event->ID ),
-				apply_filters( 'se_event_previous_link_text', esc_html( '<< ' . get_the_title( $previous_event->post_parent ) ), $previous_event )
+				apply_filters( 'simple_events_event_previous_link_text', esc_html( '<< ' . get_the_title( $previous_event->post_parent ) ), $previous_event )
 			);
 
-		$next_event = se_event_get_next_event( get_the_ID(), se_template_get_event_date_id() );
+		$next_event = simple_events_event_get_next_event( get_the_ID(), simple_events_template_get_event_date_id() );
 		$next_link  = null === $next_event
 			? ''
 			: sprintf(
 				// translators: %1$s is the link to the next event, %2$s is the title of the next event.
 				'<a href="%s" class="se-event-next-link">%s</a>',
 				esc_url( get_permalink( $next_event->post_parent ) . '?se-date=' . $next_event->ID ),
-				apply_filters( 'se_event_next_link_text', esc_html( get_the_title( $next_event->post_parent ) . ' >>' ), $next_event )
+				apply_filters( 'simple_events_event_next_link_text', esc_html( get_the_title( $next_event->post_parent ) . ' >>' ), $next_event )
 			);
 
 		$calendar_link = null !== $calendar_page
@@ -358,7 +358,7 @@ if ( ! function_exists( 'se_template_event_next_previous' ) ) {
 				// translators: %1$s is the link to the calendar page, %2$s is the title of the calendar page.
 				'<a href="%1$s" class="se-event-calendar-link">%2$s</a>',
 				esc_url( $calendar_page ),
-				apply_filters( 'se_event_calendar_link_text', esc_html__( 'View Full Calendar', 'simple-events' ) ),
+				apply_filters( 'simple_events_event_calendar_link_text', esc_html__( 'View Full Calendar', 'simple-events' ) ),
 			)
 			: '';
 
@@ -397,13 +397,13 @@ if ( ! function_exists( 'se_template_event_next_previous' ) ) {
  *
  * @return WP_Post|null The next event or null if none found.
  */
-function se_event_get_next_event( int $event_id, ?int $event_date_id = null ): ?WP_Post {
+function simple_events_event_get_next_event( int $event_id, ?int $event_date_id = null ): ?WP_Post {
 	$options        = get_option( 'se_options' );
 	$allow_grouping = isset( $options['treat_each_date_as_own_event'] ) ? 'on' === $options['treat_each_date_as_own_event'] : false;
 
 	// If we dont have an event date id, we need to get the event dates.
 	if ( ! $event_date_id ) {
-		$event_dates = se_event_get_event_dates( $event_id );
+		$event_dates = simple_events_event_get_event_dates( $event_id );
 		if ( empty( $event_dates ) ) {
 			return null;
 		}
@@ -412,7 +412,7 @@ function se_event_get_next_event( int $event_id, ?int $event_date_id = null ): ?
 
 	// Define the query to get next events.
 	$args = array(
-		'post_type'      => SE_Event_Post_Type::$event_date_post_type,
+		'post_type'      => Simple_Events_Event_Post_Type::$event_date_post_type,
 		'posts_per_page' => 1,
 		'orderby'        => 'meta_value_num',
 		'meta_key'       => 'se_event_date_start',
@@ -434,14 +434,14 @@ function se_event_get_next_event( int $event_id, ?int $event_date_id = null ): ?
 	);
 
 	// Ensure any events that are not published are not included in the query.
-	$args['post__not_in'] = se_get_date_ids_for_non_published_events();
+	$args['post__not_in'] = simple_events_get_date_ids_for_non_published_events();
 
 	// If we dont allow grouping, add the event id to parent not in.
 	if ( ! $allow_grouping ) {
 		$args['post__not_in'] = array_unique(
 			array_merge(
 				$args['post__not_in'],
-				array_map( fn( array $date ): int => $date['id'], se_event_get_event_dates( $event_id ) )
+				array_map( fn( array $date ): int => $date['id'], simple_events_event_get_event_dates( $event_id ) )
 			)
 		);
 	}
@@ -468,13 +468,13 @@ function se_event_get_next_event( int $event_id, ?int $event_date_id = null ): ?
  *
  * @return WP_Post|null The previous event or null if none found.
  */
-function se_event_get_previous_event( int $event_id, ?int $event_date_id = null ): ?WP_Post {
+function simple_events_event_get_previous_event( int $event_id, ?int $event_date_id = null ): ?WP_Post {
 	$options        = get_option( 'se_options' );
 	$allow_grouping = isset( $options['treat_each_date_as_own_event'] ) ? 'on' === $options['treat_each_date_as_own_event'] : false;
 
 	// If we dont have an event date id, we need to get the event dates.
 	if ( ! $event_date_id ) {
-		$event_dates = se_event_get_event_dates( $event_id );
+		$event_dates = simple_events_event_get_event_dates( $event_id );
 		if ( empty( $event_dates ) ) {
 			return null;
 		}
@@ -483,7 +483,7 @@ function se_event_get_previous_event( int $event_id, ?int $event_date_id = null 
 
 	// Define the query to get previous events.
 	$args = array(
-		'post_type'      => SE_Event_Post_Type::$event_date_post_type,
+		'post_type'      => Simple_Events_Event_Post_Type::$event_date_post_type,
 		'posts_per_page' => 1,
 		'orderby'        => 'meta_value_num',
 		'meta_key'       => 'se_event_date_start',
@@ -505,14 +505,14 @@ function se_event_get_previous_event( int $event_id, ?int $event_date_id = null 
 	);
 
 	// Ensure any events that are not published are not included in the query.
-	$args['post__not_in'] = se_get_date_ids_for_non_published_events();
+	$args['post__not_in'] = simple_events_get_date_ids_for_non_published_events();
 
 	// If we dont allow grouping, add the event id to parent not in.
 	if ( ! $allow_grouping ) {
 		$args['post__not_in'] = array_unique(
 			array_merge(
 				$args['post__not_in'],
-				array_map( fn( array $date ): int => $date['id'], se_event_get_event_dates( $event_id ) )
+				array_map( fn( array $date ): int => $date['id'], simple_events_event_get_event_dates( $event_id ) )
 			)
 		);
 	}
@@ -531,7 +531,7 @@ function se_event_get_previous_event( int $event_id, ?int $event_date_id = null 
 	return $previous_event;
 }
 
-if ( ! function_exists( 'se_get_date_ids_for_non_published_events' ) ) {
+if ( ! function_exists( 'simple_events_get_date_ids_for_non_published_events' ) ) {
 
 	/**
 	 * Return an array of all event date IDs whose parent event is not published
@@ -543,7 +543,7 @@ if ( ! function_exists( 'se_get_date_ids_for_non_published_events' ) ) {
 	 *
 	 * @return int[]
 	 */
-	function se_get_date_ids_for_non_published_events( $reset = false ) {
+	function simple_events_get_date_ids_for_non_published_events( $reset = false ) {
 		static $dates = null;
 		if ( $reset ) {
 			$dates = null;
@@ -554,8 +554,8 @@ if ( ! function_exists( 'se_get_date_ids_for_non_published_events' ) ) {
 
 		global $wpdb;
 
-		$date_post_type  = SE_Event_Post_Type::$event_date_post_type;
-		$event_post_type = SE_Event_Post_Type::$post_type;
+		$date_post_type  = Simple_Events_Event_Post_Type::$event_date_post_type;
+		$event_post_type = Simple_Events_Event_Post_Type::$post_type;
 
 		// Single query: find all published event-date posts whose parent is
 		// either not published or doesn't exist at all (orphaned).
@@ -580,41 +580,41 @@ if ( ! function_exists( 'se_get_date_ids_for_non_published_events' ) ) {
 	}
 }
 
-if ( ! function_exists( 'se_expired_event_notice' ) ) {
+if ( ! function_exists( 'simple_events_expired_event_notice' ) ) {
 	/**
 	 * Output the expired event notice.
 	 *
 	 * @return void
 	 */
-	function se_expired_event_notice() {
+	function simple_events_expired_event_notice() {
 		$options = get_option( 'se_options' );
 
 		// If event is expired and option is enabled, display expired event notice.
-		if ( se_event_is_expired( get_the_ID() ) ) {
+		if ( simple_events_event_is_expired( get_the_ID() ) ) {
 			$value = isset( $options['past_event_notice'] ) ? $options['past_event_notice'] : esc_html__( 'Event has passed', 'simple-events' );
 			printf( '<p class="past-event-notice">%s</p>', esc_html( $value ) );
 		}
 	}
 }
 
-if ( ! function_exists( 'se_template_event_content' ) ) {
+if ( ! function_exists( 'simple_events_template_event_content' ) ) {
 	/**
 	 * Events Content Template for Events Feed Block.
 	 *
 	 * @return void
 	 */
-	function se_template_event_content() {
+	function simple_events_template_event_content() {
 		global $post;
 		$show_on_frontend = get_post_meta( get_the_ID(), 'se_event_show_on_frontend', true );
 		if ( empty( $show_on_frontend ) ) {
 			return;
 		}
 
-		$date_display_formatter = new SE_Date_Display_Formatter( get_the_ID() );
-		$dates                  = se_event_get_event_dates( get_the_ID() );
+		$date_display_formatter = new Simple_Events_Date_Display_Formatter( get_the_ID() );
+		$dates                  = simple_events_event_get_event_dates( get_the_ID() );
 
 		// If we have an event date and we treating each date as own event, we need to get the event date id.
-		if ( se_event_treat_each_date_as_own_event() && isset( $post->event_date_id ) ) {
+		if ( simple_events_event_treat_each_date_as_own_event() && isset( $post->event_date_id ) ) {
 			$dates = array_filter(
 				$dates,
 				function ( $date ) use ( $post ) {
@@ -628,15 +628,15 @@ if ( ! function_exists( 'se_template_event_content' ) ) {
 		}
 		// Output the content for archive template.
 		echo wp_kses_post( $date_display_formatter->get_header_date( $dates ) );
-		se_template_event_location();
-		se_template_event_price();
-		se_template_event_ticket_stock();
+		simple_events_template_event_location();
+		simple_events_template_event_price();
+		simple_events_template_event_ticket_stock();
 		the_excerpt();
 	}
 }
 
 
-if ( ! function_exists( 'se_fix_se_events_fse_archive_template' ) ) {
+if ( ! function_exists( 'simple_events_fix_se_events_fse_archive_template' ) ) {
 	/**
 	 * Fix the template hierarchy for the SE Events FSE archive.
 	 *
@@ -644,7 +644,7 @@ if ( ! function_exists( 'se_fix_se_events_fse_archive_template' ) ) {
 	 *
 	 * @return array The modified template hierarchy.
 	 */
-	function se_fix_se_events_fse_archive_template( $templates ) {
+	function simple_events_fix_se_events_fse_archive_template( $templates ) {
 		if ( 'se-event-date' === get_query_var( 'post_type' ) ) {
 			// Create proper hierarchy: archive-se-events.html, then archive.html
 			$custom_hierarchy_fse    = array(
@@ -662,7 +662,7 @@ if ( ! function_exists( 'se_fix_se_events_fse_archive_template' ) ) {
 }
 
 // Filter to modify the body class for the event date archive.
-if ( ! function_exists( 'se_modify_event_date_archive_body_class' ) ) {
+if ( ! function_exists( 'simple_events_modify_event_date_archive_body_class' ) ) {
 	/**
 	 * Modify the body class for the event date archive.
 	 *
@@ -670,7 +670,7 @@ if ( ! function_exists( 'se_modify_event_date_archive_body_class' ) ) {
 	 *
 	 * @return array The modified body classes.
 	 */
-	function se_modify_event_date_archive_body_class( $classes ) {
+	function simple_events_modify_event_date_archive_body_class( $classes ) {
 		$classes = array_map(
 			function ( $body_class ) {
 				return 'post-type-archive-se-event-date' === $body_class ? 'post-type-archive-se-event' : $body_class;
@@ -682,7 +682,7 @@ if ( ! function_exists( 'se_modify_event_date_archive_body_class' ) ) {
 }
 
 // Modify the archive page title.
-if ( ! function_exists( 'se_modify_event_date_archive_template_title' ) ) {
+if ( ! function_exists( 'simple_events_modify_event_date_archive_template_title' ) ) {
 	/**
 	 * Modify the archive page title for the event date archive.
 	 *
@@ -690,7 +690,7 @@ if ( ! function_exists( 'se_modify_event_date_archive_template_title' ) ) {
 	 *
 	 * @return string The modified archive title.
 	 */
-	function se_modify_event_date_archive_template_title( $title ) {
+	function simple_events_modify_event_date_archive_template_title( $title ) {
 		if ( is_post_type_archive( 'se-event-date' ) ) {
 			$original_title = $title;
 			// Get the se-event post type object to use its archive title
@@ -736,7 +736,7 @@ if ( ! function_exists( 'se_modify_event_date_archive_template_title' ) ) {
 
 
 // Modify the page HTML title for the event date archive.
-if ( ! function_exists( 'se_modify_event_date_archive_page_title' ) ) {
+if ( ! function_exists( 'simple_events_modify_event_date_archive_page_title' ) ) {
 	/**
 	 * Modify the page HTML title for the event date archive.
 	 *
@@ -744,7 +744,7 @@ if ( ! function_exists( 'se_modify_event_date_archive_page_title' ) ) {
 	 *
 	 * @return string The modified page title.
 	 */
-	function se_modify_event_date_archive_page_title( $title ) {
+	function simple_events_modify_event_date_archive_page_title( $title ) {
 		if ( is_post_type_archive( 'se-event-date' ) ) {
 			$event_post_type = get_post_type_object( 'se-event' );
 			$title           = $event_post_type->labels->name;
@@ -766,7 +766,7 @@ if ( ! function_exists( 'se_modify_event_date_archive_page_title' ) ) {
  *
  * @return string The modified template file.
  */
-function se_event_archive_template( $template ) {
+function simple_events_event_archive_template( $template ) {
 	if ( is_post_type_archive( 'se-event-date' ) ) {
 		// If the template is not set, use the default archive template.
 		$date_archive_template = locate_template( 'archive-se-event.php' );

@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Date Display Formatter Class.
  */
-class SE_Date_Display_Formatter {
+class Simple_Events_Date_Display_Formatter {
 
 	/**
 	 * The event id.
@@ -151,13 +151,13 @@ class SE_Date_Display_Formatter {
 		$this->group_dates                         = filter_var( get_post_meta( $event_id, 'se_event_display_grouped', true ), FILTER_VALIDATE_BOOLEAN );
 		$this->is_single_view                      = is_single();
 		$this->event_timezone                      = get_post_meta( $event_id, 'se_event_timezone', true );
-		$this->event_date_id                       = se_template_get_event_date_id();
+		$this->event_date_id                       = simple_events_template_get_event_date_id();
 		$this->display_timezone                    = filter_var( get_post_meta( $event_id, 'se_event_display_timezone', true ), FILTER_VALIDATE_BOOLEAN );
 		$this->hide_end_time                       = filter_var( get_post_meta( $event_id, 'se_event_hide_end_time', true ), FILTER_VALIDATE_BOOLEAN );
 		$this->hide_start_time                     = filter_var( get_post_meta( $event_id, 'se_event_hide_start_time', true ), FILTER_VALIDATE_BOOLEAN );
 		$this->show_add_to_calendar                = filter_var( get_post_meta( $event_id, 'se_event_add_calendar_links', true ), FILTER_VALIDATE_BOOLEAN );
 		$this->open_in_new_tab                     = filter_var( get_post_meta( $event_id, 'se_event_open_in_new_window', true ), FILTER_VALIDATE_BOOLEAN );
-		$this->use_html_in_date_output             = SE_Settings::use_html_in_date_output();
+		$this->use_html_in_date_output             = Simple_Events_Settings::use_html_in_date_output();
 	}
 
 
@@ -354,7 +354,7 @@ class SE_Date_Display_Formatter {
 				}
 
 				// If the date is in the past, exclude it.
-				if ( $exclude_past_dates && $date['start_date'] < SE_Calendar::get_instance()->create_date_time( 'now' )->format( 'U' ) ) {
+				if ( $exclude_past_dates && $date['start_date'] < Simple_Events_Calendar::get_instance()->create_date_time( 'now' )->format( 'U' ) ) {
 					return false;
 				}
 
@@ -482,7 +482,7 @@ class SE_Date_Display_Formatter {
 		// Iterate over each group, and break them down to the starting month.
 		foreach ( $groups as $group ) {
 			// Create the time label.
-			$time_label = $group[0]['all_day'] ? SE_Settings::get_all_day_message() : null;
+			$time_label = $group[0]['all_day'] ? Simple_Events_Settings::get_all_day_message() : null;
 
 			if ( ! $time_label ) {
 				$time_start = ( $this->hide_start_time ) ? '' : $this->format_time( $group[0]['start_date'] );
@@ -712,9 +712,9 @@ class SE_Date_Display_Formatter {
 
 			// For all day events, just show the date (or date range if different days).
 			if ( ! $same_day ) {
-				$output .= ' &ndash; ' . $end_date . ' ' . SE_Settings::get_all_day_message();
+				$output .= ' &ndash; ' . $end_date . ' ' . Simple_Events_Settings::get_all_day_message();
 			} elseif ( ! $this->date_only ) {
-					$output .= ' ' . SE_Settings::get_all_day_message();
+					$output .= ' ' . Simple_Events_Settings::get_all_day_message();
 			}
 		} elseif ( $same_day ) {
 			// Same day event with times.

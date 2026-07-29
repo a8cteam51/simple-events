@@ -22,7 +22,7 @@ class EventDatesCleanupTest extends WP_UnitTestCase {
 		$tomorrow  = strtotime( '+1 day' );
 		$day_after = strtotime( '+2 days' );
 
-		$date_1 = se_event_create_event_date(
+		$date_1 = simple_events_event_create_event_date(
 			$event_id,
 			array(
 				'start_date' => $tomorrow,
@@ -30,7 +30,7 @@ class EventDatesCleanupTest extends WP_UnitTestCase {
 				'all_day'    => false,
 			)
 		);
-		$date_2 = se_event_create_event_date(
+		$date_2 = simple_events_event_create_event_date(
 			$event_id,
 			array(
 				'start_date' => $day_after,
@@ -64,7 +64,7 @@ class EventDatesCleanupTest extends WP_UnitTestCase {
 		$tomorrow  = strtotime( '+1 day' );
 		$day_after = strtotime( '+2 days' );
 
-		$date_1 = se_event_create_event_date(
+		$date_1 = simple_events_event_create_event_date(
 			$event_id,
 			array(
 				'start_date' => $tomorrow,
@@ -72,7 +72,7 @@ class EventDatesCleanupTest extends WP_UnitTestCase {
 				'all_day'    => false,
 			)
 		);
-		$date_2 = se_event_create_event_date(
+		$date_2 = simple_events_event_create_event_date(
 			$event_id,
 			array(
 				'start_date' => $day_after,
@@ -109,7 +109,7 @@ class EventDatesCleanupTest extends WP_UnitTestCase {
 		$tomorrow  = strtotime( '+1 day' );
 		$day_after = strtotime( '+2 days' );
 
-		$date_1 = se_event_create_event_date(
+		$date_1 = simple_events_event_create_event_date(
 			$event_id,
 			array(
 				'start_date' => $tomorrow,
@@ -117,7 +117,7 @@ class EventDatesCleanupTest extends WP_UnitTestCase {
 				'all_day'    => false,
 			)
 		);
-		$date_2 = se_event_create_event_date(
+		$date_2 = simple_events_event_create_event_date(
 			$event_id,
 			array(
 				'start_date' => $day_after,
@@ -163,7 +163,7 @@ class EventDatesCleanupTest extends WP_UnitTestCase {
 		$tomorrow  = strtotime( '+1 day' );
 		$day_after = strtotime( '+2 days' );
 
-		$date_a = se_event_create_event_date(
+		$date_a = simple_events_event_create_event_date(
 			$event_a,
 			array(
 				'start_date' => $tomorrow,
@@ -171,7 +171,7 @@ class EventDatesCleanupTest extends WP_UnitTestCase {
 				'all_day'    => false,
 			)
 		);
-		$date_b = se_event_create_event_date(
+		$date_b = simple_events_event_create_event_date(
 			$event_b,
 			array(
 				'start_date' => $day_after,
@@ -208,7 +208,7 @@ class EventDatesCleanupTest extends WP_UnitTestCase {
 		$tomorrow  = strtotime( '+1 day' );
 		$day_after = strtotime( '+2 days' );
 
-		$date_1 = se_event_create_event_date(
+		$date_1 = simple_events_event_create_event_date(
 			$event_id,
 			array(
 				'start_date' => $tomorrow,
@@ -216,7 +216,7 @@ class EventDatesCleanupTest extends WP_UnitTestCase {
 				'all_day'    => false,
 			)
 		);
-		$date_2 = se_event_create_event_date(
+		$date_2 = simple_events_event_create_event_date(
 			$event_id,
 			array(
 				'start_date' => $day_after,

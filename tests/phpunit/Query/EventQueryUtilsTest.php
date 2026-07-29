@@ -1,6 +1,6 @@
 <?php
 /**
- * Tests for SE_Event_Query_Utils::modify_event_posts.
+ * Tests for Simple_Events_Event_Query_Utils::modify_event_posts.
  *
  * @package Simple_Events
  */
@@ -53,7 +53,7 @@ class EventQueryUtilsTest extends WP_UnitTestCase {
 		// 2. Run a query that triggers modify_event_posts.
 		add_filter(
 			'the_posts',
-			array( 'SE_Event_Query_Utils', 'modify_event_posts' ),
+			array( 'Simple_Events_Event_Query_Utils', 'modify_event_posts' ),
 			10,
 			2
 		);
@@ -69,7 +69,7 @@ class EventQueryUtilsTest extends WP_UnitTestCase {
 
 		remove_filter(
 			'the_posts',
-			array( 'SE_Event_Query_Utils', 'modify_event_posts' ),
+			array( 'Simple_Events_Event_Query_Utils', 'modify_event_posts' ),
 			10
 		);
 

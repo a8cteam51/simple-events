@@ -11,10 +11,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Arrow Position for Desktop
-$se_arrow_position = isset( $args['attributes']['arrowPosition'] ) ? $args['attributes']['arrowPosition'] : 'top';
+$simple_events_arrow_position = isset( $args['attributes']['arrowPosition'] ) ? $args['attributes']['arrowPosition'] : 'top';
 
 // Arrow Position for Mobile
-$se_mobile_arrow_position = isset( $args['attributes']['mobileArrowPosition'] ) ? $args['attributes']['mobileArrowPosition'] : 'top';
+$simple_events_mobile_arrow_position = isset( $args['attributes']['mobileArrowPosition'] ) ? $args['attributes']['mobileArrowPosition'] : 'top';
 
 ?>
 
@@ -22,7 +22,7 @@ $se_mobile_arrow_position = isset( $args['attributes']['mobileArrowPosition'] ) 
 
 	<header class="simple-events-header">
 		<?php
-		SE_Template_Loader::get_template_part(
+		Simple_Events_Template_Loader::get_template_part(
 			'calendar/calendar',
 			'top-bar',
 			true,
@@ -31,12 +31,12 @@ $se_mobile_arrow_position = isset( $args['attributes']['mobileArrowPosition'] ) 
 				'previous_date'  => $args['previous_date'],
 				'next_date'      => $args['next_date'],
 				'attributes'     => $args['attributes'],
-				'arrow_position' => $se_arrow_position,
+				'arrow_position' => $simple_events_arrow_position,
 			)
 		);
 
-		if ( 'top' === $se_mobile_arrow_position ) {
-			SE_Template_Loader::get_template_part(
+		if ( 'top' === $simple_events_mobile_arrow_position ) {
+			Simple_Events_Template_Loader::get_template_part(
 				'calendar/calendar',
 				'mobile-events',
 				true,
@@ -59,13 +59,13 @@ $se_mobile_arrow_position = isset( $args['attributes']['mobileArrowPosition'] ) 
 		aria-readonly="true"
 	>
 		<?php
-		SE_Template_Loader::get_template_part(
+		Simple_Events_Template_Loader::get_template_part(
 			'calendar/calendar',
 			'header'
 		);
 		?>
 		<?php
-		SE_Template_Loader::get_template_part(
+		Simple_Events_Template_Loader::get_template_part(
 			'calendar/calendar',
 			'body',
 			true,
@@ -76,12 +76,12 @@ $se_mobile_arrow_position = isset( $args['attributes']['mobileArrowPosition'] ) 
 			)
 		);
 
-		if ( 'bottom' === $se_arrow_position ) {
+		if ( 'bottom' === $simple_events_arrow_position ) {
 			?>
 
 			<div class="simple-events-top-bar">
 			<?php
-				SE_Template_Loader::get_template_part(
+				Simple_Events_Template_Loader::get_template_part(
 					'calendar/top-bar/nav',
 					null,
 					true,
@@ -99,8 +99,8 @@ $se_mobile_arrow_position = isset( $args['attributes']['mobileArrowPosition'] ) 
 
 	<?php
 
-	if ( 'bottom' === $se_mobile_arrow_position ) {
-		SE_Template_Loader::get_template_part(
+	if ( 'bottom' === $simple_events_mobile_arrow_position ) {
+		Simple_Events_Template_Loader::get_template_part(
 			'calendar/calendar',
 			'mobile-events',
 			true,

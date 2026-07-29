@@ -13,7 +13,7 @@ get_header( 'events' );
 /**
  * Hook: simple_events_before_main_content.
  */
-do_action( 'se_before_main_content' );
+do_action( 'simple_events_before_main_content' );
 
 ?>
 
@@ -31,6 +31,6 @@ do_action( 'se_before_main_content' );
 /**
  * Hook: simple_events_after_main_content.
  */
-do_action( 'se_after_main_content' );
+do_action( 'simple_events_after_main_content' );
 
 get_footer( 'events' );

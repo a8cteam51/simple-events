@@ -8,12 +8,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-require_once SE_SRC_PATH . '/classes/class-se-event-post-type.php';
+require_once SIMPLE_EVENTS_SRC_PATH . '/classes/class-se-event-post-type.php';
 
 /**
  * Settings Class.
  */
-class SE_Settings {
+class Simple_Events_Settings {
 
 	/**
 	 * Initialize.
@@ -342,7 +342,7 @@ class SE_Settings {
 		);
 
 		// Add the migrate events button, if we have events to migrate.
-		if ( SE_Migrate_Events::has_events_to_migrate() ) {
+		if ( Simple_Events_Migrate_Events::has_events_to_migrate() ) {
 			add_settings_field(
 				'migrate_events',
 				esc_html__( 'Migrate Events', 'simple-events' ),
@@ -506,7 +506,7 @@ class SE_Settings {
 	 * @return void
 	 */
 	public static function migrate_events_cb( $args ) { // phpcs:ignore
-		$events = SE_Migrate_Events::get_events_to_migrate();
+		$events = Simple_Events_Migrate_Events::get_events_to_migrate();
 		?>
 		<div id="migrate_events" style="scroll-margin-top: 20px;">
 		<div id="se_migrate_events_wrapper" style="background: #f9f9f9; border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin: 15px 0; max-height: 400px; overflow-y: auto;">
@@ -662,7 +662,7 @@ class SE_Settings {
 				sprintf(
 					// translators: %1$s is the Archive Slug for Simple events concatenated with the download endpoint.
 					__( 'Download Endpoint: <a href="%1$s">%1$s</a>', 'simple-events' ),
-					esc_url( get_post_type_archive_link( SE_Event_Post_Type::$post_type ) . $value ),
+					esc_url( get_post_type_archive_link( Simple_Events_Event_Post_Type::$post_type ) . $value ),
 				)
 			);
 		?>
@@ -677,7 +677,7 @@ class SE_Settings {
 	 */
 	public static function options_page() {
 		add_submenu_page(
-			'edit.php?post_type=' . SE_Event_Post_Type::$post_type,
+			'edit.php?post_type=' . Simple_Events_Event_Post_Type::$post_type,
 			__( 'Settings', 'simple-events' ),
 			__( 'Settings', 'simple-events' ),
 			'manage_options',
@@ -793,7 +793,7 @@ class SE_Settings {
 				"SELECT child.ID, child.post_title, child.post_parent FROM {$wpdb->prefix}posts AS child
 				LEFT JOIN {$wpdb->prefix}posts AS parent ON child.post_parent = parent.ID
 				WHERE child.post_type = %s AND (child.post_parent = 0 OR parent.ID IS NULL)",
-				SE_Event_Post_Type::$event_date_post_type
+				Simple_Events_Event_Post_Type::$event_date_post_type
 			)
 		);
 
@@ -841,4 +841,4 @@ class SE_Settings {
 }
 
 
-SE_Settings::init();
+Simple_Events_Settings::init();

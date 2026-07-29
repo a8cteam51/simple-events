@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Post types Class.
  */
-class SE_Event_Post_Type {
+class Simple_Events_Event_Post_Type {
 
 	/**
 	 * The current event version.
@@ -549,8 +549,8 @@ class SE_Event_Post_Type {
 		$options    = get_option( 'se_options' );
 		$sort_order = ( isset( $options['reverse_events_order'] ) ) ? 'DESC' : 'ASC';
 
-		// Check if there's an override for the sort order through the 'se_pre_get_posts_order_override' filter.
-		$order_override = apply_filters( 'se_pre_get_posts_order_override', $query->get( 'se_event_order' ), $query );
+		// Check if there's an override for the sort order through the 'simple_events_pre_get_posts_order_override' filter.
+		$order_override = apply_filters( 'simple_events_pre_get_posts_order_override', $query->get( 'se_event_order' ), $query );
 
 		// If a custom order override exists, use it. Otherwise, stick with the existing sort order.
 		$sort_order = ! empty( $order_override ) ? $order_override : $sort_order;
@@ -558,7 +558,7 @@ class SE_Event_Post_Type {
 		if (
 			( $query->is_main_query() && ( is_post_type_archive( self::$post_type )
 			|| is_tax( self::$post_type . '-category' ) ) )
-			|| ( ! $query->is_main_query() && self::$post_type === $query->get( 'post_type' ) && ! $query->get( 'se_countdown' ) && $query->get( 'sub-type' ) === SE_Block_Variations::QUERY_LOOP_EVENTS )
+			|| ( ! $query->is_main_query() && self::$post_type === $query->get( 'post_type' ) && ! $query->get( 'se_countdown' ) && $query->get( 'sub-type' ) === Simple_Events_Block_Variations::QUERY_LOOP_EVENTS )
 		) {
 
 			// Handle taxonomy filtering by getting parent event IDs first
@@ -598,7 +598,7 @@ class SE_Event_Post_Type {
 				if ( empty( $parent_event_ids ) ) {
 					$date_post_ids = null;
 				} else {
-					$date_post_ids = SE_Event_Query_Utils::get_event_dates_from_events( $parent_event_ids );
+					$date_post_ids = Simple_Events_Event_Query_Utils::get_event_dates_from_events( $parent_event_ids );
 				}
 			}
 
@@ -614,7 +614,7 @@ class SE_Event_Post_Type {
 			// Order by event date start timestamp
 			$query->set( 'orderby', 'meta_value_num' );
 			$query->set( 'meta_key', 'se_event_date_start' );
-			$query->set( 'order', apply_filters( 'se_pre_get_posts_order', $sort_order, $query ) );
+			$query->set( 'order', apply_filters( 'simple_events_pre_get_posts_order', $sort_order, $query ) );
 
 			// Values for which passed events should be hidden on Feed.
 			$event_options = array( 'hide_events_on_both', 'hide_events_on_feed', 'on' );
@@ -635,22 +635,22 @@ class SE_Event_Post_Type {
 			}
 
 			// Add unique parents filtering if not treating each date as own event
-			if ( ! se_event_treat_each_date_as_own_event() ) {
+			if ( ! simple_events_event_treat_each_date_as_own_event() ) {
 				$query->set( 'unique_parents', true );
 				$query->set( 'feed_order', $sort_order );
 
 				// Add filter for unique parents WHERE clause
-				add_filter( 'posts_where', array( 'SE_Event_Query_Utils', 'filter_event_dates_where' ), 10, 2 );
+				add_filter( 'posts_where', array( 'Simple_Events_Event_Query_Utils', 'filter_event_dates_where' ), 10, 2 );
 
 				// Add filter to modify posts for event_date_id
-				add_filter( 'the_posts', array( 'SE_Event_Query_Utils', 'modify_event_posts' ), 10, 2 );
+				add_filter( 'the_posts', array( 'Simple_Events_Event_Query_Utils', 'modify_event_posts' ), 10, 2 );
 
 				// Add custom order by filter
-				add_filter( 'posts_orderby', array( 'SE_Event_Query_Utils', 'fix_sort_order' ), 10, 2 );
+				add_filter( 'posts_orderby', array( 'Simple_Events_Event_Query_Utils', 'fix_sort_order' ), 10, 2 );
 			} else {
 				// When treating each date as own event, still convert event date posts to parent events
 				// but don't filter for unique parents
-				add_filter( 'the_posts', array( 'SE_Event_Query_Utils', 'modify_event_posts' ), 10, 2 );
+				add_filter( 'the_posts', array( 'Simple_Events_Event_Query_Utils', 'modify_event_posts' ), 10, 2 );
 			}
 		}
 	}
@@ -675,7 +675,7 @@ class SE_Event_Post_Type {
 
 			$event = $wp_query->get_queried_object();
 
-			if ( ! empty( $event ) && se_event_is_expired( $event->ID ) ) {
+			if ( ! empty( $event ) && simple_events_event_is_expired( $event->ID ) ) {
 				$wp_query->set_404();
 				status_header( 404 );
 			}
@@ -736,7 +736,7 @@ class SE_Event_Post_Type {
 			return;
 		}
 
-		update_post_meta( $post->ID, 'se_event_version', SE_MIGRATION_VERSION );
+		update_post_meta( $post->ID, 'se_event_version', SIMPLE_EVENTS_MIGRATION_VERSION );
 	}
 
 	/**
@@ -765,7 +765,7 @@ class SE_Event_Post_Type {
 
 		if ( ! $is_event_info_block_present ) {
 			// Delete all the event dates.
-			SE_Event_Dates::delete_all_event_dates( $event_id );
+			Simple_Events_Event_Dates::delete_all_event_dates( $event_id );
 		}
 	}
 
@@ -857,4 +857,4 @@ class SE_Event_Post_Type {
 	}
 }
 
-SE_Event_Post_Type::init();
+Simple_Events_Event_Post_Type::init();

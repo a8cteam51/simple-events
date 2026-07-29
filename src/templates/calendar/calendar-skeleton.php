@@ -23,14 +23,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 			</div>
 		</header>
 		<div class="simple-events-calendar-skeleton__header">
-			<?php for ( $se_i = 0; $se_i < 7; $se_i++ ) : ?>
+			<?php for ( $simple_events_i = 0; $simple_events_i < 7; $simple_events_i++ ) : ?>
 				<span></span>
 			<?php endfor; ?>
 		</div>
 		<div class="simple-events-calendar-skeleton__body">
-			<?php for ( $se_week = 0; $se_week < 5; $se_week++ ) : ?>
+			<?php for ( $simple_events_week = 0; $simple_events_week < 5; $simple_events_week++ ) : ?>
 				<div class="simple-events-calendar-skeleton__week">
-					<?php for ( $se_day = 0; $se_day < 7; $se_day++ ) : ?>
+					<?php for ( $simple_events_day = 0; $simple_events_day < 7; $simple_events_day++ ) : ?>
 						<div class="simple-events-calendar-skeleton__day"></div>
 					<?php endfor; ?>
 				</div>
