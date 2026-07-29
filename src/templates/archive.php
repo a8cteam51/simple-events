@@ -35,7 +35,7 @@ do_action( 'simple_events_before_main_content' );
 		while ( have_posts() ) :
 			the_post();
 			?>
-			<?php SE_TEMPLATE_LOADER::get_template_part( 'content', 'archive' ); ?>
+			<?php Simple_Events_Template_Loader::get_template_part( 'content', 'archive' ); ?>
 		<?php endwhile; ?>
 	</ul>
 

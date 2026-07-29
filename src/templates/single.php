@@ -22,7 +22,7 @@ do_action( 'simple_events_before_main_content' );
 		the_post();
 		?>
 
-		<?php SE_TEMPLATE_LOADER::get_template_part( 'content', 'single' ); ?>
+		<?php Simple_Events_Template_Loader::get_template_part( 'content', 'single' ); ?>
 
 	<?php endwhile; // end of the loop. ?>
 

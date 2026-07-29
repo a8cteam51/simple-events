@@ -621,7 +621,7 @@ class Simple_Events_Blocks {
 						$output      .= $year_output['output'];
 					}
 
-					$output .= SE_TEMPLATE_LOADER::get_template_part( 'content', 'archive', true, array(), true );
+					$output .= Simple_Events_Template_Loader::get_template_part( 'content', 'archive', true, array(), true );
 				}
 				$output .= '</ul>';
 				$output .= '</div>';
