@@ -194,8 +194,10 @@ class SE_Event_Dates {
 		}
 		// Iterate over the dates and update the event dates.
 		foreach ( $dates as $date ) {
-			// If we dont have a date ID, create a new date.
-			if ( ! isset( $date['id'] ) ) {
+			// If we dont have a date ID, create a new date. empty() rather than
+			// isset(), so a client sending 0 or '' for a new date creates one
+			// instead of falling between the two branches.
+			if ( empty( $date['id'] ) ) {
 				$event_date = se_event_create_event_date( $event_id, $date );
 				// If we dont have a WP_Post object, return an error.
 				if ( ! $event_date ) {
@@ -372,9 +374,19 @@ class SE_Event_Dates {
 		foreach ( $event_dates as $event_date_id ) {
 			wp_delete_post( $event_date_id, true );
 		}
+	}
 
-		// Drop the legacy meta too, so the event stops advertising dates that no
-		// longer exist to cron and the countdown.
+	/**
+	 * Clear the event-level date meta.
+	 *
+	 * Only for callers discarding an event's dates for good. The migration
+	 * rebuilds children from se_event_dates, so it must not lose it.
+	 *
+	 * @param integer $event_id The event ID.
+	 *
+	 * @return void
+	 */
+	public static function delete_event_date_meta( $event_id ): void {
 		delete_post_meta( $event_id, 'se_event_dates' );
 		delete_post_meta( $event_id, 'se_event_date_start' );
 		delete_post_meta( $event_id, 'se_event_date_end' );

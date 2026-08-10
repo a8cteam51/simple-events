@@ -125,7 +125,96 @@ class EventDatesSyncIdTypeTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * A date left out of the payload is still removed.
+	 * A new date sent with a falsy ID is created, not dropped.
+	 *
+	 * A client sending id: 0 for a new date rather than omitting the key matched
+	 * neither branch: isset() said it existed so nothing was created, and the
+	 * meta writes landed on post ID 0. The event's real dates went with it,
+	 * because a falsy ID is filtered out and reads as an empty payload.
+	 *
+	 * @return void
+	 */
+	public function test_a_new_date_with_a_falsy_id_is_created() {
+		$event_id = $this->create_event_with_dates();
+		$existing = se_event_get_event_dates( $event_id );
+		$new      = strtotime( '+3 days' );
+
+		$payload = array_map(
+			function ( $date ) {
+				return array(
+					'id'                 => (string) $date['id'],
+					'start_date'         => $date['start_date'],
+					'end_date'           => $date['end_date'],
+					'all_day'            => $date['all_day'],
+					'hide_from_calendar' => $date['hide_from_calendar'],
+					'hide_from_feed'     => $date['hide_from_feed'],
+				);
+			},
+			$existing
+		);
+
+		// A new date, sent the way a non-editor client is likely to send it.
+		$payload[] = array(
+			'id'                 => 0,
+			'start_date'         => (string) $new,
+			'end_date'           => (string) ( $new + 7200 ),
+			'all_day'            => false,
+			'hide_from_calendar' => false,
+			'hide_from_feed'     => false,
+		);
+
+		$request = new WP_REST_Request( 'POST', '/simple-events/event-dates/' . $event_id . '/sync' );
+		$request->set_param( 'event_id', $event_id );
+		$request->set_param( 'dates', $payload );
+		$request->set_param( 'nonce', wp_create_nonce( 'se_event_nonce' ) );
+
+		$sync = new SE_Event_Dates();
+		$sync->sync_event_dates( $request );
+
+		$after = $this->event_date_ids( $event_id );
+
+		$this->assertCount( 3, $after, 'The falsy-ID date should have been created alongside the existing two.' );
+		$this->assertSame(
+			array( $existing[0]['id'], $existing[1]['id'] ),
+			array_slice( $after, 0, 2 ),
+			'The existing dates should keep their IDs.'
+		);
+	}
+
+	/**
+	 * Meta is never written against post ID 0.
+	 *
+	 * @return void
+	 */
+	public function test_a_falsy_id_never_writes_meta_to_post_zero() {
+		$event_id = $this->create_event_with_dates();
+		$new      = strtotime( '+3 days' );
+
+		$request = new WP_REST_Request( 'POST', '/simple-events/event-dates/' . $event_id . '/sync' );
+		$request->set_param( 'event_id', $event_id );
+		$request->set_param(
+			'dates',
+			array(
+				array(
+					'id'                 => '',
+					'start_date'         => (string) $new,
+					'end_date'           => (string) ( $new + 7200 ),
+					'all_day'            => false,
+					'hide_from_calendar' => false,
+					'hide_from_feed'     => false,
+				),
+			)
+		);
+		$request->set_param( 'nonce', wp_create_nonce( 'se_event_nonce' ) );
+
+		$sync = new SE_Event_Dates();
+		$sync->sync_event_dates( $request );
+
+		$this->assertEmpty( get_post_meta( 0, 'se_event_date_start', true ), 'Meta must never be written against post ID 0.' );
+	}
+
+	/**
+	 * A date omitted from the payload is still removed.
 	 *
 	 * Guards against fixing the comparison by never deleting anything.
 	 *

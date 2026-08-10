@@ -763,8 +763,10 @@ class SE_Event_Post_Type {
 		}
 
 		if ( ! $is_event_info_block_present ) {
-			// Delete all the event dates.
+			// Delete all the event dates, and the meta describing them, so the
+			// event stops advertising dates that no longer exist.
 			SE_Event_Dates::delete_all_event_dates( $event_id );
+			SE_Event_Dates::delete_event_date_meta( $event_id );
 		}
 	}
 
@@ -841,6 +843,13 @@ class SE_Event_Post_Type {
 
 		foreach ( $children as $child_id ) {
 			if ( get_post_status( $child_id ) === $new_status ) {
+				continue;
+			}
+
+			// Trashing goes through the trash API, so the child gets the trash
+			// bookkeeping core needs to purge it and the trash hooks fire.
+			if ( 'trash' === $new_status ) {
+				wp_trash_post( $child_id );
 				continue;
 			}
 

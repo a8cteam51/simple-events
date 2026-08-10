@@ -48,6 +48,11 @@ class MigrationIdempotencyTest extends WP_UnitTestCase {
 			)
 		);
 
+		// A legacy event also carries the derived start/end used by the countdown
+		// and the cron.
+		update_post_meta( $event_id, 'se_event_date_start', (string) $tomorrow );
+		update_post_meta( $event_id, 'se_event_date_end', (string) ( $day_after + 7200 ) );
+
 		// Publishing stamps the current version via stamp_version_on_new_event(),
 		// so drop it — a genuinely legacy event has never been stamped.
 		delete_post_meta( $event_id, 'se_event_version' );
@@ -100,6 +105,49 @@ class MigrationIdempotencyTest extends WP_UnitTestCase {
 		SE_Migrate_Events::migrate_1_0_0_to_2_0_0( $event_id );
 
 		$this->assertSame( 2, $this->count_event_dates( $event_id ), 'Two legacy rows should produce two child dates.' );
+	}
+
+	/**
+	 * Migrating must not destroy the meta it migrated from.
+	 *
+	 * The legacy meta is the only copy of a legacy event's dates. If a run dies
+	 * inside the loop no version stamp is written, so the next run reads that
+	 * meta and rebuilds. Delete it and there is nothing left to recover from.
+	 *
+	 * @return void
+	 */
+	public function test_migrating_keeps_the_legacy_meta() {
+		$event_id = $this->create_legacy_event();
+
+		SE_Migrate_Events::migrate_1_0_0_to_2_0_0( $event_id );
+
+		$this->assertNotEmpty(
+			get_post_meta( $event_id, 'se_event_dates', true ),
+			'se_event_dates is the only source for a re-run and must survive.'
+		);
+	}
+
+	/**
+	 * Migrating must leave the event queryable by the countdown and the cron.
+	 *
+	 * Both query post_type => se-event on se_event_date_start, so an event that
+	 * loses it silently drops out of each.
+	 *
+	 * @return void
+	 */
+	public function test_migrating_keeps_the_event_query_meta() {
+		$event_id = $this->create_legacy_event();
+
+		SE_Migrate_Events::migrate_1_0_0_to_2_0_0( $event_id );
+
+		$this->assertNotEmpty(
+			get_post_meta( $event_id, 'se_event_date_start', true ),
+			'se_event_date_start must survive, or the countdown and cron stop matching the event.'
+		);
+		$this->assertNotEmpty(
+			get_post_meta( $event_id, 'se_event_date_end', true ),
+			'se_event_date_end must survive.'
+		);
 	}
 
 	/**

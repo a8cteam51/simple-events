@@ -184,7 +184,40 @@ class EventDatesStatusMirrorTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Untrashing an event restores its dates to the event's status.
+	 * Child dates are trashed through the trash API, not a bare status write.
+	 *
+	 * Setting post_status directly skips the trash bookkeeping: no
+	 * _wp_trash_meta_time, and the wp_trash_post/trashed_post actions never
+	 * fire, so anything listening on them stops seeing event dates.
+	 *
+	 * @return void
+	 */
+	public function test_trashing_an_event_trashes_its_dates_through_the_trash_api() {
+		$ids = $this->create_event_with_date( 'publish' );
+
+		$trashed = array();
+		add_action(
+			'trashed_post',
+			function ( $post_id ) use ( &$trashed ) {
+				$trashed[] = $post_id;
+			}
+		);
+
+		wp_trash_post( $ids['event_id'] );
+
+		$this->assertContains(
+			$ids['date_id'],
+			$trashed,
+			'Child dates must go through wp_trash_post(), so trash hooks fire for them.'
+		);
+		$this->assertNotEmpty(
+			get_post_meta( $ids['date_id'], '_wp_trash_meta_time', true ),
+			'A properly trashed child carries _wp_trash_meta_time.'
+		);
+	}
+
+	/**
+	 * Untrashing an event restores its dates.
 	 *
 	 * @return void
 	 */
