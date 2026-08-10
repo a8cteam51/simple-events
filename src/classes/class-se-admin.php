@@ -47,8 +47,9 @@ class SE_Admin {
 			'se-admin',
 			'seAdmin',
 			array(
-				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-				'nonce'   => wp_create_nonce( 'wp_rest' ),
+				'ajaxUrl'   => admin_url( 'admin-ajax.php' ),
+				'nonce'     => wp_create_nonce( 'wp_rest' ),
+				'ajaxNonce' => wp_create_nonce( 'se_admin_ajax' ),
 			)
 		);
 		wp_enqueue_script( 'se-admin' );

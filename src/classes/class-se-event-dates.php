@@ -161,20 +161,41 @@ class SE_Event_Dates {
 			);
 		}
 
+		// Check we have a valid event.
+		$event = get_post( $event_id );
+		if ( ! $event || 'se-event' !== $event->post_type ) {
+			return new WP_REST_Response(
+				array(
+					'code'    => 'invalid_event',
+					'message' => __( 'Invalid event provided.', 'simple-events' ),
+				),
+				404
+			);
+		}
+
+		// The nonce is CSRF protection, not authorisation: check this user may edit this event.
+		if ( ! current_user_can( 'edit_post', $event_id ) ) {
+			return new WP_REST_Response(
+				array(
+					'code'    => 'forbidden',
+					'message' => __( 'You are not allowed to edit this event.', 'simple-events' ),
+				),
+				403
+			);
+		}
+
 		// Get the existing dates.
 		$existing_date_ids = array_map(
 			function ( $date ) {
-				return $date['id'];
+				return absint( $date['id'] );
 			},
 			se_event_get_event_dates( $event_id )
 		);
 
-		// Iterate over the existing dates and delete any that are not in the new dates.
-		foreach ( $existing_date_ids as $existing_date_id ) {
-			if ( ! in_array( $existing_date_id, array_column( $dates, 'id' ), true ) ) {
-				wp_delete_post( $existing_date_id, true );
-			}
-		}
+		// Create and update first, delete afterwards, so a failure part way through
+		// cannot leave the event stripped of dates it still needs.
+		$kept_date_ids = array();
+
 		// Iterate over the dates and update the event dates.
 		foreach ( $dates as $date ) {
 			// If we dont have a date ID, create a new date.
@@ -191,15 +212,32 @@ class SE_Event_Dates {
 					);
 				}
 				$date['id'] = $event_date->ID;
+			} elseif ( ! in_array( absint( $date['id'] ), $existing_date_ids, true ) ) {
+				// The ID is not one of this event's own dates, so it is not ours to write to.
+				return new WP_REST_Response(
+					array(
+						'code'    => 'invalid_date',
+						'message' => __( 'Invalid event date provided.', 'simple-events' ),
+					),
+					400
+				);
 			}
 
 			// Update the even dates meta.
-			$event_date_id = absint( $date['id'] );
+			$event_date_id   = absint( $date['id'] );
+			$kept_date_ids[] = $event_date_id;
 			update_post_meta( $event_date_id, 'se_event_date_start', esc_attr( $date['start_date'] ) );
 			update_post_meta( $event_date_id, 'se_event_date_end', esc_attr( $date['end_date'] ) );
 			update_post_meta( $event_date_id, 'se_event_all_day', boolval( $date['all_day'] ) );
 			update_post_meta( $event_date_id, 'se_event_hide_from_calendar', boolval( $date['hide_from_calendar'] ) );
 			update_post_meta( $event_date_id, 'se_event_hide_from_feed', boolval( $date['hide_from_feed'] ) );
+		}
+
+		// Delete any of this event's dates that were not in the payload.
+		foreach ( $existing_date_ids as $existing_date_id ) {
+			if ( ! in_array( $existing_date_id, $kept_date_ids, true ) ) {
+				wp_delete_post( $existing_date_id, true );
+			}
 		}
 
 		// Update the event version.
