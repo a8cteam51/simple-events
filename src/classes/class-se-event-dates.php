@@ -161,17 +161,34 @@ class SE_Event_Dates {
 			);
 		}
 
-		// Get the existing dates.
+		// Get the existing dates. Cast, because a client may send its IDs as
+		// strings and a strict comparison would read every date as missing.
 		$existing_date_ids = array_map(
 			function ( $date ) {
-				return $date['id'];
+				return absint( $date['id'] );
 			},
 			se_event_get_event_dates( $event_id )
 		);
 
+		$submitted_date_ids = array_map( 'absint', array_filter( array_column( $dates, 'id' ) ) );
+
+		// An ID we do not recognise is not ours to act on. Reject before deleting
+		// anything, rather than treating the whole set as missing.
+		foreach ( $submitted_date_ids as $submitted_date_id ) {
+			if ( ! in_array( $submitted_date_id, $existing_date_ids, true ) ) {
+				return new WP_REST_Response(
+					array(
+						'code'    => 'invalid_date',
+						'message' => __( 'Invalid event date provided.', 'simple-events' ),
+					),
+					400
+				);
+			}
+		}
+
 		// Iterate over the existing dates and delete any that are not in the new dates.
 		foreach ( $existing_date_ids as $existing_date_id ) {
-			if ( ! in_array( $existing_date_id, array_column( $dates, 'id' ), true ) ) {
+			if ( ! in_array( $existing_date_id, $submitted_date_ids, true ) ) {
 				wp_delete_post( $existing_date_id, true );
 			}
 		}
@@ -339,18 +356,28 @@ class SE_Event_Dates {
 	 * @return void
 	 */
 	public static function delete_all_event_dates( $event_id ): void {
-		// Get all the event dates.
-		try {
-			$event_dates = se_event_get_event_dates( $event_id );
-		} catch ( \Exception $e ) {
-			// If we can't get the dates, there's nothing to delete
-			return;
-		}
+		// Queried directly rather than via se_event_get_event_dates() so trashed
+		// dates are removed too, leaving nothing orphaned behind the event.
+		$event_dates = get_posts(
+			array(
+				'post_type'      => SE_Event_Post_Type::$event_date_post_type,
+				'post_status'    => SE_Event_Post_Type::child_date_statuses(),
+				'post_parent'    => $event_id,
+				'posts_per_page' => -1,
+				'fields'         => 'ids',
+			)
+		);
 
 		// Iterate over the event dates and delete them.
-		foreach ( $event_dates as $event_date ) {
-			wp_delete_post( $event_date['id'], true );
+		foreach ( $event_dates as $event_date_id ) {
+			wp_delete_post( $event_date_id, true );
 		}
+
+		// Drop the legacy meta too, so the event stops advertising dates that no
+		// longer exist to cron and the countdown.
+		delete_post_meta( $event_id, 'se_event_dates' );
+		delete_post_meta( $event_id, 'se_event_date_start' );
+		delete_post_meta( $event_id, 'se_event_date_end' );
 	}
 
 	/**

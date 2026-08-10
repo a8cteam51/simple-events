@@ -66,12 +66,19 @@ class SE_Calendar_Export {
 			$post_id = intval( $_REQUEST['id'] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		}
 
-		if ( ! empty( $post_id ) && get_post_type( $post_id ) === SE_Event_Post_Type::$post_type ) {
-			$events[] = $post_id;
-		}
+		if ( ! empty( $post_id ) ) {
+			// A specific event was asked for. Export it only if it is a published
+			// event, and never fall back to exporting every event instead.
+			$requested_event = get_post( $post_id );
 
-		// Get all events, if no event provided so far.
-		if ( empty( $events ) ) {
+			if ( $requested_event
+				&& SE_Event_Post_Type::$post_type === $requested_event->post_type
+				&& 'publish' === $requested_event->post_status
+			) {
+				$events[] = $post_id;
+			}
+		} else {
+			// No specific event requested, so export the most recent published ones.
 			$events_query_args = array(
 				'post_type'      => SE_Event_Post_Type::$post_type,
 				'post_status'    => 'publish',
