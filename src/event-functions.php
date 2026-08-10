@@ -710,6 +710,13 @@ function se_event_create_event_date( $event_id, $event_dates ) {
 		return null;
 	}
 
+	// Dates mirror their event's status, so a draft or private event never has
+	// publicly published dates. auto-draft is not a status a date should hold.
+	$event_status = get_post_status( $event_id );
+	if ( ! $event_status || 'auto-draft' === $event_status ) {
+		$event_status = 'draft';
+	}
+
 	// Create the event date post.
 	$event_date_post = array(
 		'post_title'   => sprintf(
@@ -719,7 +726,7 @@ function se_event_create_event_date( $event_id, $event_dates ) {
 			wp_date( get_option( 'date_format' ), $event_dates['start_date'] )
 		),
 		'post_content' => '',
-		'post_status'  => 'publish',
+		'post_status'  => $event_status,
 		'post_type'    => SE_Event_Post_Type::$event_date_post_type,
 		'post_parent'  => $event_id,
 	);
@@ -763,10 +770,13 @@ function se_event_get_event_dates( $event_id ): array {
 		throw new \Exception( esc_html( __( 'Invalid event ID provided.', 'simple-events' ) ) );
 	}
 
+	// Dates mirror their event's status, so returning every status here returns
+	// the event's own dates — a draft event in the editor included. Public
+	// visibility is the caller's job, not this function's.
 	$event_dates = get_posts(
 		array(
 			'post_type'      => SE_Event_Post_Type::$event_date_post_type,
-			'post_status'    => 'publish',
+			'post_status'    => array( 'publish', 'pending', 'draft', 'future', 'private' ),
 			'posts_per_page' => -1,
 			'post_parent'    => $event_id,
 			'fields'         => 'ids',

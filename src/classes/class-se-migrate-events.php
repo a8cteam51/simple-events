@@ -332,12 +332,26 @@ class SE_Migrate_Events {
 	 * @return void
 	 */
 	public static function migrate_1_0_0_to_2_0_0( int $event_id ): void {
+		// This is public, so it can be reached without migrate_event()'s version
+		// filter. Rebuilding an already-migrated event would change its date IDs
+		// and break every ?se-date= permalink.
+		$version = get_post_meta( $event_id, 'se_event_version', true );
+		if ( ! empty( $version ) && version_compare( $version, '2.0.0', '>=' ) ) {
+			return;
+		}
+
 		// Get all the events from its meta.
 		$dates = get_post_meta( $event_id, 'se_event_dates', true );
 		// Iterate over the dates.
 		if ( ! is_array( $dates ) || empty( $dates ) ) {
 			return; // No dates to migrate.
 		}
+
+		// Clear any existing children first, so a re-run rebuilds rather than
+		// duplicates. A migration that died part way through leaves no version
+		// stamp, so it always runs again from the top.
+		SE_Event_Dates::delete_all_event_dates( $event_id );
+
 		foreach ( $dates as $key => $date ) {
 			// Unpack
 			$start   = $date['datetime_start'] ?? '';

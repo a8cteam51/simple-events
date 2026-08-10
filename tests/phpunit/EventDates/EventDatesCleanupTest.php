@@ -7,6 +7,38 @@
 class EventDatesCleanupTest extends WP_UnitTestCase {
 
 	/**
+	 * Content carrying the Event Info block.
+	 *
+	 * The block is locked to the event template, so a real event always has it.
+	 * Without it, save_post clears the dates as broken-event cleanup.
+	 *
+	 * @var string
+	 */
+	private $with_block = '<!-- wp:simple-events/event-info /-->';
+
+	/**
+	 * Write the event's real dates into the block's eventDates attribute.
+	 *
+	 * A saved event carries its dates twice: as se-event-date children and as the
+	 * block attribute the editor last wrote. The IDs only exist once the children
+	 * do, so the content is written back afterwards, as the editor does.
+	 *
+	 * @param integer $event_id The event to update.
+	 *
+	 * @return void
+	 */
+	private function write_block_dates( $event_id ) {
+		$dates = se_event_get_event_dates( $event_id );
+
+		wp_update_post(
+			array(
+				'ID'           => $event_id,
+				'post_content' => '<!-- wp:simple-events/event-info ' . wp_json_encode( array( 'eventDates' => $dates ) ) . ' /-->',
+			)
+		);
+	}
+
+	/**
 	 * Permanently deleting a parent event should also delete its child event-date posts.
 	 *
 	 * @return void
@@ -14,8 +46,9 @@ class EventDatesCleanupTest extends WP_UnitTestCase {
 	public function test_deleting_event_removes_child_event_dates() {
 		$event_id = $this->factory->post->create(
 			array(
-				'post_type'   => 'se-event',
-				'post_status' => 'publish',
+				'post_type'    => 'se-event',
+				'post_status'  => 'publish',
+				'post_content' => $this->with_block,
 			)
 		);
 
@@ -41,6 +74,8 @@ class EventDatesCleanupTest extends WP_UnitTestCase {
 
 		$this->assertNotNull( $date_1 );
 		$this->assertNotNull( $date_2 );
+
+		$this->write_block_dates( $event_id );
 
 		wp_delete_post( $event_id, true );
 
@@ -56,8 +91,9 @@ class EventDatesCleanupTest extends WP_UnitTestCase {
 	public function test_trashing_event_trashes_child_event_dates() {
 		$event_id = $this->factory->post->create(
 			array(
-				'post_type'   => 'se-event',
-				'post_status' => 'publish',
+				'post_type'    => 'se-event',
+				'post_status'  => 'publish',
+				'post_content' => $this->with_block,
 			)
 		);
 
@@ -83,6 +119,8 @@ class EventDatesCleanupTest extends WP_UnitTestCase {
 
 		$this->assertNotNull( $date_1 );
 		$this->assertNotNull( $date_2 );
+
+		$this->write_block_dates( $event_id );
 
 		wp_trash_post( $event_id );
 
@@ -101,8 +139,9 @@ class EventDatesCleanupTest extends WP_UnitTestCase {
 	public function test_trashing_then_deleting_event_removes_child_event_dates() {
 		$event_id = $this->factory->post->create(
 			array(
-				'post_type'   => 'se-event',
-				'post_status' => 'publish',
+				'post_type'    => 'se-event',
+				'post_status'  => 'publish',
+				'post_content' => $this->with_block,
 			)
 		);
 
@@ -128,6 +167,8 @@ class EventDatesCleanupTest extends WP_UnitTestCase {
 
 		$this->assertNotNull( $date_1 );
 		$this->assertNotNull( $date_2 );
+
+		$this->write_block_dates( $event_id );
 
 		// Step 1: Trash the parent (children move to trash).
 		wp_trash_post( $event_id );
@@ -149,14 +190,16 @@ class EventDatesCleanupTest extends WP_UnitTestCase {
 	public function test_deleting_event_does_not_affect_other_events_dates() {
 		$event_a = $this->factory->post->create(
 			array(
-				'post_type'   => 'se-event',
-				'post_status' => 'publish',
+				'post_type'    => 'se-event',
+				'post_status'  => 'publish',
+				'post_content' => $this->with_block,
 			)
 		);
 		$event_b = $this->factory->post->create(
 			array(
-				'post_type'   => 'se-event',
-				'post_status' => 'publish',
+				'post_type'    => 'se-event',
+				'post_status'  => 'publish',
+				'post_content' => $this->with_block,
 			)
 		);
 
@@ -180,6 +223,9 @@ class EventDatesCleanupTest extends WP_UnitTestCase {
 			)
 		);
 
+		$this->write_block_dates( $event_a );
+		$this->write_block_dates( $event_b );
+
 		// Trash then permanently delete event A.
 		wp_trash_post( $event_a );
 		wp_delete_post( $event_a, true );
@@ -193,15 +239,19 @@ class EventDatesCleanupTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Untrashing a parent event should restore its child event-date posts to publish.
+	 * Untrashing a parent event should restore its dates to the event's status.
+	 *
+	 * WordPress restores an untrashed post to draft by default, so the dates
+	 * follow it there rather than being forced back to publish.
 	 *
 	 * @return void
 	 */
 	public function test_untrashing_event_restores_child_event_dates() {
 		$event_id = $this->factory->post->create(
 			array(
-				'post_type'   => 'se-event',
-				'post_status' => 'publish',
+				'post_type'    => 'se-event',
+				'post_status'  => 'publish',
+				'post_content' => $this->with_block,
 			)
 		);
 
@@ -228,10 +278,14 @@ class EventDatesCleanupTest extends WP_UnitTestCase {
 		$this->assertNotNull( $date_1 );
 		$this->assertNotNull( $date_2 );
 
+		$this->write_block_dates( $event_id );
+
 		wp_trash_post( $event_id );
 		wp_untrash_post( $event_id );
 
-		$this->assertSame( 'publish', get_post_status( $date_1->ID ), 'Child event-date post was not restored when parent event was untrashed.' );
-		$this->assertSame( 'publish', get_post_status( $date_2->ID ), 'Child event-date post was not restored when parent event was untrashed.' );
+		$restored_status = get_post_status( $event_id );
+
+		$this->assertSame( $restored_status, get_post_status( $date_1->ID ), 'Child event-date post did not match the event after untrashing.' );
+		$this->assertSame( $restored_status, get_post_status( $date_2->ID ), 'Child event-date post did not match the event after untrashing.' );
 	}
 }
