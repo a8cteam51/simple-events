@@ -3,6 +3,7 @@
 	"apiVersion": 2,
 	"name": "simple-events/countdown",
 	"title": "Countdown",
+	"textdomain": "simple-events",
 	"description": "Display a countdown to your next upcoming event.",
 	"icon": "clock",
 	"category": "simple-events",

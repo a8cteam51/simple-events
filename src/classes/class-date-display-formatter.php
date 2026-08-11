@@ -283,12 +283,13 @@ class SE_Date_Display_Formatter {
 			$found_date = array_filter(
 				$event_dates,
 				function ( $date ) {
-					return $date['id'] === $this->event_date_id;
+					return isset( $date['id'] ) && $date['id'] === $this->event_date_id;
 				}
 			);
 
+			// array_values(), because array_filter() preserves keys.
 			if ( $found_date ) {
-				return $this->render_single_date( $found_date[0] );
+				return $this->render_single_date( array_values( $found_date )[0] );
 			}
 		}
 		// If we are grouping dates, return the first date.
@@ -410,7 +411,7 @@ class SE_Date_Display_Formatter {
 		$times = array();
 
 		foreach ( $event_dates as $date ) {
-			$index = $date['all_day'] ? 'all_day' : $this->format_time( $date['start_date'] ) . ' - ' . $this->format_time( $date['end_date'] );
+			$index = $date['all_day'] ? 'all_day' : $this->time_key( $date );
 
 			// If this index is not in the array, add it.
 			if ( ! in_array( $index, $times, true ) ) {
@@ -424,6 +425,23 @@ class SE_Date_Display_Formatter {
 		}
 
 		return true;
+	}
+
+	/**
+	 * Builds the grouping key for a date's start and end times.
+	 *
+	 * Fixed 'H:i:s', not format_time(): a site time format that hides minutes
+	 * would make 10:00 and 10:45 compare equal and merge distinct events.
+	 *
+	 * @param array{start_date: integer, end_date: integer} $event_date The event date.
+	 *
+	 * @return string
+	 */
+	private function time_key( array $event_date ): string {
+		$timezone = $this->get_timezone_instance();
+
+		return wp_date( 'H:i:s', $event_date['start_date'], $timezone )
+			. ' - ' . wp_date( 'H:i:s', $event_date['end_date'], $timezone );
 	}
 
 	/**
@@ -472,12 +490,8 @@ class SE_Date_Display_Formatter {
 				$groups['all_day'][] = $date;
 				continue;
 			}
-			// Convert the start and end times,/
-			$start = $this->format_time( $date['start_date'] );
-			$end   = $this->format_time( $date['end_date'] );
-
 			// Add the date to the group.
-			$groups[ $start . ' - ' . $end ][] = $date;
+			$groups[ $this->time_key( $date ) ][] = $date;
 		}
 		// Iterate over each group, and break them down to the starting month.
 		foreach ( $groups as $group ) {

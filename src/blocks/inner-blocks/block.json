@@ -3,6 +3,7 @@
 	"apiVersion": 2,
 	"name": "simple-events/inner-blocks",
 	"title": "Event Blocks",
+	"textdomain": "simple-events",
 	"category": "simple-events",
 	"supports": {
 		"inserter": false,

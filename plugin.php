@@ -80,6 +80,13 @@ require_once SE_SRC_PATH . '/woocommerce-hooks.php';
 require_once SE_SRC_PATH . '/rest-api.php';
 require_once SE_SRC_PATH . '/back-compat.php';
 
+add_action(
+	'init',
+	static function () {
+		load_plugin_textdomain( 'simple-events', false, dirname( SE_BASENAME ) . '/languages' );
+	}
+);
+
 // Instruct WordPress to fetch update information from GitHub.
 add_filter(
 	'update_plugins_github.com',

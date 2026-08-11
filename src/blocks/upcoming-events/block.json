@@ -3,6 +3,7 @@
     "apiVersion": 2,
 	"name": "simple-events/upcoming-events",
 	"title": "Events Feed",
+	"textdomain": "simple-events",
 	"description": "Display upcoming events, past events or events between a date range.",
 	"icon": "layout",
 	"category": "simple-events",

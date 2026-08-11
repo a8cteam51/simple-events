@@ -67,7 +67,7 @@ if ( $se_hide_end_time ) {
 </article>
 
 <?php if ( $se_attributes['eventModalAccess'] && $se_event_modal_access && $se_show_no_thumbnail ) : ?>
-	<modal class="se-event-modal hidden">
+	<div class="se-event-modal hidden" role="dialog" aria-label="<?php echo esc_attr( sprintf( /* translators: %s is the event title. */ __( 'Details for %s', 'simple-events' ), get_the_title( $se_event ) ) ); ?>">
 		<div class="se-event-modal__image">
 			<?php echo get_the_post_thumbnail( $se_event ); ?>
 		</div>
@@ -86,5 +86,5 @@ if ( $se_hide_end_time ) {
 				<p class="se-event-modal__excerpt"><?php echo wp_kses_post( $se_event->post_excerpt ); ?></p>
 			<?php endif; ?>
 		</div>
-	</modal>
+	</div>
 <?php endif; ?>

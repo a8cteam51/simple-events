@@ -3,6 +3,7 @@
 	"apiVersion": 2,
 	"name": "simple-events/external-link",
 	"title": "External Tickets",
+	"textdomain": "simple-events",
 	"description": "Add a link to an external ticket website.",
 	"icon": "admin-links",
 	"category": "simple-events",

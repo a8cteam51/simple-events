@@ -30,6 +30,8 @@ class SE_Blocks {
 			add_action( 'block_categories_all', array( __CLASS__, 'block_categories' ), 10, 2 );
 			add_action( 'enqueue_block_editor_assets', array( __CLASS__, 'block_assets' ), 10 );
 			add_action( 'init', array( __CLASS__, 'register_block_type' ), 10 );
+			// After registration, so the handles exist to attach translations to.
+			add_action( 'init', array( __CLASS__, 'set_block_script_translations' ), 20 );
 			add_action( 'wp_enqueue_scripts', array( __CLASS__, 'enqueue_inline_block_styles' ), 10 );
 		} else {
 			add_action(
@@ -142,6 +144,34 @@ class SE_Blocks {
 				$variations['version'],
 				true
 			);
+
+			wp_set_script_translations( 'se-block-variations', 'simple-events', SE_PLUGIN_DIR . '/languages' );
+		}
+	}
+
+	/**
+	 * Point every block script at the plugin's JSON translations.
+	 *
+	 * Without this the editor never requests them, so wrapped strings stay in
+	 * English whatever the site language.
+	 *
+	 * @return void
+	 */
+	public static function set_block_script_translations() {
+		foreach ( WP_Block_Type_Registry::get_instance()->get_all_registered() as $name => $block_type ) {
+			if ( ! str_starts_with( $name, 'simple-events/' ) ) {
+				continue;
+			}
+
+			$handles = array_merge(
+				(array) $block_type->editor_script_handles,
+				(array) $block_type->script_handles,
+				(array) $block_type->view_script_handles
+			);
+
+			foreach ( array_unique( array_filter( $handles ) ) as $handle ) {
+				wp_set_script_translations( $handle, 'simple-events', SE_PLUGIN_DIR . '/languages' );
+			}
 		}
 	}
 

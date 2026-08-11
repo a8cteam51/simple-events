@@ -289,50 +289,65 @@ export default class Calendar {
 
 			let hideTimeout = null;
 
-			titles.forEach( ( title ) => {
-				// On hovering an event's title, show its corresponding modal.
-				title.addEventListener( 'mouseenter', ( e ) => {
-					const article = e.currentTarget.closest( 'article' );
-					modal = article.nextElementSibling;
+			// Show the modal belonging to the event the event target sits in.
+			const showModal = ( e ) => {
+				const article = e.currentTarget.closest( 'article' );
+				modal = article.nextElementSibling;
 
-					if ( ! modal ) {
-						return;
-					}
+				if ( ! modal ) {
+					return;
+				}
 
-					// Keep the modal open when hovered, remove timeout.
-					modal.addEventListener( 'mouseenter', () => {
-						clearTimeout( hideTimeout );
-					} );
-
-					// Hide the modal after cursor leaves the modal.
-					modal.addEventListener( 'mouseleave', () => {
-						hideTimeout = this.handleHideTimeout( modal );
-					} );
-
-					modal.classList.remove( 'hidden' );
-
-					// Position of the event in the calendar.
-					const position = ( idx + 1 ) % 7;
-
-					// Set the modal's position based on its position in the calendar.
-					if ( position !== 0 && position < 4 ) {
-						modal.style.left = '80px';
-					} else {
-						modal.style.right = '80px';
-					}
-					if ( ( idx + 1 ) > 22 ) {
-						modal.style.top = '-220px';
-					}
+				// Keep the modal open when hovered, remove timeout.
+				modal.addEventListener( 'mouseenter', () => {
+					clearTimeout( hideTimeout );
 				} );
 
-				title.addEventListener( 'mouseleave', () => {
-
-					if ( ! modal ) {
-						return;
-					}
-
-					// Hide the modal on leaving the title.
+				// Hide the modal after cursor leaves the modal.
+				modal.addEventListener( 'mouseleave', () => {
 					hideTimeout = this.handleHideTimeout( modal );
+				} );
+
+				clearTimeout( hideTimeout );
+				modal.classList.remove( 'hidden' );
+
+				// Position of the event in the calendar.
+				const position = ( idx + 1 ) % 7;
+
+				// Set the modal's position based on its position in the calendar.
+				if ( position !== 0 && position < 4 ) {
+					modal.style.left = '80px';
+				} else {
+					modal.style.right = '80px';
+				}
+				if ( ( idx + 1 ) > 22 ) {
+					modal.style.top = '-220px';
+				}
+			};
+
+			const hideModal = () => {
+				if ( ! modal ) {
+					return;
+				}
+
+				hideTimeout = this.handleHideTimeout( modal );
+			};
+
+			titles.forEach( ( title ) => {
+				title.addEventListener( 'mouseenter', showModal );
+				title.addEventListener( 'mouseleave', hideModal );
+
+				// focusin/focusout rather than focus/blur: the listener is on the
+				// heading but it is the link inside it that takes focus.
+				title.addEventListener( 'focusin', showModal );
+				title.addEventListener( 'focusout', hideModal );
+
+				// Dismissible without moving focus (WCAG 1.4.13).
+				title.addEventListener( 'keydown', ( e ) => {
+					if ( 'Escape' === e.key && modal ) {
+						clearTimeout( hideTimeout );
+						modal.classList.add( 'hidden' );
+					}
 				} );
 			} );
 
