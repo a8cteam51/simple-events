@@ -136,7 +136,7 @@ class SE_Calendar {
 		$current_date             = $this->create_date_time( $date );
 		$current_day              = $this->create_date_time( 'now' )->setTime( 0, 0, 0 );
 		$current_day_formatted    = $current_day->format( 'Y-m-d' );
-		$current_month            = $current_date->format( 'n' );
+		$current_month            = $current_date->format( 'Y-m' );
 		$data                     = array();
 		$data['month_has_events'] = false;
 
@@ -146,7 +146,9 @@ class SE_Calendar {
 		// Fetch the whole visible grid in a single query, bucketed per day,
 		// instead of one query per calendar cell (the old N+1 hot spot).
 		$range_events = $this->bucket_event_dates_by_day(
-			SE_Event_Query_Utils::get_event_dates_for_range( $start_day->getTimestamp(), $end_day->getTimestamp() )
+			SE_Event_Query_Utils::get_event_dates_for_range( $start_day->getTimestamp(), $end_day->getTimestamp() ),
+			$start_day,
+			$end_day
 		);
 
 		$period = new DatePeriod( $start_day, new DateInterval( 'P1D' ), $end_day );
@@ -154,7 +156,7 @@ class SE_Calendar {
 		foreach ( $period as $day ) {
 			$day->setTime( 0, 0, 0 );
 			$day_formatted = $day->format( 'Y-m-d' );
-			$day_month     = $day->format( 'n' );
+			$day_month     = $day->format( 'Y-m' );
 			$events        = $this->get_events_by_date( $day, $range_events[ $day_formatted ] ?? array() );
 
 			if ( ! $data['month_has_events'] && ! empty( $events ) && $day_month === $current_month ) {
@@ -468,28 +470,40 @@ class SE_Calendar {
 	/**
 	 * Group event dates by the calendar day they render on ('Y-m-d' => dates).
 	 *
-	 * All-day dates land on their start day; timed dates only if they end the
-	 * same day (a timed date crossing midnight lands on no day).
+	 * A date lands on every day it spans, from its start day to its end day.
 	 *
 	 * @param array<int, array{event_id: int, event_date_id: int, event_start_date: string, event_end_date: string, event_all_day: bool, event_hide_from_calendar: bool, event_hide_from_feed: bool}> $event_dates Mapped dates from SE_Event_Query_Utils::get_event_dates_for_range().
+	 * @param DateTimeInterface                                                                                                                                                                       $range_start First cell on the grid.
+	 * @param DateTimeInterface                                                                                                                                                                       $range_end   Last cell on the grid.
 	 *
 	 * @return array<string, array<int, array>> Map of 'Y-m-d' day => event dates.
 	 */
-	private function bucket_event_dates_by_day( array $event_dates ): array {
+	private function bucket_event_dates_by_day( array $event_dates, DateTimeInterface $range_start, DateTimeInterface $range_end ): array {
 		$buckets = array();
 
-		foreach ( $event_dates as $event_date ) {
-			$start_day = se_create_date_time_from_timestamp( $event_date['event_start_date'] )->format( 'Y-m-d' );
+		$first_cell = ( new DateTime( '@' . $range_start->getTimestamp() ) )->setTimezone( $range_start->getTimezone() )->setTime( 0, 0, 0 );
+		$last_cell  = ( new DateTime( '@' . $range_end->getTimestamp() ) )->setTimezone( $range_end->getTimezone() )->setTime( 0, 0, 0 );
 
-			if ( $event_date['event_all_day'] ) {
-				$buckets[ $start_day ][] = $event_date;
-				continue;
+		foreach ( $event_dates as $event_date ) {
+			$day      = se_create_date_time_from_timestamp( $event_date['event_start_date'] )->setTime( 0, 0, 0 );
+			$last_day = se_create_date_time_from_timestamp( $event_date['event_end_date'] )->setTime( 0, 0, 0 );
+
+			// An end before its start is bad data; place it on the start day alone.
+			if ( $last_day < $day ) {
+				$last_day = clone $day;
 			}
 
-			// Timed dates only render on their start day, and only if they end it.
-			$end_day = se_create_date_time_from_timestamp( $event_date['event_end_date'] )->format( 'Y-m-d' );
-			if ( $end_day === $start_day ) {
-				$buckets[ $start_day ][] = $event_date;
+			// Clamped to the visible grid, so a long span costs only the cells shown.
+			if ( $day < $first_cell ) {
+				$day = clone $first_cell;
+			}
+			if ( $last_day > $last_cell ) {
+				$last_day = clone $last_cell;
+			}
+
+			while ( $day <= $last_day ) {
+				$buckets[ $day->format( 'Y-m-d' ) ][] = $event_date;
+				$day                                  = ( clone $day )->modify( '+1 day' );
 			}
 		}
 

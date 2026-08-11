@@ -3,6 +3,7 @@
 	"apiVersion": 2,
 	"name": "simple-events/past-events-notice",
 	"title": "Past Events Notice",
+	"textdomain": "simple-events",
 	"description": "Display the notice message set in the Simple Events settings.",
 	"icon": "megaphone",
 	"category": "simple-events",

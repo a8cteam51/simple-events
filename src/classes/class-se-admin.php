@@ -51,6 +51,7 @@ class SE_Admin {
 				'nonce'   => wp_create_nonce( 'wp_rest' ),
 			)
 		);
+		wp_set_script_translations( 'se-admin', 'simple-events', SE_PLUGIN_DIR . '/languages' );
 		wp_enqueue_script( 'se-admin' );
 	}
 

@@ -1,0 +1,314 @@
+<?php
+/**
+ * GH-88: a multi-day event must show on every day it spans.
+ *
+ * bucket_event_dates_by_day() (class-se-calendar.php:489-493) only places a
+ * timed date when its end day equals its start day, so an event running from
+ * Monday to Wednesday appears on no day at all. The iCal export
+ * (class-se-calendar-export.php:121-125) exports the same date as a TimeSpan
+ * over its real start and end, so the two surfaces disagree.
+ *
+ * @package Simple_Events
+ */
+class CalendarMultiDaySpanTest extends WP_UnitTestCase {
+
+	/**
+	 * Create a published event with one child date.
+	 *
+	 * @param array $date_args Args for se_event_create_event_date().
+	 *
+	 * @return integer The se-event-date post id.
+	 */
+	private function make_date( array $date_args ): int {
+		$event_id = $this->factory->post->create(
+			array(
+				'post_type'   => 'se-event',
+				'post_status' => 'publish',
+			)
+		);
+
+		$date = se_event_create_event_date( $event_id, $date_args );
+		$this->assertNotNull( $date, 'Failed to create the event date fixture.' );
+
+		return (int) $date->ID;
+	}
+
+	/**
+	 * Timestamp for a wall-clock time in the site timezone.
+	 *
+	 * @param string $datetime Wall-clock time, e.g. '2026-06-15 12:00:00'.
+	 *
+	 * @return integer
+	 */
+	private function ts( string $datetime ): int {
+		return ( new DateTime( $datetime, wp_timezone() ) )->getTimestamp();
+	}
+
+	/**
+	 * Grid days (Y-m-d) a given event-date id renders on.
+	 *
+	 * @param string  $month   First of the month, e.g. '2026-06-01'.
+	 * @param integer $date_id The se-event-date post id.
+	 *
+	 * @return string[]
+	 */
+	private function days_for_date( string $month, int $date_id ): array {
+		$data = SE_Calendar::get_instance()->get_month_days( $month );
+		$days = array();
+
+		foreach ( $data['days'] as $day ) {
+			foreach ( $day['events'] as $event ) {
+				if ( (int) $event->event_date_id === $date_id ) {
+					$days[] = $day['date_formatted'];
+				}
+			}
+		}
+
+		return $days;
+	}
+
+	/**
+	 * Monday 22:00 to Wednesday 01:00 shows on Monday, Tuesday and Wednesday.
+	 *
+	 * @return void
+	 */
+	public function test_a_timed_event_spanning_three_days_shows_on_all_three() {
+		// 2026-06-15 is a Monday.
+		$date_id = $this->make_date(
+			array(
+				'start_date' => $this->ts( '2026-06-15 22:00:00' ),
+				'end_date'   => $this->ts( '2026-06-17 01:00:00' ),
+				'all_day'    => false,
+			)
+		);
+
+		$this->assertSame(
+			array( '2026-06-15', '2026-06-16', '2026-06-17' ),
+			$this->days_for_date( '2026-06-01', $date_id ),
+			'An event running Monday to Wednesday should appear on each of those days.'
+		);
+	}
+
+	/**
+	 * The two-day case: 23:00 to 01:00 the next morning.
+	 *
+	 * @return void
+	 */
+	public function test_a_timed_event_crossing_midnight_shows_on_both_days() {
+		$date_id = $this->make_date(
+			array(
+				'start_date' => $this->ts( '2026-06-15 23:00:00' ),
+				'end_date'   => $this->ts( '2026-06-16 01:00:00' ),
+				'all_day'    => false,
+			)
+		);
+
+		$this->assertSame(
+			array( '2026-06-15', '2026-06-16' ),
+			$this->days_for_date( '2026-06-01', $date_id ),
+			'An event crossing midnight should appear on both days, not vanish.'
+		);
+	}
+
+	/**
+	 * An all-day date spanning days shows on each of them.
+	 *
+	 * @return void
+	 */
+	public function test_an_all_day_event_spanning_days_shows_on_each() {
+		$date_id = $this->make_date(
+			array(
+				'start_date' => $this->ts( '2026-06-20 00:00:00' ),
+				'end_date'   => $this->ts( '2026-06-22 23:59:59' ),
+				'all_day'    => true,
+			)
+		);
+
+		$this->assertSame(
+			array( '2026-06-20', '2026-06-21', '2026-06-22' ),
+			$this->days_for_date( '2026-06-01', $date_id ),
+			'An all-day event over three days should appear on each of them.'
+		);
+	}
+
+	/**
+	 * A single-day event still shows on exactly one day.
+	 *
+	 * Guards against fixing the span by placing events on days they do not run.
+	 *
+	 * @return void
+	 */
+	public function test_a_single_day_event_still_shows_on_one_day() {
+		$date_id = $this->make_date(
+			array(
+				'start_date' => $this->ts( '2026-06-15 12:00:00' ),
+				'end_date'   => $this->ts( '2026-06-15 13:00:00' ),
+				'all_day'    => false,
+			)
+		);
+
+		$this->assertSame(
+			array( '2026-06-15' ),
+			$this->days_for_date( '2026-06-01', $date_id ),
+			'A same-day event should still render on exactly its own day.'
+		);
+	}
+
+	/**
+	 * A span reaching into the next month still fills the days it covers.
+	 *
+	 * @return void
+	 */
+	public function test_a_span_crossing_a_month_boundary_fills_the_visible_days() {
+		$date_id = $this->make_date(
+			array(
+				'start_date' => $this->ts( '2026-06-29 20:00:00' ),
+				'end_date'   => $this->ts( '2026-07-01 02:00:00' ),
+				'all_day'    => false,
+			)
+		);
+
+		$this->assertSame(
+			array( '2026-06-29', '2026-06-30', '2026-07-01' ),
+			$this->days_for_date( '2026-06-01', $date_id ),
+			'A span running into July should still fill the June days and the July cell the grid shows.'
+		);
+	}
+
+	/**
+	 * A span that began before the grid still fills the days it covers.
+	 *
+	 * The mirror of the trailing-edge case. get_event_dates_for_range() matches
+	 * on se_event_date_start alone, so a date starting before the first visible
+	 * cell is never fetched and the event shows on no day — the same defect at
+	 * the other end of the grid.
+	 *
+	 * Expected days are read back off the grid rather than hardcoded, so the
+	 * test holds whatever start_of_week is set.
+	 *
+	 * @return void
+	 */
+	public function test_a_span_starting_before_the_grid_still_fills_the_visible_days() {
+		$date_id = $this->make_date(
+			array(
+				'start_date' => $this->ts( '2026-06-25 20:00:00' ),
+				'end_date'   => $this->ts( '2026-07-02 02:00:00' ),
+				'all_day'    => false,
+			)
+		);
+
+		$data     = SE_Calendar::get_instance()->get_month_days( '2026-07-01' );
+		$expected = array();
+
+		foreach ( $data['days'] as $day ) {
+			if ( $day['date_formatted'] >= '2026-06-25' && $day['date_formatted'] <= '2026-07-02' ) {
+				$expected[] = $day['date_formatted'];
+			}
+		}
+
+		$this->assertNotEmpty( $expected, 'The July grid should show days inside the span.' );
+		$this->assertSame(
+			$expected,
+			$this->days_for_date( '2026-07-01', $date_id ),
+			'A span starting before the grid should still render on every visible day it covers.'
+		);
+	}
+
+	/**
+	 * A span longer than the grid fills every visible day.
+	 *
+	 * Neither end of it sits inside the range, so a query matching only on
+	 * start-in-range or end-in-range fetches nothing and the event shows on no
+	 * day — the same symptom at both edges at once.
+	 *
+	 * @return void
+	 */
+	public function test_a_span_enclosing_the_whole_grid_fills_every_day() {
+		$date_id = $this->make_date(
+			array(
+				'start_date' => $this->ts( '2026-06-01 09:00:00' ),
+				'end_date'   => $this->ts( '2026-08-31 17:00:00' ),
+				'all_day'    => false,
+			)
+		);
+
+		$data     = SE_Calendar::get_instance()->get_month_days( '2026-07-01' );
+		$expected = wp_list_pluck( $data['days'], 'date_formatted' );
+
+		$this->assertNotEmpty( $expected, 'The July grid should have days.' );
+		$this->assertSame(
+			$expected,
+			$this->days_for_date( '2026-07-01', $date_id ),
+			'A span running the whole visible grid should appear on every cell.'
+		);
+	}
+
+	/**
+	 * Events in one day cell come back in start order.
+	 *
+	 * One of them began before the visible range, so it is matched by a
+	 * different meta clause than the other. The two clauses can share a
+	 * postmeta alias, which leaves an ORDER BY on the start clause reading
+	 * whichever row satisfied the WHERE.
+	 *
+	 * @return void
+	 */
+	public function test_events_in_a_day_cell_are_ordered_by_start() {
+		// Starts before the grid, still running on the 15th.
+		$early = $this->make_date(
+			array(
+				'start_date' => $this->ts( '2026-06-20 09:00:00' ),
+				'end_date'   => $this->ts( '2026-07-15 10:00:00' ),
+				'all_day'    => false,
+			)
+		);
+
+		// Starts and ends on the 15th.
+		$later = $this->make_date(
+			array(
+				'start_date' => $this->ts( '2026-07-15 14:00:00' ),
+				'end_date'   => $this->ts( '2026-07-15 15:00:00' ),
+				'all_day'    => false,
+			)
+		);
+
+		$data  = SE_Calendar::get_instance()->get_month_days( '2026-07-01' );
+		$found = array();
+
+		foreach ( $data['days'] as $day ) {
+			if ( '2026-07-15' === $day['date_formatted'] ) {
+				foreach ( $day['events'] as $event ) {
+					$found[] = (int) $event->event_date_id;
+				}
+			}
+		}
+
+		$this->assertSame(
+			array( $early, $later ),
+			$found,
+			'The cell should list the earlier-starting event first.'
+		);
+	}
+
+	/**
+	 * hide_from_calendar still wins over the span.
+	 *
+	 * @return void
+	 */
+	public function test_a_hidden_span_shows_on_no_day() {
+		$date_id = $this->make_date(
+			array(
+				'start_date'         => $this->ts( '2026-06-15 22:00:00' ),
+				'end_date'           => $this->ts( '2026-06-17 01:00:00' ),
+				'all_day'            => false,
+				'hide_from_calendar' => true,
+			)
+		);
+
+		$this->assertSame(
+			array(),
+			$this->days_for_date( '2026-06-01', $date_id ),
+			'hide_from_calendar must still keep every day of the span clear.'
+		);
+	}
+}

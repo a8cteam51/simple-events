@@ -3,6 +3,7 @@
     	"apiVersion": 2,
 	"name": "simple-events/event-tickets",
 	"title": "Event Tickets",
+	"textdomain": "simple-events",
 	"icon": "tickets-alt",
 	"category": "simple-events",
 	"keywords": [

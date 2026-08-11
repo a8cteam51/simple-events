@@ -110,11 +110,11 @@ class CalendarHideFromCalendarTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Current placement rule: a timed event crossing midnight shows on no day.
+	 * A timed event crossing midnight shows on both days it runs on (GH-88).
 	 *
 	 * @return void
 	 */
-	public function test_timed_event_crossing_midnight_shows_on_no_day() {
+	public function test_timed_event_crossing_midnight_shows_on_both_days() {
 		$fixture = $this->make_event_with_date(
 			array(
 				'start_date' => $this->ts( '2026-06-15 23:00:00' ),
@@ -124,9 +124,9 @@ class CalendarHideFromCalendarTest extends WP_UnitTestCase {
 		);
 
 		$this->assertSame(
-			array(),
+			array( '2026-06-15', '2026-06-16' ),
 			$this->days_for_date( '2026-06-01', $fixture['date_id'] ),
-			'A timed event whose end runs past its start day shows on no day (current behaviour).'
+			'A timed event running past midnight shows on both days.'
 		);
 	}
 

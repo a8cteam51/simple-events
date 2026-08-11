@@ -20,6 +20,11 @@ $se_hide_start_time    = property_exists( $se_event, 'hide_start_time' ) ? $se_e
 $se_hide_end_time      = property_exists( $se_event, 'hide_end_time' ) ? $se_event->hide_end_time : false;
 
 
+// Needed before the title link, which describes itself by the panel's id.
+$se_has_modal = $se_attributes['eventModalAccess'] && $se_event_modal_access && $se_show_no_thumbnail;
+// Unique per render: the desktop grid and the mobile list both render this.
+$se_modal_id = wp_unique_id( 'se-event-modal-' );
+
 $se_hide_css = '';
 if ( $se_hide_start_time ) {
 	$se_hide_css .= 'se-event-hide-start-time';
@@ -54,6 +59,9 @@ if ( $se_hide_end_time ) {
 				title="<?php echo esc_attr( get_the_title( $se_event ) ); ?>"
 				rel="bookmark"
 				class="simple-events-calendar-month__calendar-event-title-link"
+				<?php if ( $se_has_modal ) : ?>
+					aria-describedby="<?php echo esc_attr( $se_modal_id ); ?>"
+				<?php endif; ?>
 				<?php if ( property_exists( $se_event, 'open_in_new_window' ) && true === (bool) $se_event->open_in_new_window ) : ?>
 					target="_blank"
 				<?php endif; ?>
@@ -66,8 +74,8 @@ if ( $se_hide_end_time ) {
 	</div>
 </article>
 
-<?php if ( $se_attributes['eventModalAccess'] && $se_event_modal_access && $se_show_no_thumbnail ) : ?>
-	<modal class="se-event-modal hidden">
+<?php if ( $se_has_modal ) : ?>
+	<div class="se-event-modal hidden" id="<?php echo esc_attr( $se_modal_id ); ?>" role="tooltip">
 		<div class="se-event-modal__image">
 			<?php echo get_the_post_thumbnail( $se_event ); ?>
 		</div>
@@ -86,5 +94,5 @@ if ( $se_hide_end_time ) {
 				<p class="se-event-modal__excerpt"><?php echo wp_kses_post( $se_event->post_excerpt ); ?></p>
 			<?php endif; ?>
 		</div>
-	</modal>
+	</div>
 <?php endif; ?>
