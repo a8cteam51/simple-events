@@ -93,6 +93,36 @@ class I18nWiringTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * The text domain must load before anything that translates on init.
+	 *
+	 * SE_Event_Post_Type and SE_Blocks both register init callbacks at 10, and
+	 * they run at require time, so they are registered first. At the same
+	 * priority the domain would load after every post type label and every
+	 * block.json string had already been resolved.
+	 *
+	 * @return void
+	 */
+	public function test_the_text_domain_loads_before_anything_that_translates() {
+		$textdomain = has_action( 'init', 'se_load_plugin_textdomain' );
+
+		$this->assertNotFalse( $textdomain, 'se_load_plugin_textdomain() should be hooked to init.' );
+
+		foreach ( array( 'register_post_type', 'register_taxonomy', 'register_meta' ) as $method ) {
+			$this->assertLessThan(
+				has_action( 'init', array( 'SE_Event_Post_Type', $method ) ),
+				$textdomain,
+				sprintf( 'The text domain must load before SE_Event_Post_Type::%s().', $method )
+			);
+		}
+
+		$this->assertLessThan(
+			has_action( 'init', array( 'SE_Blocks', 'register_block_type' ) ),
+			$textdomain,
+			'The text domain must load before the blocks register.'
+		);
+	}
+
+	/**
 	 * The translation files have somewhere to live.
 	 *
 	 * @return void

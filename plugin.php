@@ -80,12 +80,17 @@ require_once SE_SRC_PATH . '/woocommerce-hooks.php';
 require_once SE_SRC_PATH . '/rest-api.php';
 require_once SE_SRC_PATH . '/back-compat.php';
 
-add_action(
-	'init',
-	static function () {
-		load_plugin_textdomain( 'simple-events', false, dirname( SE_BASENAME ) . '/languages' );
-	}
-);
+/**
+ * Load the plugin text domain.
+ *
+ * @return void
+ */
+function se_load_plugin_textdomain() {
+	load_plugin_textdomain( 'simple-events', false, dirname( SE_BASENAME ) . '/languages' );
+}
+
+// Priority 0: post type labels and block.json strings resolve on init at 10.
+add_action( 'init', 'se_load_plugin_textdomain', 0 );
 
 // Instruct WordPress to fetch update information from GitHub.
 add_filter(

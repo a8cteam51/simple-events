@@ -49,21 +49,42 @@ test.describe( 'calendar event modal accessibility', () => {
 			.waitFor();
 	} );
 
-	test( 'the modal is a real dialog, not an invented <modal> element', async ( {
+	test( 'the panel is a real element with tooltip semantics', async ( {
 		page,
 	} ) => {
-		// Confirms the fixture actually rendered a modal before asserting on it.
-		await expect( page.locator( `${ GRID } .se-event-modal` ) ).toHaveCount( 1 );
+		// Confirms the fixture actually rendered its panels before asserting.
+		await expect( page.locator( `${ GRID } .se-event-modal` ) ).toHaveCount( 2 );
 
 		await expect(
 			page.locator( `${ GRID } modal` ),
 			'<modal> is not an HTML element and carries no semantics'
 		).toHaveCount( 0 );
 
+		// role=tooltip, not dialog: focus stays on the trigger, which is what
+		// the W3C tooltip pattern describes and what calendar.js implements.
 		await expect(
-			page.locator( `${ GRID } .se-event-modal[role="dialog"]` ),
-			'the modal must expose dialog semantics'
-		).toHaveCount( 1 );
+			page.locator( `${ GRID } .se-event-modal[role="tooltip"]` )
+		).toHaveCount( 2 );
+	} );
+
+	test( 'each title describes itself by its own panel', async ( { page } ) => {
+		const titles = page.locator(
+			`${ GRID } .simple-events-calendar-month__calendar-event-title a`
+		);
+
+		await expect( titles ).toHaveCount( 2 );
+
+		for ( let i = 0; i < 2; i++ ) {
+			const describedBy = await titles
+				.nth( i )
+				.getAttribute( 'aria-describedby' );
+
+			expect( describedBy, 'the title must point at a panel' ).toBeTruthy();
+			await expect(
+				page.locator( `#${ describedBy }` ),
+				`aria-describedby="${ describedBy }" must resolve to one element`
+			).toHaveCount( 1 );
+		}
 	} );
 
 	test( 'the modal opens from the keyboard', async ( { page } ) => {
@@ -94,6 +115,45 @@ test.describe( 'calendar event modal accessibility', () => {
 		await page.keyboard.press( 'Escape' );
 
 		await expect( modal, 'Escape should dismiss the modal' ).toBeHidden();
+	} );
+
+	test( 'moving to another title does not strand the first modal', async ( {
+		page,
+	} ) => {
+		const titles = page.locator(
+			`${ GRID } .simple-events-calendar-month__calendar-event-title a`
+		);
+		const modals = page.locator( `${ GRID } .se-event-modal` );
+
+		await expect( titles ).toHaveCount( 2 );
+
+		await titles.nth( 0 ).focus();
+		await expect( modals.nth( 0 ) ).toBeVisible();
+
+		// Straight to the next title, inside the 150ms hide delay.
+		await titles.nth( 1 ).focus();
+
+		await expect( modals.nth( 1 ) ).toBeVisible();
+		await expect(
+			modals.nth( 0 ),
+			'the modal we moved away from must not be left over the grid'
+		).toBeHidden();
+	} );
+
+	test( 'Escape closes the modal that is actually open', async ( {
+		page,
+	} ) => {
+		const titles = page.locator(
+			`${ GRID } .simple-events-calendar-month__calendar-event-title a`
+		);
+		const modals = page.locator( `${ GRID } .se-event-modal` );
+
+		await titles.nth( 0 ).focus();
+		await titles.nth( 1 ).focus();
+		await page.keyboard.press( 'Escape' );
+
+		await expect( modals.nth( 0 ) ).toBeHidden();
+		await expect( modals.nth( 1 ) ).toBeHidden();
 	} );
 
 	test( 'the modal still opens on hover', async ( { page } ) => {

@@ -86,8 +86,16 @@ class SE_Event_Query_Utils {
 			'posts_per_page' => -1,
 			'no_found_rows'  => true,
 			'meta_query'     => array(
+				'relation'     => 'OR',
 				'start_clause' => array(
 					'key'     => 'se_event_date_start',
+					'value'   => array( $start_timestamp, $end_timestamp ),
+					'compare' => 'BETWEEN',
+					'type'    => 'NUMERIC',
+				),
+				// A span that began earlier still runs inside the range.
+				'end_clause'   => array(
+					'key'     => 'se_event_date_end',
 					'value'   => array( $start_timestamp, $end_timestamp ),
 					'compare' => 'BETWEEN',
 					'type'    => 'NUMERIC',

@@ -38,32 +38,38 @@ foreach ( get_posts(
 	wp_delete_post( $p->ID, true );
 }
 
-// Event-info block in content so the save_post cleanup hook keeps child dates.
-$event_id = wp_insert_post(
-	array(
-		'post_type'    => 'se-event',
-		'post_status'  => 'publish',
-		'post_title'   => $prefix . ' EVENT',
-		'post_content' => '<!-- wp:simple-events/event-info /-->',
-		'post_excerpt' => 'Modal excerpt for the accessibility spec.',
-	)
-);
-
-// Per-event opt-ins the template checks before rendering the modal.
-update_post_meta( $event_id, 'se_event_modal_access', 1 );
-update_post_meta( $event_id, 'se_show_modal_title', 1 );
-update_post_meta( $event_id, 'se_show_modal_excerpt', 1 );
-
-// Today at noon, so the current month has an event and the grid renders.
+// Two events on the same day, so a spec can move between two titles inside one
+// calendar cell — the case where one modal can be left stranded by another.
 $ts = strtotime( 'today noon' );
-se_event_create_event_date(
-	$event_id,
-	array(
-		'start_date' => $ts,
-		'end_date'   => $ts + 7200,
-		'all_day'    => false,
-	)
-);
+
+foreach ( array( 'ONE', 'TWO' ) as $index => $suffix ) {
+	// Event-info block in content so the save_post cleanup hook keeps child dates.
+	$event_id = wp_insert_post(
+		array(
+			'post_type'    => 'se-event',
+			'post_status'  => 'publish',
+			'post_title'   => $prefix . ' EVENT ' . $suffix,
+			'post_content' => '<!-- wp:simple-events/event-info /-->',
+			'post_excerpt' => 'Modal excerpt for the accessibility spec.',
+		)
+	);
+
+	// Per-event opt-ins the template checks before rendering the modal.
+	update_post_meta( $event_id, 'se_event_modal_access', 1 );
+	update_post_meta( $event_id, 'se_show_modal_title', 1 );
+	update_post_meta( $event_id, 'se_show_modal_excerpt', 1 );
+
+	// Today, an hour apart, so both land in the same cell in a stable order.
+	$start = $ts + ( $index * HOUR_IN_SECONDS );
+	se_event_create_event_date(
+		$event_id,
+		array(
+			'start_date' => $start,
+			'end_date'   => $start + 1800,
+			'all_day'    => false,
+		)
+	);
+}
 
 $attributes = wp_json_encode(
 	array(

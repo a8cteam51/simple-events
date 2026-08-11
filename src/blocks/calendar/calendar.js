@@ -287,26 +287,44 @@ export default class Calendar {
 				return;
 			}
 
+			// initListeners() runs again on every month change, over every
+			// calendar on the page, so cells already bound are left alone.
+			if ( element.dataset.seModalBound ) {
+				return;
+			}
+			element.dataset.seModalBound = '1';
+
 			let hideTimeout = null;
+
+			// Bound once per panel, not on every hover or focus.
+			element.querySelectorAll( '.se-event-modal' ).forEach( ( panel ) => {
+				// Keep the panel open while the cursor is over it.
+				panel.addEventListener( 'mouseenter', () => {
+					clearTimeout( hideTimeout );
+				} );
+
+				// Hide it once the cursor leaves.
+				panel.addEventListener( 'mouseleave', () => {
+					hideTimeout = this.handleHideTimeout( panel );
+				} );
+			} );
 
 			// Show the modal belonging to the event the event target sits in.
 			const showModal = ( e ) => {
 				const article = e.currentTarget.closest( 'article' );
+				const previous = modal;
+
 				modal = article.nextElementSibling;
 
 				if ( ! modal ) {
 					return;
 				}
 
-				// Keep the modal open when hovered, remove timeout.
-				modal.addEventListener( 'mouseenter', () => {
-					clearTimeout( hideTimeout );
-				} );
-
-				// Hide the modal after cursor leaves the modal.
-				modal.addEventListener( 'mouseleave', () => {
-					hideTimeout = this.handleHideTimeout( modal );
-				} );
+				// The one we came from, hidden now rather than by its pending
+				// timeout, which the clearTimeout below cancels.
+				if ( previous && previous !== modal ) {
+					previous.classList.add( 'hidden' );
+				}
 
 				clearTimeout( hideTimeout );
 				modal.classList.remove( 'hidden' );

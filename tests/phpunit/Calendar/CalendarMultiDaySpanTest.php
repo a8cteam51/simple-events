@@ -176,6 +176,45 @@ class CalendarMultiDaySpanTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * A span that began before the grid still fills the days it covers.
+	 *
+	 * The mirror of the trailing-edge case. get_event_dates_for_range() matches
+	 * on se_event_date_start alone, so a date starting before the first visible
+	 * cell is never fetched and the event shows on no day — the same defect at
+	 * the other end of the grid.
+	 *
+	 * Expected days are read back off the grid rather than hardcoded, so the
+	 * test holds whatever start_of_week is set.
+	 *
+	 * @return void
+	 */
+	public function test_a_span_starting_before_the_grid_still_fills_the_visible_days() {
+		$date_id = $this->make_date(
+			array(
+				'start_date' => $this->ts( '2026-06-25 20:00:00' ),
+				'end_date'   => $this->ts( '2026-07-02 02:00:00' ),
+				'all_day'    => false,
+			)
+		);
+
+		$data     = SE_Calendar::get_instance()->get_month_days( '2026-07-01' );
+		$expected = array();
+
+		foreach ( $data['days'] as $day ) {
+			if ( $day['date_formatted'] >= '2026-06-25' && $day['date_formatted'] <= '2026-07-02' ) {
+				$expected[] = $day['date_formatted'];
+			}
+		}
+
+		$this->assertNotEmpty( $expected, 'The July grid should show days inside the span.' );
+		$this->assertSame(
+			$expected,
+			$this->days_for_date( '2026-07-01', $date_id ),
+			'A span starting before the grid should still render on every visible day it covers.'
+		);
+	}
+
+	/**
 	 * hide_from_calendar still wins over the span.
 	 *
 	 * @return void
