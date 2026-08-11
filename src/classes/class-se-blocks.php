@@ -683,6 +683,14 @@ class SE_Blocks {
 	public static function countdown_render( $attributes = array() ) {
 		$output = '';
 
+		// If this is being loaded on an archive page, ensure event query filters
+		// are removed. Left attached, modify_event_posts() remaps the events this
+		// block finds onto their parents and the countdown counts to the wrong
+		// date — on the archive it renders all zeroes.
+		if ( is_archive() && in_array( get_post_type(), array( SE_Event_Post_Type::$post_type, SE_Event_Post_Type::$event_date_post_type ), true ) ) {
+			SE_Event_Query_Utils::remove_event_query_filters();
+		}
+
 		$events_query_args = array(
 			'se_countdown'   => true,
 			'post_type'      => SE_Event_Post_Type::$post_type,

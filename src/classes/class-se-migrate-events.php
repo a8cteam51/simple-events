@@ -79,33 +79,11 @@ class SE_Migrate_Events {
 	 * @return array<int, array{id: int, version: string}>
 	 */
 	public static function get_events_to_migrate() {
-
-		$versions = array_keys( self::VERSION_UPGRADES );
-
 		// Get all events.
 		return get_posts(
 			array(
 				'post_type'      => SE_Event_Post_Type::$post_type,
-				// only results that have a version lower that the max version.
-				'meta_query'     => array(
-					'relation' => 'OR',
-					array(
-						'key'     => 'se_event_version',
-						'value'   => max( $versions ),
-						'compare' => '<',
-					),
-					// or does not exist.
-					array(
-						'key'     => 'se_event_version',
-						'compare' => 'NOT EXISTS',
-					),
-					// or is empty.
-					array(
-						'key'     => 'se_event_version',
-						'value'   => '',
-						'compare' => '=',
-					),
-				),
+				'meta_query'     => self::unmigrated_meta_query(),
 				'posts_per_page' => -1,
 				'post_status'    => 'any',
 			)
@@ -113,12 +91,56 @@ class SE_Migrate_Events {
 	}
 
 	/**
+	 * Matches events below the latest version, or with no version set.
+	 *
+	 * @return array
+	 */
+	private static function unmigrated_meta_query() {
+		$versions = array_keys( self::VERSION_UPGRADES );
+
+		return array(
+			'relation' => 'OR',
+			// only results that have a version lower that the max version.
+			array(
+				'key'     => 'se_event_version',
+				'value'   => max( $versions ),
+				'compare' => '<',
+			),
+			// or does not exist.
+			array(
+				'key'     => 'se_event_version',
+				'compare' => 'NOT EXISTS',
+			),
+			// or is empty.
+			array(
+				'key'     => 'se_event_version',
+				'value'   => '',
+				'compare' => '=',
+			),
+		);
+	}
+
+	/**
 	 * Checks if we have any events to migrate.
+	 *
+	 * Runs on every admin request, so it asks for one ID rather than every
+	 * unmigrated event as a post object.
 	 *
 	 * @return boolean
 	 */
 	public static function has_events_to_migrate() {
-		return count( self::get_events_to_migrate() ) > 0;
+		$found = get_posts(
+			array(
+				'post_type'      => SE_Event_Post_Type::$post_type,
+				'meta_query'     => self::unmigrated_meta_query(),
+				'posts_per_page' => 1,
+				'post_status'    => 'any',
+				'fields'         => 'ids',
+				'no_found_rows'  => true,
+			)
+		);
+
+		return ! empty( $found );
 	}
 
 	/**

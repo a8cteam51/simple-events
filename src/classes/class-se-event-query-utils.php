@@ -126,6 +126,18 @@ class SE_Event_Query_Utils {
 	 */
 	public static function map_events_dates_to_event_dates( $events_dates ): array {
 		$compiled_events = array();
+
+		// Prime in bulk, so the loop below reads cache rather than querying
+		// once per date for meta and once per date for the parent event.
+		if ( ! empty( $events_dates ) ) {
+			update_meta_cache( 'post', wp_list_pluck( $events_dates, 'ID' ) );
+
+			$parent_ids = array_unique( array_filter( wp_list_pluck( $events_dates, 'post_parent' ) ) );
+			if ( ! empty( $parent_ids ) ) {
+				_prime_post_caches( $parent_ids, false, false );
+			}
+		}
+
 		foreach ( $events_dates as $event_date ) {
 			// Front end only ever surfaces a published date under a published parent.
 			if ( 'publish' !== get_post_status( $event_date ) ) {
