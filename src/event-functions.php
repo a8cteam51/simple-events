@@ -783,6 +783,11 @@ function se_event_get_event_dates( $event_id ): array {
 		)
 	);
 
+	// One query for every date's meta, rather than one per date below.
+	if ( ! empty( $event_dates ) ) {
+		update_meta_cache( 'post', $event_dates );
+	}
+
 	// Map with meta.
 	$dates = array_map(
 		function ( $date_id ) {

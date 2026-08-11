@@ -683,6 +683,11 @@ class SE_Blocks {
 	public static function countdown_render( $attributes = array() ) {
 		$output = '';
 
+		// Strip the archive's filters, or modify_event_posts() remaps this block's results and it counts to the wrong date. Same conditions pre_get_posts() attaches them under.
+		if ( is_post_type_archive( array( SE_Event_Post_Type::$post_type, SE_Event_Post_Type::$event_date_post_type ) ) || is_tax( SE_Event_Post_Type::$post_type . '-category' ) ) {
+			SE_Event_Query_Utils::remove_event_query_filters();
+		}
+
 		$events_query_args = array(
 			'se_countdown'   => true,
 			'post_type'      => SE_Event_Post_Type::$post_type,
@@ -766,8 +771,8 @@ class SE_Blocks {
 		$sequential_months = isset( $attributes['sequentialMonths'] ) ? (bool) $attributes['sequentialMonths'] : false;
 		$current_date_time = SE_Calendar::get_instance()->create_date_time( 'now' );
 
-		// If this being loaded on an archive page, ensure event query filters are removed.
-		if ( is_archive() && in_array( get_post_type(), array( SE_Event_Post_Type::$post_type, SE_Event_Post_Type::$event_date_post_type ), true ) ) {
+		// Strip the archive's filters, or modify_event_posts() remaps this block's results and it lists nothing. Same conditions pre_get_posts() attaches them under.
+		if ( is_post_type_archive( array( SE_Event_Post_Type::$post_type, SE_Event_Post_Type::$event_date_post_type ) ) || is_tax( SE_Event_Post_Type::$post_type . '-category' ) ) {
 			SE_Event_Query_Utils::remove_event_query_filters();
 		}
 

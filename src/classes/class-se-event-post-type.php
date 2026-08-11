@@ -593,9 +593,9 @@ class SE_Event_Post_Type {
 
 				$parent_events    = new WP_Query( $parent_query_args );
 				$parent_event_ids = $parent_events->posts;
-				// If no parent events match, set to empty array to return no results
+				// Empty array, not null — null already means "no taxonomy filtering".
 				if ( empty( $parent_event_ids ) ) {
-					$date_post_ids = null;
+					$date_post_ids = array();
 				} else {
 					$date_post_ids = SE_Event_Query_Utils::get_event_dates_from_events( $parent_event_ids );
 				}
@@ -606,7 +606,8 @@ class SE_Event_Post_Type {
 
 			// If we have taxonomy filtering, limit to dates of matching parent events
 			if ( null !== $date_post_ids ) {
-				$query->set( 'post__in', $date_post_ids );
+				// WP_Query ignores an empty post__in, so restrict to an impossible ID.
+				$query->set( 'post__in', empty( $date_post_ids ) ? array( 0 ) : $date_post_ids );
 				unset( $query->query_vars['se-event-category'] );
 			}
 

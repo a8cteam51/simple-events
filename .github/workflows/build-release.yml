@@ -22,7 +22,7 @@ jobs:
           npm run build:variations
 
       - name: Zip Folder
-        run: zip -r ${{ github.event.repository.name }}.zip . -x ".git/*" ".github/*" "node_modules/*" ".gitignore" ".editorconfig" ".phpcs.xml" "composer.json" "composer.lock" "package.json" "package-lock.json" "CLAUDE.md" "AGENTS.md" ".agents/*" ".cursor/*" ".deployignore"
+        run: zip -r ${{ github.event.repository.name }}.zip . -x ".git/*" ".github/*" "node_modules/*" "tests/*" "test-results/*" "playwright-report/*" "phpunit.xml.dist" ".phpunit.result.cache" ".wp-env.json" "seed-test-events.php" ".gitignore" ".editorconfig" ".phpcs.xml" "composer.json" "composer.lock" "package.json" "package-lock.json" "CLAUDE.md" "AGENTS.md" ".agents/*" ".cursor/*" ".deployignore"
 
       - name: Release
         uses: softprops/action-gh-release@v1
