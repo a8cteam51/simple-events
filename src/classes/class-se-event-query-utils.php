@@ -100,6 +100,22 @@ class SE_Event_Query_Utils {
 					'compare' => 'BETWEEN',
 					'type'    => 'NUMERIC',
 				),
+				// Longer than the range, so neither end sits inside it.
+				array(
+					'relation' => 'AND',
+					array(
+						'key'     => 'se_event_date_start',
+						'value'   => $start_timestamp,
+						'compare' => '<=',
+						'type'    => 'NUMERIC',
+					),
+					array(
+						'key'     => 'se_event_date_end',
+						'value'   => $end_timestamp,
+						'compare' => '>=',
+						'type'    => 'NUMERIC',
+					),
+				),
 			),
 			'orderby'        => array( 'start_clause' => 'ASC' ),
 		);
@@ -122,7 +138,18 @@ class SE_Event_Query_Utils {
 			_prime_post_caches( $parent_ids, false, true );
 		}
 
-		return self::map_events_dates_to_event_dates( $query->posts );
+		$dates = self::map_events_dates_to_event_dates( $query->posts );
+
+		// The OR clauses share a postmeta alias, so the SQL ORDER BY sorts on
+		// whichever row matched. Order here instead.
+		usort(
+			$dates,
+			function ( $a, $b ) {
+				return (int) $a['event_start_date'] <=> (int) $b['event_start_date'];
+			}
+		);
+
+		return $dates;
 	}
 
 	/**

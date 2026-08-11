@@ -215,6 +215,82 @@ class CalendarMultiDaySpanTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * A span longer than the grid fills every visible day.
+	 *
+	 * Neither end of it sits inside the range, so a query matching only on
+	 * start-in-range or end-in-range fetches nothing and the event shows on no
+	 * day — the same symptom at both edges at once.
+	 *
+	 * @return void
+	 */
+	public function test_a_span_enclosing_the_whole_grid_fills_every_day() {
+		$date_id = $this->make_date(
+			array(
+				'start_date' => $this->ts( '2026-06-01 09:00:00' ),
+				'end_date'   => $this->ts( '2026-08-31 17:00:00' ),
+				'all_day'    => false,
+			)
+		);
+
+		$data     = SE_Calendar::get_instance()->get_month_days( '2026-07-01' );
+		$expected = wp_list_pluck( $data['days'], 'date_formatted' );
+
+		$this->assertNotEmpty( $expected, 'The July grid should have days.' );
+		$this->assertSame(
+			$expected,
+			$this->days_for_date( '2026-07-01', $date_id ),
+			'A span running the whole visible grid should appear on every cell.'
+		);
+	}
+
+	/**
+	 * Events in one day cell come back in start order.
+	 *
+	 * One of them began before the visible range, so it is matched by a
+	 * different meta clause than the other. The two clauses can share a
+	 * postmeta alias, which leaves an ORDER BY on the start clause reading
+	 * whichever row satisfied the WHERE.
+	 *
+	 * @return void
+	 */
+	public function test_events_in_a_day_cell_are_ordered_by_start() {
+		// Starts before the grid, still running on the 15th.
+		$early = $this->make_date(
+			array(
+				'start_date' => $this->ts( '2026-06-20 09:00:00' ),
+				'end_date'   => $this->ts( '2026-07-15 10:00:00' ),
+				'all_day'    => false,
+			)
+		);
+
+		// Starts and ends on the 15th.
+		$later = $this->make_date(
+			array(
+				'start_date' => $this->ts( '2026-07-15 14:00:00' ),
+				'end_date'   => $this->ts( '2026-07-15 15:00:00' ),
+				'all_day'    => false,
+			)
+		);
+
+		$data  = SE_Calendar::get_instance()->get_month_days( '2026-07-01' );
+		$found = array();
+
+		foreach ( $data['days'] as $day ) {
+			if ( '2026-07-15' === $day['date_formatted'] ) {
+				foreach ( $day['events'] as $event ) {
+					$found[] = (int) $event->event_date_id;
+				}
+			}
+		}
+
+		$this->assertSame(
+			array( $early, $later ),
+			$found,
+			'The cell should list the earlier-starting event first.'
+		);
+	}
+
+	/**
 	 * hide_from_calendar still wins over the span.
 	 *
 	 * @return void
