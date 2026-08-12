@@ -28,17 +28,9 @@ test.describe( 'Event dates – first publish from autodraft', () => {
 	test( 'leaves the post clean and produces exactly one child date', async ( { page } ) => {
 		const consoleErrors = [];
 		page.on( 'console', ( msg ) => {
-			if ( msg.type() !== 'error' ) {
-				return;
+			if ( msg.type() === 'error' ) {
+				consoleErrors.push( msg.text() );
 			}
-			// Third-party asset 404s are not this block's behaviour. WooCommerce
-			// Box Office enqueues build/css/frontend.css, which it does not ship
-			// (the file is at build/frontend.css), so it 404s on every admin page
-			// wherever Box Office is installed.
-			if ( /Failed to load resource/.test( msg.text() ) ) {
-				return;
-			}
-			consoleErrors.push( msg.text() );
 		} );
 
 		const net = startNetworkCounter( page );

@@ -1,6 +1,8 @@
 const { test, expect } = require( '@playwright/test' );
 const { execSync } = require( 'child_process' );
 
+const BASE_URL = process.env.WP_BASE_URL || 'http://localhost:8888';
+
 /**
  * When the event-dates GET fails, the edit view must say so — not show an empty
  * date list with dead controls.
@@ -56,12 +58,14 @@ test.describe( 'Event info – event-dates GET failure', () => {
 			}
 		} );
 
+		// Tie the cookie to whatever host the suite resolved. A hardcoded
+		// 'localhost' is not sent to 127.0.0.1, so the fixture would never fire
+		// and the failure would look like it came from the block.
 		await context.addCookies( [
 			{
 				name: 'se_e2e_fail_dates',
 				value: '1',
-				domain: 'localhost',
-				path: '/',
+				url: BASE_URL,
 			},
 		] );
 
