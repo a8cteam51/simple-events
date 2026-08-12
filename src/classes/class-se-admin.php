@@ -47,8 +47,11 @@ class SE_Admin {
 			'se-admin',
 			'seAdmin',
 			array(
-				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-				'nonce'   => wp_create_nonce( 'wp_rest' ),
+				'ajaxUrl'          => admin_url( 'admin-ajax.php' ),
+				'nonce'            => wp_create_nonce( 'wp_rest' ),
+				// rest_url() handles subdirectory installs and plain permalinks,
+				// which a hardcoded /wp-json/ path does not.
+				'migrateEventsUrl' => rest_url( 'simple-events/migrate-events' ),
 			)
 		);
 		wp_set_script_translations( 'se-admin', 'simple-events', SE_PLUGIN_DIR . '/languages' );

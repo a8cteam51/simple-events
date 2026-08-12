@@ -76,10 +76,17 @@ export const getEventDatePosts = () => {
 	}
 
 	// simple-events/event-dates/{event}
-	return apiFetch({ path: '/simple-events/event-dates/' + postId }).then((posts) => posts
-	).catch((error) => {
-		console.error('Error fetching event dates:', error);
-		return [];
+	// Let the rejection through. Returning [] here made a failed read
+	// indistinguishable from an event that genuinely has no dates.
+	return apiFetch({ path: '/simple-events/event-dates/' + postId }).catch((error) => {
+		// Spell out what came back — logging the object alone prints "Object".
+		console.error(
+			'Simple Events: could not load event dates for post ' + postId + ' — ' +
+			[error?.data?.status, error?.code, error?.message]
+				.filter(Boolean)
+				.join(' | ')
+		);
+		throw error;
 	});
 
 };
@@ -235,8 +242,8 @@ const initializeDateManager = async () => {
 		dateManagerInstance = dateManager(eventDatePosts, currentTimezone, metaSync);
 		return dateManagerInstance;
 	} catch (error) {
-		console.error('Error initializing date manager:', error);
-		return null;
+		// Already logged with detail by getEventDatePosts.
+		throw error;
 	} finally {
 		gettingDates = false;
 	}
@@ -283,6 +290,9 @@ registerBlockType('simple-events/event-info', {
 		const [isGettingDates, setIsGettingDates] = useState(false);
 		const [dateManagerReady, setDateManagerReady] = useState(false);
 		const [dateManagerState, setDateManagerState] = useState(null);
+		// Set when the dates could not be read at all, which is not the same as
+		// the event having none.
+		const [datesLoadFailed, setDatesLoadFailed] = useState(false);
 		// Add refresh counter to force re-renders when dateManager state changes
 		const [refreshCounter, setRefreshCounter] = useState(0);
 
@@ -377,7 +387,10 @@ registerBlockType('simple-events/event-info', {
 					setDateManagerReady(true);
 					setDateManagerState(manager);
 				} catch (error) {
-					console.error('❌ Failed to initialize date manager:', error);
+					// Mark ready anyway. Leaving it false re-triggers this effect
+					// forever, and we do not retry a failed read.
+					setDateManagerReady(true);
+					setDatesLoadFailed(true);
 				} finally {
 					setIsGettingDates(false);
 				}
@@ -607,7 +620,7 @@ registerBlockType('simple-events/event-info', {
 			return (
 				<Fragment>
 					<span className="se-datetimegroup-controls-label">
-						{__('Event Dates (New)', 'simple-events')}
+						{__('Event Dates', 'simple-events')}
 					</span>
 					{datesOutput}
 
@@ -668,33 +681,54 @@ registerBlockType('simple-events/event-info', {
 				>
 					<UnsavedChangesWarning />
 
-					<EventDateTime
-						dates={dateManagerState?.getCurrentDates()?.dates}
-						refreshCounter={refreshCounter}
-					/>
-					{/* Button container with 50/50 layout */}
-					<div style={{
-						display: 'flex',
-						gap: '12px',
-						width: '100%',
-						marginBottom: '16px'
-					}}>
-						<Button
-							className="se-add-date-button"
-							variant="primary"
-							onClick={handleAddDate}
-							text={__('Add Date', 'simple-events')}
-							style={{ flex: 1 }}
-						/>
-						<Button
-							className="se-revert-changes-button"
-							variant="secondary"
-							onClick={handleRevertDates}
-							disabled={!dateManagerState?.getCurrentDates()?.isDirty}
-							text={__('Revert Changes', 'simple-events')}
-							style={{ flex: 1 }}
-						/>
-					</div>
+					{datesLoadFailed ? (
+						// Showing an empty list here would claim the event has no
+						// dates, when in fact we could not read them.
+						<div className="se-dates-load-error" style={{
+							background: '#fcf0f1',
+							border: '1px solid #f0b3b8',
+							borderRadius: '4px',
+							padding: '12px 16px',
+							margin: '0 0 20px 0',
+							color: '#8a1f28'
+						}}>
+							<strong>{__('Event dates could not be loaded', 'simple-events')}</strong>
+							<br />
+							<span style={{ fontSize: '13px' }}>
+								{__('The existing dates are unchanged. Reload the page to try again — editing them is disabled until they load.', 'simple-events')}
+							</span>
+						</div>
+					) : (
+						<Fragment>
+							<EventDateTime
+								dates={dateManagerState?.getCurrentDates()?.dates}
+								refreshCounter={refreshCounter}
+							/>
+							{/* Button container with 50/50 layout */}
+							<div style={{
+								display: 'flex',
+								gap: '12px',
+								width: '100%',
+								marginBottom: '16px'
+							}}>
+								<Button
+									className="se-add-date-button"
+									variant="primary"
+									onClick={handleAddDate}
+									text={__('Add Date', 'simple-events')}
+									style={{ flex: 1 }}
+								/>
+								<Button
+									className="se-revert-changes-button"
+									variant="secondary"
+									onClick={handleRevertDates}
+									disabled={!dateManagerState?.getCurrentDates()?.isDirty}
+									text={__('Revert Changes', 'simple-events')}
+									style={{ flex: 1 }}
+								/>
+							</div>
+						</Fragment>
+					)}
 					<TextControl
 						className="se-location-label"
 						label={__('Venue', 'simple-events')}
@@ -828,7 +862,7 @@ registerBlockType('simple-events/event-info', {
 							}
 						/>
 						<ToggleControl
-							label={__('Hide End Timer', 'simple-events')}
+							label={__('Hide End Time', 'simple-events')}
 							help={__('Hides the End Time on the Front-end')}
 							checked={meta?.se_event_hide_end_time ?? false}
 							onChange={(value) =>
