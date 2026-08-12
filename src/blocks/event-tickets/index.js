@@ -13,9 +13,9 @@ import { __, sprintf } from '@wordpress/i18n';
 import apiFetch from "@wordpress/api-fetch";
 import { registerBlockType } from '@wordpress/blocks';
 import { Placeholder, Button, Spinner } from '@wordpress/components';
-import { Fragment } from '@wordpress/element';
+import { Fragment, useEffect } from '@wordpress/element';
 import { addQueryArgs } from '@wordpress/url';
-import { withState } from '@wordpress/compose';
+import { useMergeState } from './use-merge-state';
 import { useBlockProps } from '@wordpress/block-editor';
 import { flatten, uniqBy, debounce } from 'lodash';
 
@@ -95,48 +95,61 @@ const getProducts = async ( { selected = [], search = '' } ) => {
 	} );
 };
 
-const TicketSelection = withState( {
-	loading: true,
-	selected: [],
-	products: [],
-	search: '',
-} )( ( props ) => {
-	const {
-		setState,
-		setAttributes,
-		attributes,
-		loading,
-		selected,
-		products,
-		search,
-	} = props;
+const TicketSelection = ( props ) => {
+	const { setAttributes, attributes } = props;
 
-
+	const [ { loading, selected, products, search }, setState ] = useMergeState( {
+		loading: true,
+		selected: [],
+		products: [],
+		search: '',
+	} );
 
 	// Read selected from attributes.
 	const savedSelected = attributes.selected ?? [];
 	const selectedCount = savedSelected.length;
 
-	if ( selectedCount && ! selected.length ) {
-		setState( { selected: savedSelected } );
-	}
+	// These three ran during render under withState. useState treats a
+	// render-phase update as a re-render trigger, and the newTicketAdded one
+	// also writes to the block's attributes, so they belong in effects.
+	useEffect( () => {
+		if ( selectedCount && ! selected.length ) {
+			setState( { selected: savedSelected } );
+		}
+	}, [ selectedCount, selected.length ] );
 
 	// Reload products if a new ticket has been added.
-	if ( attributes.newTicketAdded ) {
-		setState( { loading: true } );
-		setAttributes( { newTicketAdded: false } );
-	}
+	useEffect( () => {
+		if ( attributes.newTicketAdded ) {
+			setState( { loading: true } );
+			setAttributes( { newTicketAdded: false } );
+		}
+	}, [ attributes.newTicketAdded ] );
 
 	// Load products.
-	if ( loading ) {
+	useEffect( () => {
+		if ( ! loading ) {
+			return undefined;
+		}
+
+		let cancelled = false;
+
 		getProducts( { savedSelected, search } )
 			.then( ( data ) => {
-				setState( { products: data, loading: false } );
+				if ( ! cancelled ) {
+					setState( { products: data, loading: false } );
+				}
 			} )
 			.catch( () => {
-				setState( { products: [], loading: false } );
+				if ( ! cancelled ) {
+					setState( { products: [], loading: false } );
+				}
 			} );
-	}
+
+		return () => {
+			cancelled = true;
+		};
+	}, [ loading, search ] );
 
 	const debounceSearch = debounce( ( searchValue ) => {
 		setState( { loading: true, search: searchValue } );
@@ -262,7 +275,7 @@ const TicketSelection = withState( {
 			{ attributes.searchMode && searchList }
 		</Fragment>
 	);
-} );
+};
 
 /**
  * Register: a Gutenberg Block.

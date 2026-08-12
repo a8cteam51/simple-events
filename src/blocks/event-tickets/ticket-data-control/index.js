@@ -24,8 +24,8 @@ import {
 	Path,
 	SVG,
 } from '@wordpress/components';
-import { Fragment } from '@wordpress/element';
-import { withState } from '@wordpress/compose';
+import { Fragment, useState } from '@wordpress/element';
+import { useMergeState } from '../use-merge-state';
 import { decodeEntities } from '@wordpress/html-entities';
 import { getSettings, date } from '@wordpress/date';
 import { concat, isEqual } from 'lodash';
@@ -43,6 +43,92 @@ const fieldTypeOptions = () => {
 	options.unshift( { value: '', label: __( 'Type', 'simple-events' ) } );
 
 	return options;
+};
+
+/**
+ * One row of the additional-fields editor.
+ *
+ * Defined at module scope on purpose. While it lived inside TicketDataControl it
+ * was a new component type on every parent render, so React unmounted and
+ * rebuilt the row each time the parent updated — which meant the text input lost
+ * focus after a keystroke.
+ *
+ * @param {Object}   props
+ * @param {Object}   props.fieldset         The field being edited.
+ * @param {number}   props.index            Its position in the list.
+ * @param {Array}    props.additionalFields The whole list, for reordering.
+ * @param {Function} props.onChange         Called with a reordered list.
+ * @param {Function} props.onUpdate         Called with ( index, changes ).
+ * @param {Function} props.onRemove         Called with ( index ).
+ */
+const TicketFieldSet = ( {
+	fieldset,
+	index,
+	additionalFields,
+	onChange,
+	onUpdate,
+	onRemove,
+} ) => {
+	const defaultRequired = [ 'first_name', 'last_name', 'email' ].includes(
+		fieldset.type
+	);
+
+	return (
+		<DraggableItem
+			className="se-ticket-data_additional-field"
+			index={ index }
+			onChange={ ( order ) =>
+				onChange( order.map( ( i ) => additionalFields[ i ] ) )
+			}
+		>
+			<TextControl
+				autoComplete="off"
+				disabled={ defaultRequired }
+				label={ __( 'Field label', 'simple-events' ) }
+				hideLabelFromVision
+				placeholder={ __( 'Field label', 'simple-events' ) }
+				value={ fieldset.label }
+				onChange={ ( value ) => onUpdate( index, { label: value } ) }
+			/>
+			<SelectControl
+				disabled={ defaultRequired }
+				label={ __( 'Field type', 'simple-events' ) }
+				hideLabelFromVision
+				value={ fieldset.type }
+				options={ fieldTypeOptions() }
+				onChange={ ( type ) => onUpdate( index, { type } ) }
+			/>
+			<CheckboxControl
+				className={ defaultRequired ? 'disabled' : '' }
+				checked={ fieldset.required }
+				disabled={ defaultRequired }
+				label={ __( 'Required', 'simple-events' ) }
+				onChange={ ( required ) => onUpdate( index, { required } ) }
+			/>
+			{ ! defaultRequired && (
+				<Button
+					className="se-ticket-data_additional-field-remove"
+					label={ sprintf( __( 'Remove field', 'simple-events' ) ) }
+					onClick={ () => onRemove( index ) }
+				>
+					{ removeIcon }
+				</Button>
+			) }
+			{ [ 'select', 'radio', 'checkbox' ].includes( fieldset.type ) && (
+				<TextareaControl
+					className="se-ticket-data_additional-field-options"
+					label={ __( 'Options', 'simple-events' ) }
+					hideLabelFromVision
+					help={ __(
+						'Comma-separated list of available options',
+						'simple-events'
+					) }
+					value={ fieldset.options }
+					onChange={ ( value ) => onUpdate( index, { options: value } ) }
+				/>
+			) }
+		</DraggableItem>
+	);
 };
 
 const removeIcon = (
@@ -210,9 +296,8 @@ const TicketDataControl = ( {
 	/**
 	 * The sale scheduling interface.
 	 */
-	const DateField = withState( {
-		tempDate: '',
-	} )( ( { label, value, tempDate, setState } ) => {
+	const DateField = ( { label, value } ) => {
+		const [ tempDate, setTempDate ] = useState( '' );
 		const settings = getSettings();
 		const displayDate = tempDate ? tempDate : value;
 
@@ -234,7 +319,7 @@ const TicketDataControl = ( {
 					if ( tempDate ) {
 						// Send to the parent scope to update state there.
 						maybeUpdateDateTime( label, value, tempDate );
-						setState( { tempDate: undefined } );
+						setTempDate( '' );
 					}
 				} }
 				position="bottom center"
@@ -242,9 +327,7 @@ const TicketDataControl = ( {
 					<TimePicker
 						currentTime={ displayDate }
 						is12Hour={ is12HourTime }
-						onChange={ ( newDate ) =>
-							setState( { tempDate: newDate } )
-						}
+						onChange={ ( newDate ) => setTempDate( newDate ) }
 					/>
 				) }
 				renderToggle={ ( { isOpen, onToggle } ) => (
@@ -262,7 +345,7 @@ const TicketDataControl = ( {
 				) }
 			/>
 		);
-	} );
+	};
 
 	/**
 	 * Remove the field at the given index.
@@ -271,120 +354,30 @@ const TicketDataControl = ( {
 	 * @param {number} i The index of the field to remove.
 	 */
 	const removeFieldset = ( i ) => {
-		const updatedFields = additionalFields;
-
-		updatedFields.splice( i, 1 );
-
-		setState( { additionalFields: updatedFields } );
+		setState( {
+			additionalFields: additionalFields.filter(
+				( field, index ) => index !== i
+			),
+		} );
 	};
 
 	/**
-	 * Displays the interface for adding or editing additional fields.
+	 * Apply changes to one fieldset.
+	 *
+	 * Builds a new field object and a new array rather than editing in place, so
+	 * the update goes through state instead of relying on the mutation being
+	 * visible to the parent.
+	 *
+	 * @param {number} i       The index of the field to change.
+	 * @param {Object} changes The keys to overwrite on that field.
 	 */
-	const TicketFieldSet = withState( {
-		fields: [],
-	} )( ( { fields, setState, fieldset, index, onChange } ) => {
-		const defaultRequired = [ 'first_name', 'last_name', 'email' ].includes(
-			fieldset.type
-		);
-
-		return (
-			<DraggableItem
-				className="se-ticket-data_additional-field"
-				index={ index }
-				onChange={ ( order ) =>
-					onChange( order.map( ( i ) => additionalFields[ i ] ) )
-				}
-			>
-				<TextControl
-					autoComplete="off"
-					disabled={ defaultRequired }
-					label={ __( 'Field label', 'simple-events' ) }
-					hideLabelFromVision
-					placeholder={ __( 'Field label', 'simple-events' ) }
-					value={ fieldset.label }
-					onChange={ ( value ) => {
-						const updatedFields = fields;
-
-						updatedFields[ index ] = Object.assign( fieldset, {
-							label: value,
-						} );
-
-						setState( { fields: updatedFields } );
-					} }
-					onBlur={ () => setState( { additionalFields: fields } ) }
-				/>
-				<SelectControl
-					disabled={ defaultRequired }
-					label={ __( 'Field type', 'simple-events' ) }
-					hideLabelFromVision
-					value={ fieldset.type }
-					options={ fieldTypeOptions() }
-					onChange={ ( type ) => {
-						const updatedFields = additionalFields;
-
-						updatedFields[ index ] = Object.assign( fieldset, {
-							type,
-						} );
-
-						setState( { additionalFields: updatedFields } );
-					} }
-				/>
-				<CheckboxControl
-					className={ defaultRequired ? 'disabled' : '' }
-					checked={ fieldset.required }
-					disabled={ defaultRequired }
-					label={ __( 'Required', 'simple-events' ) }
-					onChange={ ( required ) => {
-						const updatedFields = additionalFields;
-
-						updatedFields[ index ] = Object.assign( fieldset, {
-							required,
-						} );
-
-						setState( { additionalFields: updatedFields } );
-					} }
-				/>
-				{ ! defaultRequired && (
-					<Button
-						className="se-ticket-data_additional-field-remove"
-						label={ sprintf(
-							__( 'Remove field', 'simple-events' )
-						) }
-						onClick={ () => removeFieldset( index ) }
-					>
-						{ removeIcon }
-					</Button>
-				) }
-				{ [ 'select', 'radio', 'checkbox' ].includes(
-					fieldset.type
-				) && (
-					<TextareaControl
-						className="se-ticket-data_additional-field-options"
-						label={ __( 'Options', 'simple-events' ) }
-						hideLabelFromVision
-						help={ __(
-							'Comma-separated list of available options',
-							'simple-events'
-						) }
-						value={ fieldset.options }
-						onChange={ ( value ) => {
-							const updatedFields = fields;
-
-							updatedFields[ index ] = Object.assign( fieldset, {
-								options: value,
-							} );
-
-							setState( { fields: updatedFields } );
-						} }
-						onBlur={ () =>
-							setState( { additionalFields: fields } )
-						}
-					/>
-				) }
-			</DraggableItem>
-		);
-	} );
+	const updateFieldset = ( i, changes ) => {
+		setState( {
+			additionalFields: additionalFields.map( ( field, index ) =>
+				index === i ? { ...field, ...changes } : field
+			),
+		} );
+	};
 
 	/**
 	 * Adds a new additional field to the product.
@@ -532,10 +525,12 @@ const TicketDataControl = ( {
 							<TicketFieldSet
 								fieldset={ field }
 								index={ index }
-								onChange={ ( additionalFields ) =>
-									setState( { additionalFields } )
+								onChange={ ( reordered ) =>
+									setState( { additionalFields: reordered } )
 								}
 								additionalFields={ additionalFields }
+								onUpdate={ updateFieldset }
+								onRemove={ removeFieldset }
 							/>
 						) ) }
 					</div>
@@ -736,7 +731,7 @@ const TicketDataControl = ( {
 	);
 };
 
-export default withState( {
+const initialTicketDataState = {
 	dataLoaded: false,
 	loading: false,
 	name: '',
@@ -763,4 +758,15 @@ export default withState( {
 			required: true,
 		},
 	],
-} )( TicketDataControl );
+};
+
+/**
+ * Supplies the state withState used to inject, so the component body is unchanged.
+ */
+const TicketDataControlWithState = ( props ) => {
+	const [ state, setState ] = useMergeState( initialTicketDataState );
+
+	return <TicketDataControl { ...props } { ...state } setState={ setState } />;
+};
+
+export default TicketDataControlWithState;
