@@ -15,7 +15,6 @@ import {
 	withSpokenMessages,
 } from '@wordpress/components';
 import { Component } from '@wordpress/element';
-import { compose, withState } from '@wordpress/compose';
 import { escapeRegExp } from 'lodash';
 
 const Messages = {
@@ -38,14 +37,18 @@ export class SearchListControl extends Component {
 	constructor() {
 		super( ...arguments );
 
+		// Held here rather than injected by withState, which is deprecated.
+		this.state = { search: '' };
+
 		this.onSelect = this.onSelect.bind( this );
 		this.renderList = this.renderList.bind( this );
 	}
 
-	componentDidUpdate( prevProps ) {
-		const { onSearch, search } = this.props;
+	componentDidUpdate( prevProps, prevState ) {
+		const { onSearch } = this.props;
+		const { search } = this.state;
 
-		if ( search !== prevProps.search && typeof onSearch === 'function' ) {
+		if ( search !== prevState.search && typeof onSearch === 'function' ) {
 			onSearch( search );
 		}
 	}
@@ -75,7 +78,7 @@ export class SearchListControl extends Component {
 	}
 
 	renderList( list, depth = 0 ) {
-		const { search } = this.props;
+		const { search } = this.state;
 
 		if ( ! list ) {
 			return null;
@@ -93,7 +96,8 @@ export class SearchListControl extends Component {
 	}
 
 	renderListSection() {
-		const { isLoading, search } = this.props;
+		const { isLoading } = this.props;
+		const { search } = this.state;
 
 		if ( isLoading ) {
 			return (
@@ -136,7 +140,8 @@ export class SearchListControl extends Component {
 	}
 
 	render() {
-		const { className = '', search, setState } = this.props;
+		const { className = '' } = this.props;
+		const { search } = this.state;
 
 		return (
 			<div className={ `woocommerce-search-list ${ className }` }>
@@ -145,7 +150,7 @@ export class SearchListControl extends Component {
 						label={ Messages.search }
 						type="search"
 						value={ search }
-						onChange={ ( value ) => setState( { search: value } ) }
+						onChange={ ( value ) => this.setState( { search: value } ) }
 					/>
 				</div>
 
@@ -155,9 +160,4 @@ export class SearchListControl extends Component {
 	}
 }
 
-export default compose( [
-	withState( {
-		search: '',
-	} ),
-	withSpokenMessages,
-] )( SearchListControl );
+export default withSpokenMessages( SearchListControl );

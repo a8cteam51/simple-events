@@ -1,4 +1,4 @@
-import { sortBy, isEqual, clone } from 'lodash';
+import { sortBy, isEqual, cloneDeep } from 'lodash';
 import { getStartAndEndDate, createDefaultDate, getDstOffset, TIMEZONE, OFFSET } from './date-utils';
 import moment from 'moment';
 import { select } from '@wordpress/data';
@@ -54,8 +54,12 @@ const createDateHash = (start, end, postId) => {
  * @return {Object} Date management service with public interface.
  */
 export const dateManager = (initialDates = [], timezone = '', metaSync = null) => {
+	// Tolerate anything that is not { dates: [...] } — this used to throw and the
+	// TypeError was swallowed upstream, leaving the block silently inert.
+	const seedDates = Array.isArray(initialDates?.dates) ? initialDates.dates : [];
+
 	// lOOP through dates and add a hash to each date
-	initialDates.dates.forEach(date => {
+	seedDates.forEach(date => {
 		// If date has a hash and its not empty, skip
 		if (date.hash && date.hash !== '') {
 			return;
@@ -67,14 +71,14 @@ export const dateManager = (initialDates = [], timezone = '', metaSync = null) =
 	});
 
 	// Internal state
-	let originalDates = clone(initialDates.dates || []);
-	let currentDates = clone(initialDates.dates || []);
+	let originalDates = cloneDeep(seedDates);
+	let currentDates = cloneDeep(seedDates);
 	let originalTimezone = timezone || TIMEZONE;
 	let currentTimezone = timezone || TIMEZONE;
 	let isDirty = false;
 
 	// Meta sync helpers
-	const { meta, setMeta } = metaSync || {};
+	const { setMeta } = metaSync || {};
 
 	/**
 	 * Refreshes the date manager with new dates.
@@ -96,8 +100,8 @@ export const dateManager = (initialDates = [], timezone = '', metaSync = null) =
 		});
 
 		// Update internal state
-		originalDates = clone(newDates);
-		currentDates = clone(newDates);
+		originalDates = cloneDeep(newDates);
+		currentDates = cloneDeep(newDates);
 		isDirty = false;
 
 		// If orginal timezone is not the same as current timezone, update current timezone
@@ -157,7 +161,7 @@ export const dateManager = (initialDates = [], timezone = '', metaSync = null) =
 	 * @return {Object} Updated date management service state.
 	 */
 	const updateTimezone = (newTimezone) => {
-		const updatedDates = clone(currentDates);
+		const updatedDates = cloneDeep(currentDates);
 
 		// Ensure that the value is a string.
 		newTimezone = !Boolean(newTimezone) ? '' : newTimezone;
@@ -205,10 +209,10 @@ export const dateManager = (initialDates = [], timezone = '', metaSync = null) =
 		currentTimezone = newTimezone;
 		isDirty = true; // Mark as dirty since timezone changed
 
-		// Sync to meta if available
-		if (setMeta && meta) {
+		// Write only the key we own — editPost merges meta, and the captured
+		// `meta` snapshot is stale the moment anything else is edited.
+		if (setMeta) {
 			setMeta({
-				...meta,
 				se_event_timezone: newTimezone
 			});
 		}
@@ -310,14 +314,13 @@ export const dateManager = (initialDates = [], timezone = '', metaSync = null) =
 	 * @return {Object} Reverted date management service state.
 	 */
 	const revertDates = () => {
-		currentDates = clone(originalDates);
+		currentDates = cloneDeep(originalDates);
 		currentTimezone = originalTimezone;
 		isDirty = false;
 
-		// Sync timezone revert to meta if available
-		if (setMeta && meta) {
+		// Write only the key we own — see updateTimezone.
+		if (setMeta) {
 			setMeta({
-				...meta,
 				se_event_timezone: originalTimezone
 			});
 		}
@@ -341,8 +344,8 @@ export const dateManager = (initialDates = [], timezone = '', metaSync = null) =
 		get currentTimezone() { return currentTimezone; },
 		get isDirty() { return isDirty; },
 		// Expose internal state setters for external access
-		set originalDates(value) { originalDates = clone(value); },
-		set currentDates(value) { currentDates = clone(value); },
+		set originalDates(value) { originalDates = cloneDeep(value); },
+		set currentDates(value) { currentDates = cloneDeep(value); },
 		set originalTimezone(value) { originalTimezone = value; },
 		set currentTimezone(value) { currentTimezone = value; },
 		set isDirty(value) { isDirty = value; }
