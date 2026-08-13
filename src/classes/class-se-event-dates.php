@@ -112,6 +112,19 @@ class SE_Event_Dates {
 			);
 		}
 
+		// The route is public, and se_event_get_event_dates() returns every status,
+		// so gate it here: anyone may read a published event, only an editor of the
+		// event may read one that is not.
+		if ( 'publish' !== $event->post_status && ! current_user_can( 'edit_post', $event_id ) ) {
+			return new WP_REST_Response(
+				array(
+					'code'    => 'invalid_event',
+					'message' => __( 'Invalid event provided.', 'simple-events' ),
+				),
+				404
+			);
+		}
+
 		try {
 			$dates = se_event_get_event_dates( $event_id );
 		} catch ( \Throwable $th ) {
