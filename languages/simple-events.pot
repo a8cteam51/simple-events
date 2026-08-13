@@ -1,0 +1,1490 @@
+# Copyright (C) 2026 WordPress.com Special Projects
+# This file is distributed under the GPL v3 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: Simple Events 2.2.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/simple-events\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-08-12T12:33:50+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.12.0\n"
+"X-Domain: simple-events\n"
+
+#. Plugin Name of the plugin
+#: plugin.php
+#: src/classes/class-se-blocks.php:87
+msgid "Simple Events"
+msgstr ""
+
+#. Plugin URI of the plugin
+#: plugin.php
+msgid "https://github.com/a8cteam51/simple-events"
+msgstr ""
+
+#. Description of the plugin
+#: plugin.php
+msgid "Event management frontend for WooCommerce Box Office."
+msgstr ""
+
+#. Author of the plugin
+#: plugin.php
+msgid "WordPress.com Special Projects"
+msgstr ""
+
+#. Author URI of the plugin
+#: plugin.php
+msgid "https://wpspecialprojects.wordpress.com"
+msgstr ""
+
+#: plugin.php:51
+msgid "It seems like <strong>Simple Events</strong> is corrupted. Please reinstall!"
+msgstr ""
+
+#: src/back-compat.php:47
+msgid "Simple Events Migration Required"
+msgstr ""
+
+#: src/back-compat.php:50
+msgid "We have events that need to be migrated to the new format. This must be completed before the events will function properly."
+msgstr ""
+
+#: src/back-compat.php:56
+msgid "Go to Settings & Migrate Events"
+msgstr ""
+
+#: src/classes/class-se-admin.php:69
+msgid "Event Date/Time"
+msgstr ""
+
+#: src/classes/class-se-admin.php:70
+msgid "Event Location"
+msgstr ""
+
+#. translators: 1: composer command. 2: plugin directory
+#: src/classes/class-se-blocks.php:46
+#, php-format
+msgid "Your installation of the Simple Events plugin is incomplete. Please run %1$s and %2$s within the %3$s directory."
+msgstr ""
+
+#: src/classes/class-se-blocks.php:120
+#: src/template-functions.php:594
+msgid "Event has passed"
+msgstr ""
+
+#: src/classes/class-se-blocks.php:327
+msgid "Additional Date"
+msgid_plural "Additional Dates"
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/classes/class-se-blocks.php:330
+msgid "Date"
+msgid_plural "Dates"
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/classes/class-se-blocks.php:379
+#: src/blocks/event-info/index.js:734
+#: src/blocks/loop-event-info/index.js:102
+msgid "Venue"
+msgstr ""
+
+#: src/classes/class-se-blocks.php:384
+#: src/blocks/event-info/index.js:741
+#: src/blocks/loop-event-info/index.js:101
+msgid "Location"
+msgstr ""
+
+#: src/classes/class-se-blocks.php:429
+#: src/classes/class-se-blocks.php:985
+#: src/classes/class-se-blocks.php:991
+#: src/classes/class-se-event-post-type.php:421
+msgid "Tickets"
+msgstr ""
+
+#. translators: %s: number tickets in stock
+#: src/classes/class-se-blocks.php:504
+#, php-format
+msgid "%s available"
+msgstr ""
+
+#. translators: %s: event title
+#: src/classes/class-se-blocks.php:512
+#, php-format
+msgid "Buy ticket \"%s\""
+msgstr ""
+
+#: src/classes/class-se-blocks.php:521
+msgid "Buy Ticket"
+msgstr ""
+
+#: src/classes/class-se-blocks.php:526
+msgid "No longer available for sale"
+msgstr ""
+
+#: src/classes/class-se-blocks.php:927
+msgid "Example Location Name"
+msgstr ""
+
+#: src/classes/class-se-blocks.php:930
+msgid "Example Venue Name"
+msgstr ""
+
+#: src/classes/class-se-blocks.php:933
+msgid "June 20, 2023 9:00 am - 10:00 am"
+msgstr ""
+
+#: src/classes/class-se-blocks.php:936
+msgid "June 28, 2023"
+msgstr ""
+
+#: src/classes/class-se-blocks.php:939
+msgid "9:00 am - 10:00 am"
+msgstr ""
+
+#: src/classes/class-se-blocks.php:991
+msgid "Details"
+msgstr ""
+
+#: src/classes/class-se-event-dates.php:97
+#: src/event-functions.php:768
+msgid "Invalid event ID provided."
+msgstr ""
+
+#: src/classes/class-se-event-dates.php:109
+msgid "Invalid event provided."
+msgstr ""
+
+#: src/classes/class-se-event-dates.php:121
+#: src/classes/class-se-event-dates.php:234
+msgid "An error occurred while fetching event dates."
+msgstr ""
+
+#: src/classes/class-se-event-dates.php:158
+msgid "Invalid nonce provided."
+msgstr ""
+
+#: src/classes/class-se-event-dates.php:182
+msgid "Invalid event date provided."
+msgstr ""
+
+#: src/classes/class-se-event-dates.php:207
+msgid "An error occurred while creating the event date."
+msgstr ""
+
+#: src/classes/class-se-event-dates.php:247
+msgid "Event dates synced successfully."
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:90
+#: src/classes/class-se-event-post-type.php:114
+msgid "Events"
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:91
+msgid "Event"
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:92
+msgid "All Events"
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:93
+msgid "Event Archives"
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:94
+msgid "Event Attributes"
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:95
+msgid "Insert into Event"
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:96
+msgid "Uploaded to this Event"
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:97
+msgctxt "se-event"
+msgid "Featured Image"
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:98
+msgctxt "se-event"
+msgid "Set featured image"
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:99
+msgctxt "se-event"
+msgid "Remove featured image"
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:100
+msgctxt "se-event"
+msgid "Use as featured image"
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:101
+msgid "Filter Events list"
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:102
+msgid "Events list navigation"
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:103
+msgid "Events list"
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:104
+msgid "New Event"
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:105
+#: src/classes/class-se-event-post-type.php:167
+msgid "Add New"
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:106
+msgid "Add New Event"
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:107
+msgid "Edit Event"
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:108
+msgid "View Event"
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:109
+msgid "View Events"
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:110
+msgid "Search Events"
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:111
+msgid "No Events found"
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:112
+msgid "No Events found in trash"
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:113
+msgid "Parent Event:"
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:152
+#: src/classes/class-se-event-post-type.php:176
+#: src/blocks/event-info/index.js:623
+msgid "Event Dates"
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:153
+msgid "Event Date"
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:154
+msgid "All Event Dates"
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:155
+msgid "Event Date Archives"
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:156
+msgid "Event Date Attributes"
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:157
+msgid "Insert into Event Date"
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:158
+msgid "Uploaded to this Event Date"
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:159
+msgctxt "se-event-date"
+msgid "Featured Image"
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:160
+msgctxt "se-event-date"
+msgid "Set featured image"
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:161
+msgctxt "se-event-date"
+msgid "Remove featured image"
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:162
+msgctxt "se-event-date"
+msgid "Use as featured image"
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:163
+msgid "Filter Event Dates list"
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:164
+msgid "Event Dates list navigation"
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:165
+msgid "Event Dates list"
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:166
+msgid "New Event Date"
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:168
+msgid "Add New Event Date"
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:169
+msgid "Edit Event Date"
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:170
+msgid "View Event Date"
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:171
+msgid "View Event Dates"
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:172
+msgid "Search Event Dates"
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:173
+msgid "No Event Dates found"
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:174
+msgid "No Event Dates found in trash"
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:175
+msgid "Parent Event Date:"
+msgstr ""
+
+#: src/classes/class-se-event-post-type.php:216
+msgid "Categories for simple event posts"
+msgstr ""
+
+#: src/classes/class-se-migrate-events.php:158
+msgid "No events to migrate."
+msgstr ""
+
+#: src/classes/class-se-migrate-events.php:172
+#: src/classes/class-se-migrate-events.php:230
+msgid "An error occurred while migrating events."
+msgstr ""
+
+#: src/classes/class-se-migrate-events.php:181
+#: src/classes/class-se-migrate-events.php:240
+msgid "Events migrated successfully."
+msgstr ""
+
+#: src/classes/class-se-migrate-events.php:202
+msgid "No events provided for migration."
+msgstr ""
+
+#: src/classes/class-se-migrate-events.php:215
+msgid "Invalid event IDs provided : "
+msgstr ""
+
+#: src/classes/class-se-rest-ticket-products.php:62
+msgid "Sorry, you cannot list resources."
+msgstr ""
+
+#: src/classes/class-se-rest-ticket-products.php:77
+msgid "Sorry, you cannot view this resource."
+msgstr ""
+
+#: src/classes/class-se-rest-ticket-products.php:173
+msgid "Unique identifier for the resource."
+msgstr ""
+
+#: src/classes/class-se-rest-ticket-products.php:179
+msgid "Product name."
+msgstr ""
+
+#: src/classes/class-se-rest-ticket-products.php:184
+msgid "Product variation attributes, if applicable."
+msgstr ""
+
+#: src/classes/class-se-rest-ticket-products.php:189
+msgid "Product URL."
+msgstr ""
+
+#: src/classes/class-se-rest-ticket-products.php:196
+msgid "Unique identifier."
+msgstr ""
+
+#: src/classes/class-se-rest-ticket-products.php:201
+msgid "Is the product on sale?"
+msgstr ""
+
+#: src/classes/class-se-rest-ticket-products.php:207
+msgid "Short description or excerpt from description."
+msgstr ""
+
+#: src/classes/class-se-rest-ticket-products.php:212
+msgid "Current product price."
+msgstr ""
+
+#: src/classes/class-se-rest-ticket-products.php:217
+msgid "Price formatted in HTML."
+msgstr ""
+
+#: src/classes/class-se-rest-ticket-products.php:223
+msgid "Does the product have options?"
+msgstr ""
+
+#: src/classes/class-se-rest-ticket-products.php:229
+msgid "Is the product purchasable?"
+msgstr ""
+
+#: src/classes/class-se-rest-ticket-products.php:235
+msgid "Is the product in stock?"
+msgstr ""
+
+#: src/classes/class-se-settings.php:44
+msgid "Editor"
+msgstr ""
+
+#. translators: %s is a HTML break tag.
+#: src/classes/class-se-settings.php:54
+#, php-format
+msgid "Remove Event Tickets Block from New Events%s"
+msgstr ""
+
+#: src/classes/class-se-settings.php:62
+msgid "Select this setting if you are creating free events only."
+msgstr ""
+
+#: src/classes/class-se-settings.php:69
+msgid "Archives"
+msgstr ""
+
+#: src/classes/class-se-settings.php:77
+msgid "Hide Past Events ( Feed & Single )"
+msgstr ""
+
+#: src/classes/class-se-settings.php:89
+msgid "Past Event Notice"
+msgstr ""
+
+#. translators: %s is a HTML break tag.
+#: src/classes/class-se-settings.php:104
+#, php-format
+msgid "All Day Message%s"
+msgstr ""
+
+#. translators: %s is a HTML break tag.
+#: src/classes/class-se-settings.php:122
+#, php-format
+msgid "Update Query Dates%s"
+msgstr ""
+
+#: src/classes/class-se-settings.php:136
+msgid "Reverse events order in post feed."
+msgstr ""
+
+#: src/classes/class-se-settings.php:148
+msgid "Show next/previous links on event singles."
+msgstr ""
+
+#. translators: %s is a HTML break tag.
+#: src/classes/class-se-settings.php:162
+#, php-format
+msgid "Treat each date as own event%s"
+msgstr ""
+
+#. translators: %s is a HTML break tag.
+#: src/classes/class-se-settings.php:178
+#, php-format
+msgid "Allow grouping of dates with different times.%s"
+msgstr ""
+
+#: src/classes/class-se-settings.php:192
+msgid "Select the page for the calendar."
+msgstr ""
+
+#: src/classes/class-se-settings.php:204
+msgid "Next/Previous link placement."
+msgstr ""
+
+#. translators: %s is a HTML break tag.
+#: src/classes/class-se-settings.php:218
+#, php-format
+msgid "Use HTML in date output.%s"
+msgstr ""
+
+#: src/classes/class-se-settings.php:232
+msgid "WooCommerce"
+msgstr ""
+
+#: src/classes/class-se-settings.php:240
+msgid "Skip cart for tickets and redirect to checkout"
+msgstr ""
+
+#. translators: %s is a HTML break tag.
+#: src/classes/class-se-settings.php:254
+#, php-format
+msgid "Empty cart before a ticket is added%s"
+msgstr ""
+
+#. translators: %s is a HTML break tag.
+#: src/classes/class-se-settings.php:269
+#, php-format
+msgid "Set Ticket Order Status to Completed.%s"
+msgstr ""
+
+#. translators: %s is a HTML break tag.
+#: src/classes/class-se-settings.php:284
+#, php-format
+msgid "Set existing ticket orders as completed.%s"
+msgstr ""
+
+#: src/classes/class-se-settings.php:292
+msgid "Perform bulk status updates"
+msgstr ""
+
+#: src/classes/class-se-settings.php:299
+msgid "Calendar"
+msgstr ""
+
+#: src/classes/class-se-settings.php:307
+msgid "Custom Endpoint for Downloading Calendar"
+msgstr ""
+
+#: src/classes/class-se-settings.php:319
+msgid "Disable Calendar Download Endpoint"
+msgstr ""
+
+#. translators: %s is a HTML break tag.
+#: src/classes/class-se-settings.php:332
+#, php-format
+msgid "Clear orphaned events.%s"
+msgstr ""
+
+#: src/classes/class-se-settings.php:340
+msgid "Clear orphaned events"
+msgstr ""
+
+#: src/classes/class-se-settings.php:348
+#: src/classes/class-se-settings.php:543
+msgid "Migrate Events"
+msgstr ""
+
+#: src/classes/class-se-settings.php:366
+msgid "Simple Events editor options."
+msgstr ""
+
+#: src/classes/class-se-settings.php:377
+msgid "Simple Events archive view options."
+msgstr ""
+
+#: src/classes/class-se-settings.php:388
+msgid "Simple Events WooCommerce options."
+msgstr ""
+
+#: src/classes/class-se-settings.php:399
+msgid "Simple Events calendar download options."
+msgstr ""
+
+#: src/classes/class-se-settings.php:513
+msgid "Events to Migrate:"
+msgstr ""
+
+#: src/classes/class-se-settings.php:515
+msgid "No events need migration."
+msgstr ""
+
+#: src/classes/class-se-settings.php:528
+msgid "Pending"
+msgstr ""
+
+#: src/classes/class-se-settings.php:597
+msgid "Before content"
+msgstr ""
+
+#: src/classes/class-se-settings.php:603
+msgid "After content"
+msgstr ""
+
+#: src/classes/class-se-settings.php:623
+msgid "Select a page"
+msgstr ""
+
+#. translators: %1$s is the Archive Slug for Simple events concatenated with the download endpoint.
+#: src/classes/class-se-settings.php:664
+#, php-format
+msgid "Download Endpoint: <a href=\"%1$s\">%1$s</a>"
+msgstr ""
+
+#: src/classes/class-se-settings.php:681
+#: src/classes/class-se-settings.php:682
+#: src/blocks/event-info/index.js:794
+msgid "Settings"
+msgstr ""
+
+#: src/classes/class-se-settings.php:700
+msgid "Settings Saved"
+msgstr ""
+
+#. translators: %d is the number of orders updated.
+#: src/classes/class-se-settings.php:779
+#, php-format
+msgid "%d orders updated successfully"
+msgstr ""
+
+#. translators: %d is the number of orphaned events deleted.
+#: src/classes/class-se-settings.php:811
+#, php-format
+msgid "%d orphaned events deleted successfully"
+msgstr ""
+
+#. translators: 1: Event title, 2: Formatted date
+#: src/event-functions.php:722
+#, php-format
+msgid "%1$s - %2$s"
+msgstr ""
+
+#: src/template-functions.php:207
+msgid "tickets left"
+msgstr ""
+
+#: src/template-functions.php:227
+msgid "More information"
+msgstr ""
+
+#: src/template-functions.php:284
+msgid "Google Calendar"
+msgstr ""
+
+#: src/template-functions.php:292
+msgid "iCal"
+msgstr ""
+
+#: src/template-functions.php:307
+msgid "Add this event to your calendar:"
+msgstr ""
+
+#: src/template-functions.php:361
+msgid "View Full Calendar"
+msgstr ""
+
+#: src/templates/archive.php:49
+msgid "No events were found matching your selection."
+msgstr ""
+
+#: src/templates/calendar/calendar-body.php:47
+msgid "No Events Scheduled"
+msgstr ""
+
+#: src/templates/calendar/day/day.php:25
+#: src/templates/calendar/day/day.php:26
+msgid "Has Events"
+msgstr ""
+
+#: src/templates/calendar/mobile-events/nav.php:17
+#: src/templates/calendar/top-bar/nav.php:17
+msgid "Previous month"
+msgstr ""
+
+#: src/templates/calendar/mobile-events/nav.php:39
+#: src/templates/calendar/top-bar/nav.php:24
+msgid "Next month"
+msgstr ""
+
+#: src/templates/calendar/mobile-events/today.php:20
+#: src/templates/calendar/mobile-events/today.php:21
+#: src/templates/calendar/mobile-events/today.php:23
+#: src/templates/calendar/top-bar/today.php:17
+#: src/templates/calendar/top-bar/today.php:18
+#: src/templates/calendar/top-bar/today.php:20
+msgid "This Month"
+msgstr ""
+
+#: src/blocks/calendar/color-panel/index.js:32
+#: src/blocks/calendar/index.js:142
+msgid "Background Color"
+msgstr ""
+
+#: src/blocks/calendar/color-panel/index.js:39
+#: src/blocks/calendar/index.js:148
+#: src/blocks/calendar/index.js:201
+msgid "Text Color"
+msgstr ""
+
+#: src/blocks/calendar/color-panel/index.js:46
+msgid "Border Color"
+msgstr ""
+
+#: src/blocks/calendar/index.js:43
+msgid "Show Months in Order"
+msgstr ""
+
+#: src/blocks/calendar/index.js:47
+msgid "When enabled, months move one at a time and the calendar opens on the first month that has events (from today if the current month is empty). When disabled, navigation jumps only between months that have events."
+msgstr ""
+
+#: src/blocks/calendar/index.js:57
+msgid "Hide Events on Neighbouring Months"
+msgstr ""
+
+#: src/blocks/calendar/index.js:61
+msgid "Used to hide events on the previous and next month for a particular month."
+msgstr ""
+
+#: src/blocks/calendar/index.js:71
+msgid "Show Dot for Events ( Mobile )"
+msgstr ""
+
+#: src/blocks/calendar/index.js:75
+msgid "Toggle to show / hide the dot to indicate events for smaller devices."
+msgstr ""
+
+#: src/blocks/calendar/index.js:87
+msgid "Event Dot Color ( Mobile )"
+msgstr ""
+
+#: src/blocks/calendar/index.js:103
+#: src/blocks/event-info/index.js:908
+msgid "Enable Event Modal"
+msgstr ""
+
+#: src/blocks/calendar/index.js:104
+msgid "Enables modal for all events. Modals for specific events can be disabled on the event edit page"
+msgstr ""
+
+#: src/blocks/calendar/index.js:112
+#: src/blocks/event-info/index.js:917
+msgid "Show Event Title in Modal"
+msgstr ""
+
+#: src/blocks/calendar/index.js:113
+msgid "Toggle to show/hide the title of the event in the modal. Applicable to all events."
+msgstr ""
+
+#: src/blocks/calendar/index.js:121
+#: src/blocks/event-info/index.js:926
+msgid "Show Event Excerpt in Modal"
+msgstr ""
+
+#: src/blocks/calendar/index.js:122
+msgid "Toggle to show/hide the excerpt of the event in the modal. Applicable to all events."
+msgstr ""
+
+#: src/blocks/calendar/index.js:130
+msgid "Show Event Modal when no thumbnail is defined"
+msgstr ""
+
+#: src/blocks/calendar/index.js:131
+msgid "Toggle to show/hide the modal even if no thumbnail is defined."
+msgstr ""
+
+#: src/blocks/calendar/index.js:138
+msgid "Color Configuration"
+msgstr ""
+
+#: src/blocks/calendar/index.js:154
+msgid "Icon Color"
+msgstr ""
+
+#: src/blocks/calendar/index.js:165
+msgid "Today's Date"
+msgstr ""
+
+#: src/blocks/calendar/index.js:173
+msgid "Days with Events"
+msgstr ""
+
+#: src/blocks/calendar/index.js:181
+msgid "Past Dates"
+msgstr ""
+
+#: src/blocks/calendar/index.js:189
+msgid "Upcoming Dates"
+msgstr ""
+
+#: src/blocks/calendar/index.js:195
+msgid "Month and Year"
+msgstr ""
+
+#: src/blocks/calendar/index.js:213
+msgid "Arrows"
+msgstr ""
+
+#: src/blocks/calendar/index.js:219
+msgid "Arrow Color"
+msgstr ""
+
+#: src/blocks/calendar/index.js:229
+msgid "Arrow Position"
+msgstr ""
+
+#: src/blocks/calendar/index.js:236
+#: src/blocks/calendar/index.js:256
+msgid "Top"
+msgstr ""
+
+#: src/blocks/calendar/index.js:240
+#: src/blocks/calendar/index.js:260
+msgid "Bottom"
+msgstr ""
+
+#: src/blocks/calendar/index.js:246
+msgid "Arrow Position ( Mobile )"
+msgstr ""
+
+#: src/blocks/calendar/index.js:267
+msgid "Loading Skeleton"
+msgstr ""
+
+#: src/blocks/calendar/index.js:273
+msgid "Base Color"
+msgstr ""
+
+#: src/blocks/calendar/index.js:282
+msgid "Highlight Color"
+msgstr ""
+
+#: src/blocks/event-info/components/DateTimeGroup.js:176
+msgid "Remove date"
+msgstr ""
+
+#: src/blocks/event-info/components/DateTimeGroup.js:189
+msgid "Start Date/Time"
+msgstr ""
+
+#: src/blocks/event-info/components/DateTimeGroup.js:238
+#: src/blocks/event-info/components/DateTimeGroup.js:291
+msgid "Set time"
+msgstr ""
+
+#: src/blocks/event-info/components/DateTimeGroup.js:248
+msgid "End Date/Time"
+msgstr ""
+
+#: src/blocks/event-info/components/DateTimeGroup.js:302
+msgid "All day"
+msgstr ""
+
+#: src/blocks/event-info/components/DateTimeGroup.js:349
+msgid "Hide from calendar"
+msgstr ""
+
+#: src/blocks/event-info/components/DateTimeGroup.js:368
+msgid "Hide from feed"
+msgstr ""
+
+#: src/blocks/event-info/date-utils.js:39
+msgid "Same as site"
+msgstr ""
+
+#: src/blocks/event-info/index.js:150
+msgid "Failed to save event dates. Please try again."
+msgstr ""
+
+#: src/blocks/event-info/index.js:454
+msgid "Edit"
+msgstr ""
+
+#: src/blocks/event-info/index.js:461
+msgid "Show on Front-End?"
+msgstr ""
+
+#: src/blocks/event-info/index.js:579
+msgid "Unsaved Changes"
+msgstr ""
+
+#: src/blocks/event-info/index.js:582
+msgid "You have unsaved date and timezone changes. Save the post to persist these changes."
+msgstr ""
+
+#: src/blocks/event-info/index.js:677
+msgid "Event Information"
+msgstr ""
+
+#: src/blocks/event-info/index.js:695
+msgid "Event dates could not be loaded"
+msgstr ""
+
+#: src/blocks/event-info/index.js:698
+msgid "The existing dates are unchanged. Reload the page to try again — editing them is disabled until they load."
+msgstr ""
+
+#: src/blocks/event-info/index.js:718
+msgid "Add Date"
+msgstr ""
+
+#: src/blocks/event-info/index.js:726
+msgid "Revert Changes"
+msgstr ""
+
+#: src/blocks/event-info/index.js:748
+msgid "External Link"
+msgstr ""
+
+#: src/blocks/event-info/index.js:759
+msgid "External Link Label"
+msgstr ""
+
+#: src/blocks/event-info/index.js:770
+msgid "Open external link from calendar"
+msgstr ""
+
+#: src/blocks/event-info/index.js:790
+msgid "Done"
+msgstr ""
+
+#: src/blocks/event-info/index.js:796
+msgid "Site TimeZone"
+msgstr ""
+
+#: src/blocks/event-info/index.js:806
+msgid "Change"
+msgstr ""
+
+#: src/blocks/event-info/index.js:811
+msgid "Time Zone"
+msgstr ""
+
+#: src/blocks/event-info/index.js:812
+msgid "Events default to the site's time zone as configured in the WordPress settings. If this event is happening in a different region, manually set the time zone here."
+msgstr ""
+
+#: src/blocks/event-info/index.js:826
+msgid "Display Time Zone in Front-end"
+msgstr ""
+
+#: src/blocks/event-info/index.js:839
+msgid "Group event dates with matching times"
+msgstr ""
+
+#: src/blocks/event-info/index.js:852
+msgid "Hide Start Time"
+msgstr ""
+
+#: src/blocks/event-info/index.js:865
+msgid "Hide End Time"
+msgstr ""
+
+#: src/blocks/event-info/index.js:876
+#: src/blocks/loop-event-info/index.js:120
+msgid "Show \"Add to calendar\" links"
+msgstr ""
+
+#: src/blocks/event-info/index.js:877
+msgid "Shows the \"Add to calendar\" links on the Front-end"
+msgstr ""
+
+#: src/blocks/event-info/index.js:887
+msgid "Open event in new window"
+msgstr ""
+
+#: src/blocks/event-info/index.js:891
+msgid "Open the event in new window from calender"
+msgstr ""
+
+#: src/blocks/event-info/index.js:906
+msgid "Calendar Modal Configuration"
+msgstr ""
+
+#: src/blocks/event-info/index.js:909
+msgid "Enable modal for this event."
+msgstr ""
+
+#: src/blocks/event-info/index.js:918
+msgid "Toggle to show/hide the title of the event in the modal."
+msgstr ""
+
+#: src/blocks/event-info/index.js:927
+msgid "Toggle to show/hide the excerpt of the event in the modal."
+msgstr ""
+
+#: src/blocks/event-tickets/index.js:41
+#, js-format
+msgid "%s must be installed and active to use this block."
+msgstr ""
+
+#: src/blocks/event-tickets/index.js:45
+msgid " and "
+msgstr ""
+
+#: src/blocks/event-tickets/index.js:207
+msgid "Done adding existing tickets"
+msgstr ""
+
+#: src/blocks/event-tickets/index.js:220
+#: src/blocks/event-tickets/search-list-control/index.js:21
+msgid "Clear all selected tickets"
+msgstr ""
+
+#: src/blocks/event-tickets/index.js:225
+msgid "Clear all"
+msgstr ""
+
+#: src/blocks/event-tickets/index.js:267
+msgid "No tickets have been added to this event."
+msgstr ""
+
+#: src/blocks/event-tickets/index.js:313
+msgid "Event Tickets"
+msgstr ""
+
+#: src/blocks/event-tickets/index.js:341
+#: src/blocks/event-tickets/ticket-data-control/index.js:620
+msgid "Create new ticket"
+msgstr ""
+
+#: src/blocks/event-tickets/index.js:354
+msgid "Add existing tickets"
+msgstr ""
+
+#: src/blocks/event-tickets/search-list-control/index.js:22
+msgid "Ticket Products"
+msgstr ""
+
+#: src/blocks/event-tickets/search-list-control/index.js:23
+msgid "Results"
+msgstr ""
+
+#: src/blocks/event-tickets/search-list-control/index.js:24
+msgid "Your store doesn't have any ticket products."
+msgstr ""
+
+#: src/blocks/event-tickets/search-list-control/index.js:28
+#, js-format
+msgid "No results for %s"
+msgstr ""
+
+#: src/blocks/event-tickets/search-list-control/index.js:29
+msgid "Search for a ticket product:"
+msgstr ""
+
+#: src/blocks/event-tickets/search-list-control/index.js:30
+msgid "Ticket products search results updated."
+msgstr ""
+
+#: src/blocks/event-tickets/ticket-data-control/index.js:43
+#: src/blocks/event-tickets/ticket-data-control/index.js:522
+msgid "Type"
+msgstr ""
+
+#: src/blocks/event-tickets/ticket-data-control/index.js:87
+#: src/blocks/event-tickets/ticket-data-control/index.js:89
+msgid "Field label"
+msgstr ""
+
+#: src/blocks/event-tickets/ticket-data-control/index.js:95
+msgid "Field type"
+msgstr ""
+
+#: src/blocks/event-tickets/ticket-data-control/index.js:105
+msgid "Required"
+msgstr ""
+
+#: src/blocks/event-tickets/ticket-data-control/index.js:111
+msgid "Remove field"
+msgstr ""
+
+#: src/blocks/event-tickets/ticket-data-control/index.js:120
+msgid "Options"
+msgstr ""
+
+#: src/blocks/event-tickets/ticket-data-control/index.js:122
+msgid "Comma-separated list of available options"
+msgstr ""
+
+#: src/blocks/event-tickets/ticket-data-control/index.js:410
+msgid "Name"
+msgstr ""
+
+#: src/blocks/event-tickets/ticket-data-control/index.js:418
+msgid "Price"
+msgstr ""
+
+#: src/blocks/event-tickets/ticket-data-control/index.js:428
+msgid "Stock"
+msgstr ""
+
+#: src/blocks/event-tickets/ticket-data-control/index.js:437
+msgid "If less than 1, ticket will appear as \"Sold Out\"."
+msgstr ""
+
+#: src/blocks/event-tickets/ticket-data-control/index.js:452
+msgid "+ Add sale price"
+msgstr ""
+
+#: src/blocks/event-tickets/ticket-data-control/index.js:462
+msgid "Sale price"
+msgstr ""
+
+#: src/blocks/event-tickets/ticket-data-control/index.js:475
+msgid "From"
+msgstr ""
+
+#: src/blocks/event-tickets/ticket-data-control/index.js:480
+msgid "To"
+msgstr ""
+
+#: src/blocks/event-tickets/ticket-data-control/index.js:487
+msgid "The sale will start at 00:00:00 of \"From\" date and end at 23:59:59 of \"To\" date."
+msgstr ""
+
+#: src/blocks/event-tickets/ticket-data-control/index.js:507
+#: src/blocks/event-tickets/ticket-data-control/index.js:591
+msgid "Cancel"
+msgstr ""
+
+#: src/blocks/event-tickets/ticket-data-control/index.js:516
+msgid "Ticket Fields"
+msgstr ""
+
+#: src/blocks/event-tickets/ticket-data-control/index.js:521
+msgid "Label"
+msgstr ""
+
+#: src/blocks/event-tickets/ticket-data-control/index.js:538
+msgid "+ Add Field"
+msgstr ""
+
+#: src/blocks/event-tickets/ticket-data-control/index.js:614
+msgid "Edit "
+msgstr ""
+
+#: src/blocks/event-tickets/ticket-data-control/index.js:649
+#, js-format
+msgid "Remove %s"
+msgstr ""
+
+#: src/blocks/event-tickets/ticket-data-control/index.js:746
+msgid "First Name"
+msgstr ""
+
+#: src/blocks/event-tickets/ticket-data-control/index.js:751
+msgid "Last Name"
+msgstr ""
+
+#: src/blocks/event-tickets/ticket-data-control/index.js:756
+msgid "Email Address"
+msgstr ""
+
+#: src/blocks/loop-event-info/index.js:76
+#: src/blocks/upcoming-events/index.js:42
+msgid "Display Options"
+msgstr ""
+
+#: src/blocks/loop-event-info/index.js:79
+msgid "HTML element"
+msgstr ""
+
+#: src/blocks/loop-event-info/index.js:82
+msgid "Default (div)"
+msgstr ""
+
+#: src/blocks/loop-event-info/index.js:83
+msgid "Paragraph (p)"
+msgstr ""
+
+#: src/blocks/loop-event-info/index.js:84
+msgid "Heading 1 (h1)"
+msgstr ""
+
+#: src/blocks/loop-event-info/index.js:85
+msgid "Heading 2 (h2)"
+msgstr ""
+
+#: src/blocks/loop-event-info/index.js:86
+msgid "Heading 3 (h3)"
+msgstr ""
+
+#: src/blocks/loop-event-info/index.js:87
+msgid "Heading 4 (h4)"
+msgstr ""
+
+#: src/blocks/loop-event-info/index.js:88
+msgid "Heading 5 (h5)"
+msgstr ""
+
+#: src/blocks/loop-event-info/index.js:89
+msgid "Heading 6 (h6)"
+msgstr ""
+
+#: src/blocks/loop-event-info/index.js:97
+msgid "Show what event info?"
+msgstr ""
+
+#: src/blocks/loop-event-info/index.js:100
+msgid "Date & Time"
+msgstr ""
+
+#: src/blocks/loop-event-info/index.js:103
+msgid "Date Only"
+msgstr ""
+
+#: src/blocks/loop-event-info/index.js:104
+msgid "Time Only"
+msgstr ""
+
+#: src/blocks/loop-event-info/index.js:112
+msgid "Prefix"
+msgstr ""
+
+#: src/blocks/loop-event-info/index.js:128
+msgid "Date format override"
+msgstr ""
+
+#. translators: %s: rendered date example.
+#. translators: %s: rendered time example.
+#: src/blocks/loop-event-info/index.js:133
+#: src/blocks/loop-event-info/index.js:157
+#, js-format
+msgid "Preview: %s"
+msgstr ""
+
+#. translators: %s: site default date format.
+#. translators: %s: site default time format.
+#: src/blocks/loop-event-info/index.js:138
+#: src/blocks/loop-event-info/index.js:162
+#, js-format
+msgid "Leave empty to use the site default (%s)."
+msgstr ""
+
+#: src/blocks/loop-event-info/index.js:152
+msgid "Time format override"
+msgstr ""
+
+#: src/blocks/upcoming-events/index.js:46
+msgid "Feed layout"
+msgstr ""
+
+#: src/blocks/upcoming-events/index.js:59
+msgid "Grid columns"
+msgstr ""
+
+#: src/blocks/upcoming-events/index.js:73
+msgid "Hide \"no results\" view"
+msgstr ""
+
+#: src/blocks/upcoming-events/index.js:77
+#: src/blocks/upcoming-events/index.js:243
+msgid "Edit \"no results\" view"
+msgstr ""
+
+#: src/blocks/upcoming-events/index.js:84
+msgid "Event Options"
+msgstr ""
+
+#: src/blocks/upcoming-events/index.js:88
+msgid "Feed type"
+msgstr ""
+
+#: src/blocks/upcoming-events/index.js:195
+msgid "Number of Events"
+msgstr ""
+
+#: src/blocks/upcoming-events/index.js:229
+msgid "List view"
+msgstr ""
+
+#: src/blocks/upcoming-events/index.js:236
+msgid "Grid view"
+msgstr ""
+
+#: src/variations/query-loop-events/block.js:170
+msgid "Events per Page"
+msgstr ""
+
+#: src/variations/query-loop-events/block.js:187
+msgid "Offset"
+msgstr ""
+
+#: src/variations/query-loop-events/block.js:188
+msgid "Number of events to skip from the start of the query."
+msgstr ""
+
+#: src/variations/query-loop-events/block.js:209
+msgid "Select the type of events to display and their order."
+msgstr ""
+
+#: src/variations/query-loop-events/block.js:224
+msgid "Events Query Loop"
+msgstr ""
+
+#: src/blocks/calendar/block.json
+msgctxt "block title"
+msgid "Simple Events Calendar"
+msgstr ""
+
+#: src/blocks/calendar/block.json
+#: src/blocks/countdown/block.json
+#: src/blocks/event-info/block.json
+#: src/blocks/event-tickets/block.json
+#: src/blocks/upcoming-events/block.json
+msgctxt "block keyword"
+msgid "event"
+msgstr ""
+
+#: src/blocks/calendar/block.json
+msgctxt "block keyword"
+msgid "calendar"
+msgstr ""
+
+#: src/blocks/calendar/block.json
+msgctxt "block keyword"
+msgid "view"
+msgstr ""
+
+#: src/blocks/calendar/block.json
+#: src/blocks/countdown/block.json
+#: src/blocks/event-info/block.json
+#: src/blocks/event-tickets/block.json
+#: src/blocks/external-link/block.json
+#: src/blocks/loop-event-info/block.json
+#: src/blocks/past-events-notice/block.json
+#: src/blocks/upcoming-events/block.json
+msgctxt "block keyword"
+msgid "Simple Events"
+msgstr ""
+
+#: src/blocks/countdown/block.json
+msgctxt "block title"
+msgid "Countdown"
+msgstr ""
+
+#: src/blocks/countdown/block.json
+msgctxt "block description"
+msgid "Display a countdown to your next upcoming event."
+msgstr ""
+
+#: src/blocks/countdown/block.json
+msgctxt "block keyword"
+msgid "countdown"
+msgstr ""
+
+#: src/blocks/countdown/block.json
+#: src/blocks/upcoming-events/block.json
+msgctxt "block keyword"
+msgid "upcoming"
+msgstr ""
+
+#: src/blocks/event-info/block.json
+msgctxt "block title"
+msgid "Event Information"
+msgstr ""
+
+#: src/blocks/event-info/block.json
+msgctxt "block keyword"
+msgid "information"
+msgstr ""
+
+#: src/blocks/event-tickets/block.json
+msgctxt "block title"
+msgid "Event Tickets"
+msgstr ""
+
+#: src/blocks/event-tickets/block.json
+#: src/blocks/external-link/block.json
+msgctxt "block keyword"
+msgid "tickets"
+msgstr ""
+
+#: src/blocks/external-link/block.json
+msgctxt "block title"
+msgid "External Tickets"
+msgstr ""
+
+#: src/blocks/external-link/block.json
+msgctxt "block description"
+msgid "Add a link to an external ticket website."
+msgstr ""
+
+#: src/blocks/external-link/block.json
+#: src/blocks/loop-event-info/block.json
+msgctxt "block keyword"
+msgid "event info"
+msgstr ""
+
+#: src/blocks/external-link/block.json
+msgctxt "block keyword"
+msgid "link"
+msgstr ""
+
+#: src/blocks/external-link/block.json
+#: src/blocks/loop-event-info/block.json
+msgctxt "block keyword"
+msgid "meta"
+msgstr ""
+
+#: src/blocks/inner-blocks/block.json
+msgctxt "block title"
+msgid "Event Blocks"
+msgstr ""
+
+#: src/blocks/loop-event-info/block.json
+msgctxt "block title"
+msgid "Event Metadata"
+msgstr ""
+
+#: src/blocks/loop-event-info/block.json
+msgctxt "block description"
+msgid "Display event meta in a custom query loop."
+msgstr ""
+
+#: src/blocks/loop-event-info/block.json
+msgctxt "block keyword"
+msgid "date"
+msgstr ""
+
+#: src/blocks/loop-event-info/block.json
+msgctxt "block keyword"
+msgid "location"
+msgstr ""
+
+#: src/blocks/past-events-notice/block.json
+msgctxt "block title"
+msgid "Past Events Notice"
+msgstr ""
+
+#: src/blocks/past-events-notice/block.json
+msgctxt "block description"
+msgid "Display the notice message set in the Simple Events settings."
+msgstr ""
+
+#: src/blocks/past-events-notice/block.json
+msgctxt "block keyword"
+msgid "past-events"
+msgstr ""
+
+#: src/blocks/past-events-notice/block.json
+msgctxt "block keyword"
+msgid "notice"
+msgstr ""
+
+#: src/blocks/upcoming-events/block.json
+msgctxt "block title"
+msgid "Events Feed"
+msgstr ""
+
+#: src/blocks/upcoming-events/block.json
+msgctxt "block description"
+msgid "Display upcoming events, past events or events between a date range."
+msgstr ""

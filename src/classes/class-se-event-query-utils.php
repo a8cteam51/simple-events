@@ -86,11 +86,35 @@ class SE_Event_Query_Utils {
 			'posts_per_page' => -1,
 			'no_found_rows'  => true,
 			'meta_query'     => array(
+				'relation'     => 'OR',
 				'start_clause' => array(
 					'key'     => 'se_event_date_start',
 					'value'   => array( $start_timestamp, $end_timestamp ),
 					'compare' => 'BETWEEN',
 					'type'    => 'NUMERIC',
+				),
+				// A span that began earlier still runs inside the range.
+				'end_clause'   => array(
+					'key'     => 'se_event_date_end',
+					'value'   => array( $start_timestamp, $end_timestamp ),
+					'compare' => 'BETWEEN',
+					'type'    => 'NUMERIC',
+				),
+				// Longer than the range, so neither end sits inside it.
+				array(
+					'relation' => 'AND',
+					array(
+						'key'     => 'se_event_date_start',
+						'value'   => $start_timestamp,
+						'compare' => '<=',
+						'type'    => 'NUMERIC',
+					),
+					array(
+						'key'     => 'se_event_date_end',
+						'value'   => $end_timestamp,
+						'compare' => '>=',
+						'type'    => 'NUMERIC',
+					),
 				),
 			),
 			'orderby'        => array( 'start_clause' => 'ASC' ),
@@ -114,7 +138,18 @@ class SE_Event_Query_Utils {
 			_prime_post_caches( $parent_ids, false, true );
 		}
 
-		return self::map_events_dates_to_event_dates( $query->posts );
+		$dates = self::map_events_dates_to_event_dates( $query->posts );
+
+		// The OR clauses share a postmeta alias, so the SQL ORDER BY sorts on
+		// whichever row matched. Order here instead.
+		usort(
+			$dates,
+			function ( $a, $b ) {
+				return (int) $a['event_start_date'] <=> (int) $b['event_start_date'];
+			}
+		);
+
+		return $dates;
 	}
 
 	/**
@@ -126,6 +161,18 @@ class SE_Event_Query_Utils {
 	 */
 	public static function map_events_dates_to_event_dates( $events_dates ): array {
 		$compiled_events = array();
+
+		// Prime in bulk, so the loop below reads cache rather than querying
+		// once per date for meta and once per date for the parent event.
+		if ( ! empty( $events_dates ) ) {
+			update_meta_cache( 'post', wp_list_pluck( $events_dates, 'ID' ) );
+
+			$parent_ids = array_unique( array_filter( wp_list_pluck( $events_dates, 'post_parent' ) ) );
+			if ( ! empty( $parent_ids ) ) {
+				_prime_post_caches( $parent_ids, false, false );
+			}
+		}
+
 		foreach ( $events_dates as $event_date ) {
 			// Front end only ever surfaces a published date under a published parent.
 			if ( 'publish' !== get_post_status( $event_date ) ) {

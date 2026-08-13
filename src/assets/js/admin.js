@@ -102,7 +102,7 @@ jQuery(document).ready(function ($) {
 
 		// Make REST API call to migrate events
 		$.ajax({
-			url: window.location.origin + '/wp-json/simple-events/migrate-events',
+			url: seAdmin.migrateEventsUrl,
 			type: 'POST',
 			data: {
 				events: JSON.stringify(eventIds.get())

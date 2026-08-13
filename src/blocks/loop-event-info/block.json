@@ -3,6 +3,7 @@
     "apiVersion": 2,
     "name": "simple-events/loop-event-info",
     "title": "Event Metadata",
+    "textdomain": "simple-events",
     "description": "Display event meta in a custom query loop.",
     "icon": "tag",
     "category": "simple-events",

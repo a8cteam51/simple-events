@@ -30,6 +30,8 @@ class SE_Blocks {
 			add_action( 'block_categories_all', array( __CLASS__, 'block_categories' ), 10, 2 );
 			add_action( 'enqueue_block_editor_assets', array( __CLASS__, 'block_assets' ), 10 );
 			add_action( 'init', array( __CLASS__, 'register_block_type' ), 10 );
+			// After registration, so the handles exist to attach translations to.
+			add_action( 'init', array( __CLASS__, 'set_block_script_translations' ), 20 );
 			add_action( 'wp_enqueue_scripts', array( __CLASS__, 'enqueue_inline_block_styles' ), 10 );
 		} else {
 			add_action(
@@ -142,6 +144,34 @@ class SE_Blocks {
 				$variations['version'],
 				true
 			);
+
+			wp_set_script_translations( 'se-block-variations', 'simple-events', SE_PLUGIN_DIR . '/languages' );
+		}
+	}
+
+	/**
+	 * Point every block script at the plugin's JSON translations.
+	 *
+	 * Without this the editor never requests them, so wrapped strings stay in
+	 * English whatever the site language.
+	 *
+	 * @return void
+	 */
+	public static function set_block_script_translations() {
+		foreach ( WP_Block_Type_Registry::get_instance()->get_all_registered() as $name => $block_type ) {
+			if ( ! str_starts_with( $name, 'simple-events/' ) ) {
+				continue;
+			}
+
+			$handles = array_merge(
+				(array) $block_type->editor_script_handles,
+				(array) $block_type->script_handles,
+				(array) $block_type->view_script_handles
+			);
+
+			foreach ( array_unique( array_filter( $handles ) ) as $handle ) {
+				wp_set_script_translations( $handle, 'simple-events', SE_PLUGIN_DIR . '/languages' );
+			}
 		}
 	}
 
@@ -683,6 +713,11 @@ class SE_Blocks {
 	public static function countdown_render( $attributes = array() ) {
 		$output = '';
 
+		// Strip the archive's filters, or modify_event_posts() remaps this block's results and it counts to the wrong date. Same conditions pre_get_posts() attaches them under.
+		if ( is_post_type_archive( array( SE_Event_Post_Type::$post_type, SE_Event_Post_Type::$event_date_post_type ) ) || is_tax( SE_Event_Post_Type::$post_type . '-category' ) ) {
+			SE_Event_Query_Utils::remove_event_query_filters();
+		}
+
 		$events_query_args = array(
 			'se_countdown'   => true,
 			'post_type'      => SE_Event_Post_Type::$post_type,
@@ -766,8 +801,8 @@ class SE_Blocks {
 		$sequential_months = isset( $attributes['sequentialMonths'] ) ? (bool) $attributes['sequentialMonths'] : false;
 		$current_date_time = SE_Calendar::get_instance()->create_date_time( 'now' );
 
-		// If this being loaded on an archive page, ensure event query filters are removed.
-		if ( is_archive() && in_array( get_post_type(), array( SE_Event_Post_Type::$post_type, SE_Event_Post_Type::$event_date_post_type ), true ) ) {
+		// Strip the archive's filters, or modify_event_posts() remaps this block's results and it lists nothing. Same conditions pre_get_posts() attaches them under.
+		if ( is_post_type_archive( array( SE_Event_Post_Type::$post_type, SE_Event_Post_Type::$event_date_post_type ) ) || is_tax( SE_Event_Post_Type::$post_type . '-category' ) ) {
 			SE_Event_Query_Utils::remove_event_query_filters();
 		}
 

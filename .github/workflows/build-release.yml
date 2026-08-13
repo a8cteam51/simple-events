@@ -26,7 +26,7 @@ jobs:
           zip -r ${{ github.event.repository.name }}.zip . \
             -x ".git/*" ".github/*" "node_modules/*" ".gitignore" ".editorconfig" ".phpcs.xml" \
                "composer.json" "composer.lock" "package.json" "package-lock.json" \
-               "CLAUDE.md" "AGENTS.md" ".agents/*" ".cursor/*" ".deployignore" \
+               "CLAUDE.md" "AGENTS.md" ".agents/*" ".cursor/*" ".claude/*" ".deployignore" \
                "tests/*" "phpunit.xml.dist" ".phpunit.result.cache" \
                ".wp-env.json" ".wp-env.override.json" \
                "playwright-report/*" "test-results/*" "seed-test-events.php"

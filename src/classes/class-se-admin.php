@@ -47,11 +47,15 @@ class SE_Admin {
 			'se-admin',
 			'seAdmin',
 			array(
-				'ajaxUrl'   => admin_url( 'admin-ajax.php' ),
-				'nonce'     => wp_create_nonce( 'wp_rest' ),
-				'ajaxNonce' => wp_create_nonce( 'se_admin_ajax' ),
+				'ajaxUrl'          => admin_url( 'admin-ajax.php' ),
+				'nonce'            => wp_create_nonce( 'wp_rest' ),
+				'ajaxNonce'        => wp_create_nonce( 'se_admin_ajax' ),
+				// rest_url() handles subdirectory installs and plain permalinks,
+				// which a hardcoded /wp-json/ path does not.
+				'migrateEventsUrl' => rest_url( 'simple-events/migrate-events' ),
 			)
 		);
+		wp_set_script_translations( 'se-admin', 'simple-events', SE_PLUGIN_DIR . '/languages' );
 		wp_enqueue_script( 'se-admin' );
 	}
 

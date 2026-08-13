@@ -2,11 +2,14 @@
 /**
  * Tests that calendar event-date queries respect the parent event's publish status.
  *
- * Regression coverage: event-date posts are always created as 'publish', and the
- * calendar query (SE_Event_Dates::find_event_dates) filters only on the date post's
- * own status. Without a parent-published guard, a date whose parent se-event is in
- * draft/pending status still leaked into the calendar. find_event_dates() now applies
- * SE_Event_Query_Utils::filter_event_dates_where, matching the archive/feed behaviour.
+ * Regression coverage: the calendar query (SE_Event_Dates::find_event_dates) filters
+ * on the date post's own status. Without a parent-published guard, a date whose
+ * parent se-event is in draft/pending status still leaked into the calendar.
+ * find_event_dates() now applies SE_Event_Query_Utils::filter_event_dates_where,
+ * matching the archive/feed behaviour.
+ *
+ * Dates now also mirror their event's status (GH-86), so the parent guard is a
+ * second line of defence rather than the only one. These tests keep covering it.
  *
  * @package Simple_Events
  */
@@ -51,8 +54,8 @@ class EventDatesParentStatusTest extends WP_UnitTestCase {
 		);
 
 		$this->assertNotNull( $date, 'Fixture event-date should have been created.' );
-		// The child date is published regardless of the parent's status.
-		$this->assertSame( 'publish', get_post_status( $date->ID ) );
+		// The child date mirrors its parent's status.
+		$this->assertSame( $parent_status, get_post_status( $date->ID ) );
 
 		return array(
 			'event_id' => $event_id,

@@ -748,7 +748,7 @@ class SE_Settings {
 		);
 
 		// Disable email notifications
-		add_filter( 'woocommerce_defer_transactional_emails', '__return_true' );
+		add_filter( 'woocommerce_email_enabled_customer_completed_order', '__return_false' );
 
 		$updated_orders = 0;
 
@@ -778,8 +778,8 @@ class SE_Settings {
 			}
 		}
 
-		// Enable email notifications again
-		remove_filter( 'woocommerce_defer_transactional_emails', '__return_true' );
+		// Not removed: wp_send_json_success() ends the request, and a deferred
+		// send evaluates is_enabled() at shutdown, after any removal here.
 
 		// translators: %d is the number of orders updated.
 		wp_send_json_success( sprintf( __( '%d orders updated successfully', 'simple-events' ), $updated_orders ) );

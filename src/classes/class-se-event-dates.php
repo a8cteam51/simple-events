@@ -184,7 +184,8 @@ class SE_Event_Dates {
 			);
 		}
 
-		// Get the existing dates.
+		// Get the existing dates. Cast, because a client may send its IDs as
+		// strings and a strict comparison would read every date as missing.
 		$existing_date_ids = array_map(
 			function ( $date ) {
 				return absint( $date['id'] );
@@ -192,14 +193,32 @@ class SE_Event_Dates {
 			se_event_get_event_dates( $event_id )
 		);
 
+		$submitted_date_ids = array_map( 'absint', array_filter( array_column( $dates, 'id' ) ) );
+
+		// An ID we do not recognise is not ours to act on. Reject before deleting
+		// anything, rather than treating the whole set as missing.
+		foreach ( $submitted_date_ids as $submitted_date_id ) {
+			if ( ! in_array( $submitted_date_id, $existing_date_ids, true ) ) {
+				return new WP_REST_Response(
+					array(
+						'code'    => 'invalid_date',
+						'message' => __( 'Invalid event date provided.', 'simple-events' ),
+					),
+					400
+				);
+			}
+		}
+
 		// Create and update first, delete afterwards, so a failure part way through
 		// cannot leave the event stripped of dates it still needs.
 		$kept_date_ids = array();
 
 		// Iterate over the dates and update the event dates.
 		foreach ( $dates as $date ) {
-			// If we dont have a date ID, create a new date.
-			if ( ! isset( $date['id'] ) ) {
+			// If we dont have a date ID, create a new date. empty() rather than
+			// isset(), so a client sending 0 or '' for a new date creates one
+			// instead of falling between the two branches.
+			if ( empty( $date['id'] ) ) {
 				$event_date = se_event_create_event_date( $event_id, $date );
 				// If we dont have a WP_Post object, return an error.
 				if ( ! $event_date ) {
@@ -212,15 +231,6 @@ class SE_Event_Dates {
 					);
 				}
 				$date['id'] = $event_date->ID;
-			} elseif ( ! in_array( absint( $date['id'] ), $existing_date_ids, true ) ) {
-				// The ID is not one of this event's own dates, so it is not ours to write to.
-				return new WP_REST_Response(
-					array(
-						'code'    => 'invalid_date',
-						'message' => __( 'Invalid event date provided.', 'simple-events' ),
-					),
-					400
-				);
 			}
 
 			// Update the even dates meta.
@@ -377,18 +387,38 @@ class SE_Event_Dates {
 	 * @return void
 	 */
 	public static function delete_all_event_dates( $event_id ): void {
-		// Get all the event dates.
-		try {
-			$event_dates = se_event_get_event_dates( $event_id );
-		} catch ( \Exception $e ) {
-			// If we can't get the dates, there's nothing to delete
-			return;
-		}
+		// Queried directly rather than via se_event_get_event_dates() so trashed
+		// dates are removed too, leaving nothing orphaned behind the event.
+		$event_dates = get_posts(
+			array(
+				'post_type'      => SE_Event_Post_Type::$event_date_post_type,
+				'post_status'    => SE_Event_Post_Type::child_date_statuses(),
+				'post_parent'    => $event_id,
+				'posts_per_page' => -1,
+				'fields'         => 'ids',
+			)
+		);
 
 		// Iterate over the event dates and delete them.
-		foreach ( $event_dates as $event_date ) {
-			wp_delete_post( $event_date['id'], true );
+		foreach ( $event_dates as $event_date_id ) {
+			wp_delete_post( $event_date_id, true );
 		}
+	}
+
+	/**
+	 * Clear the event-level date meta.
+	 *
+	 * Only for callers discarding an event's dates for good. The migration
+	 * rebuilds children from se_event_dates, so it must not lose it.
+	 *
+	 * @param integer $event_id The event ID.
+	 *
+	 * @return void
+	 */
+	public static function delete_event_date_meta( $event_id ): void {
+		delete_post_meta( $event_id, 'se_event_dates' );
+		delete_post_meta( $event_id, 'se_event_date_start' );
+		delete_post_meta( $event_id, 'se_event_date_end' );
 	}
 
 	/**

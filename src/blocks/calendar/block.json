@@ -3,6 +3,7 @@
 	"apiVersion": 2,
 	"name": "simple-events/calendar",
 	"title": "Simple Events Calendar",
+	"textdomain": "simple-events",
 	"icon": "calendar",
 	"category": "simple-events",
 	"keywords": ["event", "calendar", "view", "Simple Events"],

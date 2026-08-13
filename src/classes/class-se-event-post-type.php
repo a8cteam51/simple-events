@@ -60,8 +60,7 @@ class SE_Event_Post_Type {
 		add_action( 'save_post', array( __CLASS__, 'delete_event_dates_if_no_event_info_block' ) );
 		add_action( 'transition_post_status', array( __CLASS__, 'stamp_version_on_new_event' ), 10, 3 );
 		add_action( 'before_delete_post', array( __CLASS__, 'delete_child_event_dates' ) );
-		add_action( 'wp_trash_post', array( __CLASS__, 'trash_child_event_dates' ) );
-		add_action( 'untrashed_post', array( __CLASS__, 'untrash_child_event_dates' ) );
+		add_action( 'transition_post_status', array( __CLASS__, 'sync_child_event_date_status' ), 10, 3 );
 		add_filter( 'is_protected_meta', array( __CLASS__, 'is_protected_meta' ), 10, 3 );
 	}
 
@@ -594,9 +593,9 @@ class SE_Event_Post_Type {
 
 				$parent_events    = new WP_Query( $parent_query_args );
 				$parent_event_ids = $parent_events->posts;
-				// If no parent events match, set to empty array to return no results
+				// Empty array, not null — null already means "no taxonomy filtering".
 				if ( empty( $parent_event_ids ) ) {
-					$date_post_ids = null;
+					$date_post_ids = array();
 				} else {
 					$date_post_ids = SE_Event_Query_Utils::get_event_dates_from_events( $parent_event_ids );
 				}
@@ -607,7 +606,8 @@ class SE_Event_Post_Type {
 
 			// If we have taxonomy filtering, limit to dates of matching parent events
 			if ( null !== $date_post_ids ) {
-				$query->set( 'post__in', $date_post_ids );
+				// WP_Query ignores an empty post__in, so restrict to an impossible ID.
+				$query->set( 'post__in', empty( $date_post_ids ) ? array( 0 ) : $date_post_ids );
 				unset( $query->query_vars['se-event-category'] );
 			}
 
@@ -764,8 +764,10 @@ class SE_Event_Post_Type {
 		}
 
 		if ( ! $is_event_info_block_present ) {
-			// Delete all the event dates.
+			// Delete all the event dates, and the meta describing them, so the
+			// event stops advertising dates that no longer exist.
 			SE_Event_Dates::delete_all_event_dates( $event_id );
+			SE_Event_Dates::delete_event_date_meta( $event_id );
 		}
 	}
 
@@ -784,7 +786,7 @@ class SE_Event_Post_Type {
 		$children = get_posts(
 			array(
 				'post_type'      => self::$event_date_post_type,
-				'post_status'    => array( 'publish', 'trash' ),
+				'post_status'    => self::child_date_statuses(),
 				'post_parent'    => $post_id,
 				'posts_per_page' => -1,
 				'fields'         => 'ids',
@@ -797,60 +799,65 @@ class SE_Event_Post_Type {
 	}
 
 	/**
-	 * Trash child event-date posts when a parent event is trashed.
+	 * Every status a child event date can hold.
 	 *
-	 * @param integer $post_id Post ID.
+	 * Listed explicitly because WP_Query's 'any' omits trash.
 	 *
-	 * @return void
+	 * @return array<string>
 	 */
-	public static function trash_child_event_dates( $post_id ) {
-		if ( get_post_type( $post_id ) !== self::$post_type ) {
-			return;
-		}
-
-		$children = get_posts(
-			array(
-				'post_type'      => self::$event_date_post_type,
-				'post_status'    => 'publish',
-				'post_parent'    => $post_id,
-				'posts_per_page' => -1,
-				'fields'         => 'ids',
-			)
-		);
-
-		foreach ( $children as $child_id ) {
-			wp_trash_post( $child_id );
-		}
+	public static function child_date_statuses(): array {
+		return array( 'publish', 'pending', 'draft', 'future', 'private', 'trash' );
 	}
 
 	/**
-	 * Restore child event-date posts when a parent event is untrashed.
+	 * Keep child event-date posts on the same status as their event.
 	 *
-	 * @param integer $post_id Post ID.
+	 * Replaces the previous trash/untrash pair: trashing and restoring are both
+	 * status transitions, so one handler covers them along with draft, pending,
+	 * private and scheduled.
+	 *
+	 * @param string  $new_status The status being moved to.
+	 * @param string  $old_status The status being moved from.
+	 * @param WP_Post $post       The post being transitioned.
 	 *
 	 * @return void
 	 */
-	public static function untrash_child_event_dates( $post_id ) {
-		if ( get_post_type( $post_id ) !== self::$post_type ) {
+	public static function sync_child_event_date_status( $new_status, $old_status, $post ) {
+		if ( $new_status === $old_status || ! $post instanceof WP_Post || self::$post_type !== $post->post_type ) {
+			return;
+		}
+
+		// Not statuses a date should ever hold.
+		if ( in_array( $new_status, array( 'auto-draft', 'inherit', 'new' ), true ) ) {
 			return;
 		}
 
 		$children = get_posts(
 			array(
 				'post_type'      => self::$event_date_post_type,
-				'post_status'    => 'trash',
-				'post_parent'    => $post_id,
+				'post_status'    => self::child_date_statuses(),
+				'post_parent'    => $post->ID,
 				'posts_per_page' => -1,
 				'fields'         => 'ids',
 			)
 		);
 
 		foreach ( $children as $child_id ) {
-			wp_untrash_post( $child_id );
+			if ( get_post_status( $child_id ) === $new_status ) {
+				continue;
+			}
+
+			// Trashing goes through the trash API, so the child gets the trash
+			// bookkeeping core needs to purge it and the trash hooks fire.
+			if ( 'trash' === $new_status ) {
+				wp_trash_post( $child_id );
+				continue;
+			}
+
 			wp_update_post(
 				array(
 					'ID'          => $child_id,
-					'post_status' => 'publish',
+					'post_status' => $new_status,
 				)
 			);
 		}
