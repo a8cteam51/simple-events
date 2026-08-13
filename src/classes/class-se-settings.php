@@ -732,6 +732,12 @@ class SE_Settings {
 	 * @return void
 	 */
 	public static function mark_existing_orders_as_completed() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( __( 'You are not allowed to do this.', 'simple-events' ), 403 );
+		}
+
+		check_ajax_referer( 'se_admin_ajax', 'nonce' );
+
 		$orders = wc_get_orders(
 			array(
 				'limit'   => -1,
@@ -785,6 +791,12 @@ class SE_Settings {
 	 * @return void
 	 */
 	public static function clear_orphaned_events() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( __( 'You are not allowed to do this.', 'simple-events' ), 403 );
+		}
+
+		check_ajax_referer( 'se_admin_ajax', 'nonce' );
+
 		// Query all event dates where the parent event is missing.
 		global $wpdb;
 

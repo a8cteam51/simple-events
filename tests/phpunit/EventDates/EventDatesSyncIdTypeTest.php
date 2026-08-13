@@ -12,6 +12,17 @@
 class EventDatesSyncIdTypeTest extends WP_UnitTestCase {
 
 	/**
+	 * sync_event_dates() checks edit_post on the event, so log a user in.
+	 *
+	 * @return void
+	 */
+	public function set_up() {
+		parent::set_up();
+
+		wp_set_current_user( $this->factory->user->create( array( 'role' => 'administrator' ) ) );
+	}
+
+	/**
 	 * Create a published event carrying two child dates.
 	 *
 	 * @return integer The event ID.

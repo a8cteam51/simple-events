@@ -3,4 +3,14 @@ CLAUDE.md
 AGENTS.md
 .agents/
 .cursor/
+.claude/
 .deployignore
+
+# Test and local environment files – match the release zip in build-release.yml
+tests/
+phpunit.xml.dist
+.phpunit.result.cache
+.wp-env.json
+.wp-env.override.json
+playwright-report/
+test-results/

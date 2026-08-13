@@ -49,6 +49,7 @@ class SE_Admin {
 			array(
 				'ajaxUrl'          => admin_url( 'admin-ajax.php' ),
 				'nonce'            => wp_create_nonce( 'wp_rest' ),
+				'ajaxNonce'        => wp_create_nonce( 'se_admin_ajax' ),
 				// rest_url() handles subdirectory installs and plain permalinks,
 				// which a hardcoded /wp-json/ path does not.
 				'migrateEventsUrl' => rest_url( 'simple-events/migrate-events' ),

@@ -204,6 +204,7 @@ jQuery(document).ready(function ($) {
 			type: 'POST',
 			data: {
 				action: action,
+				nonce: seAdmin.ajaxNonce,
 			},
 			success: function (response) {
 				$('#se_ajax_response').html(`<p>${response?.data}</p>`);
@@ -232,6 +233,7 @@ jQuery(document).ready(function ($) {
 			type: 'POST',
 			data: {
 				action: action,
+				nonce: seAdmin.ajaxNonce,
 			},
 			success: function (response) {
 				$('#se_clear_orphaned_response').html(`<p>${response?.data}</p>`);

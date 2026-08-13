@@ -64,10 +64,10 @@ class SE_Migrate_Events {
 			$namespace,
 			'/migrate-all-events',
 			array(
-				'methods'             => array( 'POST', 'GET' ),
+				'methods'             => 'POST',
 				'callback'            => array( __CLASS__, 'migrate_events_rest_all' ),
 				'permission_callback' => function () {
-					return true;
+					return current_user_can( 'manage_options' );
 				},
 			)
 		);
