@@ -2,14 +2,14 @@
 # This file is distributed under the GPL v3 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Simple Events 2.2.0\n"
+"Project-Id-Version: Simple Events 2.3.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/simple-events\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-08-12T12:33:50+00:00\n"
+"POT-Creation-Date: 2026-08-13T15:11:34+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: simple-events\n"
@@ -56,11 +56,11 @@ msgstr ""
 msgid "Go to Settings & Migrate Events"
 msgstr ""
 
-#: src/classes/class-se-admin.php:69
+#: src/classes/class-se-admin.php:70
 msgid "Event Date/Time"
 msgstr ""
 
-#: src/classes/class-se-admin.php:70
+#: src/classes/class-se-admin.php:71
 msgid "Event Location"
 msgstr ""
 
@@ -156,27 +156,33 @@ msgid "Invalid event ID provided."
 msgstr ""
 
 #: src/classes/class-se-event-dates.php:109
+#: src/classes/class-se-event-dates.php:122
+#: src/classes/class-se-event-dates.php:183
 msgid "Invalid event provided."
 msgstr ""
 
-#: src/classes/class-se-event-dates.php:121
-#: src/classes/class-se-event-dates.php:234
+#: src/classes/class-se-event-dates.php:134
+#: src/classes/class-se-event-dates.php:276
 msgid "An error occurred while fetching event dates."
 msgstr ""
 
-#: src/classes/class-se-event-dates.php:158
+#: src/classes/class-se-event-dates.php:171
 msgid "Invalid nonce provided."
 msgstr ""
 
-#: src/classes/class-se-event-dates.php:182
+#: src/classes/class-se-event-dates.php:194
+msgid "You are not allowed to edit this event."
+msgstr ""
+
+#: src/classes/class-se-event-dates.php:218
 msgid "Invalid event date provided."
 msgstr ""
 
-#: src/classes/class-se-event-dates.php:207
+#: src/classes/class-se-event-dates.php:241
 msgid "An error occurred while creating the event date."
 msgstr ""
 
-#: src/classes/class-se-event-dates.php:247
+#: src/classes/class-se-event-dates.php:289
 msgid "Event dates synced successfully."
 msgstr ""
 
@@ -647,14 +653,19 @@ msgstr ""
 msgid "Settings Saved"
 msgstr ""
 
+#: src/classes/class-se-settings.php:736
+#: src/classes/class-se-settings.php:795
+msgid "You are not allowed to do this."
+msgstr ""
+
 #. translators: %d is the number of orders updated.
-#: src/classes/class-se-settings.php:779
+#: src/classes/class-se-settings.php:785
 #, php-format
 msgid "%d orders updated successfully"
 msgstr ""
 
 #. translators: %d is the number of orphaned events deleted.
-#: src/classes/class-se-settings.php:811
+#: src/classes/class-se-settings.php:823
 #, php-format
 msgid "%d orphaned events deleted successfully"
 msgstr ""

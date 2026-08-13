@@ -224,6 +224,14 @@ Copy the `team51-focal-point` folder to your `mu-plugins` directory.
 
 ## Changelog
 
+### 2.3.0
+
+- **Security:** the `migrate-all-events` REST route, both settings-page ajax handlers and the event-dates sync and read routes now check an appropriate capability, and the ajax handlers check a nonce. Previously they could be reached without one. Sites should update.
+- **Event dates:** removing the Event Info block, migrating, or syncing dates no longer destroys data — the 1.0.0 to 2.0.0 migration is idempotent, dates mirror their event's status, and a sync creates and updates before deleting.
+- **Archives and calendar:** fixed category filtering and the event-date query cost on archives, incorrect header dates, month flags at year boundaries, date grouping, mobile navigation labels, and events spanning midnight or enclosing the visible grid. Calendar event details are now keyboard accessible.
+- **Editor:** fixed changing the timezone discarding every other event setting, "Revert Changes" leaving the wrong timestamps, a failed date fetch silently showing no dates, the Migrate Events button failing on plain permalinks, and lost focus while typing in ticket fields.
+- **Internationalisation:** the plugin now loads its text domain and ships a translation template.
+
 ### 2.2.0 
 - Improves the calendar event query process to reduce the number of queries and improve performance on sites with large numbers of events. Adds customisable colours to the calendars loading skeleton. Fixes a bug where events which are not published can still leak into calendar or next/previous queries.
 
