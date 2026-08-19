@@ -14,13 +14,9 @@ import apiFetch from "@wordpress/api-fetch";
 import { registerBlockType } from '@wordpress/blocks';
 import { Placeholder, Button, Spinner } from '@wordpress/components';
 import { Fragment, useEffect } from '@wordpress/element';
-import { addQueryArgs } from '@wordpress/url';
 import { useMergeState } from './use-merge-state';
 import { useBlockProps } from '@wordpress/block-editor';
-import { flatten, uniqBy, debounce } from 'lodash';
 
-const productCount = window.seSettings.productCount || 50;
-const isLargeCatalog = window.seSettings.isLargeCatalog || false;
 const isWCActive = window.seSettings.isWCActive || false;
 const isBOActive = window.seSettings.isBOActive || false;
 
@@ -49,60 +45,26 @@ const renderMissingDependencies = () => {
 };
 
 /**
- * Get a promise that resolves to a list of products from the API.
+ * Get a promise that resolves to the full list of ticket products.
  *
- * @param {string} - A query string with the search term.
- * @return {Array} - An array of products.
+ * @return {Array} - An array of { id, name } products.
  */
-const getProducts = async ( { selected = [], search = '' } ) => {
-	const postTypes = [ 'product', 'product_variation' ];
-	const pageSize = 25;
-	let offset = 0;
-	let requests = [];
-	let queryArgs = null;
+const getProducts = async () => {
+	const data = await apiFetch( { path: '/simple-events/tickets/all' } );
 
-	while ( offset < productCount ) {
-		queryArgs = {
-			post_type: postTypes,
-			offset: offset,
-			per_page: pageSize,
-			status: 'publish',
-			search,
-		};
-
-		requests.push( addQueryArgs( 'simple-events/tickets', queryArgs ) );
-		offset += pageSize;
-	}
-
-	if ( selected.length ) {
-		requests.push(
-			addQueryArgs( 'simple-events/tickets', {
-				status: 'publish',
-				include: selected,
-			} )
-		);
-	}
-
-	const data = await Promise.all(
-		requests.map( ( path ) => apiFetch( { path } ) )
-	);
-
-	return uniqBy( flatten( data ), 'id' ).map( ( item ) => {
-		return {
-			id: parseInt( item.id, 10 ),
-			name: item.name,
-		};
-	} );
+	return data.map( ( item ) => ( {
+		id: parseInt( item.id, 10 ),
+		name: item.name,
+	} ) );
 };
 
 const TicketSelection = ( props ) => {
 	const { setAttributes, attributes } = props;
 
-	const [ { loading, selected, products, search }, setState ] = useMergeState( {
+	const [ { loading, selected, products }, setState ] = useMergeState( {
 		loading: true,
 		selected: [],
 		products: [],
-		search: '',
 	} );
 
 	// Read selected from attributes.
@@ -134,7 +96,7 @@ const TicketSelection = ( props ) => {
 
 		let cancelled = false;
 
-		getProducts( { savedSelected, search } )
+		getProducts()
 			.then( ( data ) => {
 				if ( ! cancelled ) {
 					setState( { products: data, loading: false } );
@@ -149,11 +111,7 @@ const TicketSelection = ( props ) => {
 		return () => {
 			cancelled = true;
 		};
-	}, [ loading, search ] );
-
-	const debounceSearch = debounce( ( searchValue ) => {
-		setState( { loading: true, search: searchValue } );
-	}, 400 );
+	}, [ loading ] );
 
 	const onChange = ( ids ) => {
 		setState( { selected: ids } );
@@ -198,7 +156,6 @@ const TicketSelection = ( props ) => {
 
 					onChange( updatedSelected );
 				} }
-				onSearch={ isLargeCatalog ? debounceSearch : null }
 			/>
 			<Button
 				isPrimary

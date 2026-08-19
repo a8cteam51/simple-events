@@ -71,6 +71,7 @@ require_once SE_SRC_PATH . '/classes/class-se-event-query-dates.php';
 require_once SE_SRC_PATH . '/classes/class-se-event-dates.php';
 require_once SE_SRC_PATH . '/classes/class-date-display-formatter.php';
 require_once SE_SRC_PATH . '/classes/class-se-migrate-events.php';
+require_once SE_SRC_PATH . '/classes/class-se-rest-ticket-products-list.php';
 
 require_once SE_SRC_PATH . '/calendar-functions.php';
 require_once SE_SRC_PATH . '/event-functions.php';
