@@ -47,7 +47,7 @@ const renderMissingDependencies = () => {
 /**
  * Get a promise that resolves to the full list of ticket products.
  *
- * @return {Array} - An array of { id, name } products.
+ * @return {Promise<Array>} - A promise resolving to an array of { id, name } products.
  */
 const getProducts = async () => {
 	const data = await apiFetch( { path: '/simple-events/tickets/all' } );
@@ -190,17 +190,21 @@ const TicketSelection = ( props ) => {
 						{ loading || attributes.newTicketAdded ? (
 							<Spinner />
 						) : (
-							getSelectedProducts().map( ( item, i ) => (
+							getSelectedProducts().map( ( item ) => (
 								<TicketDataControl
 									{ ...props }
 									editingProduct={ item.id }
 									index={ item.id }
 									onRemove={ () => {
-										const updatedSelected = selected;
-
-										updatedSelected.splice( i, 1 );
-
-										onChange( updatedSelected );
+										// Remove by id, not render index: the
+										// rendered list is filtered and can be
+										// shorter than selected.
+										onChange(
+											selected.filter(
+												( selectedId ) =>
+													selectedId !== item.id
+											)
+										);
 									} }
 									onReorder={ ( reorderedSelected ) => {
 										setAttributes( {

@@ -42,6 +42,11 @@ class SE_REST_Ticket_Products_List {
 		add_action( 'trashed_post', array( __CLASS__, 'maybe_flush_cache' ) );
 		add_action( 'untrashed_post', array( __CLASS__, 'maybe_flush_cache' ) );
 		add_action( 'deleted_post', array( __CLASS__, 'flush_cache_on_delete' ), 10, 2 );
+
+		// _ticket can change without a post save (importer, WP-CLI, meta-only CRUD save).
+		add_action( 'added_post_meta', array( __CLASS__, 'maybe_flush_cache_on_meta' ), 10, 3 );
+		add_action( 'updated_post_meta', array( __CLASS__, 'maybe_flush_cache_on_meta' ), 10, 3 );
+		add_action( 'deleted_post_meta', array( __CLASS__, 'maybe_flush_cache_on_meta' ), 10, 3 );
 	}
 
 	/**
@@ -66,11 +71,9 @@ class SE_REST_Ticket_Products_List {
 	/**
 	 * Same gate as SE_REST_Ticket_Products: editors and above.
 	 *
-	 * @param WP_REST_Request $request Full details about the request.
-	 *
 	 * @return WP_Error|boolean
 	 */
-	public function get_items_permissions_check( $request ) {
+	public function get_items_permissions_check() {
 		if ( ! current_user_can( 'edit_posts' ) ) {
 			return new WP_Error( 'woocommerce_rest_cannot_view', __( 'Sorry, you cannot list resources.', 'simple-events' ), array( 'status' => \rest_authorization_required_code() ) );
 		}
@@ -81,11 +84,9 @@ class SE_REST_Ticket_Products_List {
 	/**
 	 * Return all published ticket products as [ { id, name } ], from cache when warm.
 	 *
-	 * @param WP_REST_Request $request Full details about the request.
-	 *
 	 * @return WP_REST_Response
 	 */
-	public function get_items( $request ) {
+	public function get_items() {
 		$items = get_transient( self::CACHE_KEY );
 
 		if ( false === $items ) {
@@ -102,11 +103,18 @@ class SE_REST_Ticket_Products_List {
 	 * @return array<array{id: integer, name: string}>
 	 */
 	private function query_ticket_products() {
+		/**
+		 * Bound the list so the transient payload stays under object-cache item limits.
+		 *
+		 * @param integer $limit Maximum number of ticket products returned.
+		 */
+		$limit = (int) apply_filters( 'se_ticket_products_all_limit', 2000 );
+
 		$query = new WP_Query(
 			array(
 				'post_type'              => array( 'product', 'product_variation' ),
 				'post_status'            => 'publish',
-				'posts_per_page'         => -1,
+				'posts_per_page'         => $limit,
 				'no_found_rows'          => true,
 				'update_post_meta_cache' => false,
 				'update_post_term_cache' => false,
@@ -151,6 +159,21 @@ class SE_REST_Ticket_Products_List {
 	 */
 	public static function maybe_flush_cache( $post_id ) {
 		if ( in_array( get_post_type( $post_id ), array( 'product', 'product_variation' ), true ) ) {
+			self::flush_cache();
+		}
+	}
+
+	/**
+	 * Flush when the _ticket meta itself is added, updated or deleted.
+	 *
+	 * @param integer|array $meta_id  Meta row ID(s).
+	 * @param integer       $post_id  The post ID.
+	 * @param string        $meta_key The meta key.
+	 *
+	 * @return void
+	 */
+	public static function maybe_flush_cache_on_meta( $meta_id, $post_id, $meta_key ) {
+		if ( '_ticket' === $meta_key ) {
 			self::flush_cache();
 		}
 	}

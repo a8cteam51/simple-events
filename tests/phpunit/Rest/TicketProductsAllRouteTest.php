@@ -15,6 +15,13 @@
 class TicketProductsAllRouteTest extends WP_UnitTestCase {
 
 	/**
+	 * Post types this test registered itself (and so must unregister).
+	 *
+	 * @var array
+	 */
+	private $registered_post_types = array();
+
+	/**
 	 * Spin up a REST server, register product post types and start clean.
 	 *
 	 * @return void
@@ -22,8 +29,13 @@ class TicketProductsAllRouteTest extends WP_UnitTestCase {
 	public function set_up() {
 		parent::set_up();
 
-		register_post_type( 'product', array( 'public' => true ) );
-		register_post_type( 'product_variation', array( 'public' => false ) );
+		// Guarded so a WooCommerce-loaded suite keeps WC's own registrations.
+		foreach ( array( 'product', 'product_variation' ) as $post_type ) {
+			if ( ! post_type_exists( $post_type ) ) {
+				register_post_type( $post_type, array( 'public' => 'product' === $post_type ) );
+				$this->registered_post_types[] = $post_type;
+			}
+		}
 
 		global $wp_rest_server;
 		$wp_rest_server = new WP_REST_Server();
@@ -42,8 +54,10 @@ class TicketProductsAllRouteTest extends WP_UnitTestCase {
 		global $wp_rest_server;
 		$wp_rest_server = null;
 
-		unregister_post_type( 'product' );
-		unregister_post_type( 'product_variation' );
+		foreach ( $this->registered_post_types as $post_type ) {
+			unregister_post_type( $post_type );
+		}
+		$this->registered_post_types = array();
 
 		parent::tear_down();
 	}
@@ -208,7 +222,35 @@ class TicketProductsAllRouteTest extends WP_UnitTestCase {
 
 		$this->login_as_contributor();
 
+		// Warm-up dispatch so user/cap queries are primed, then the second
+		// dispatch must hit the database zero times.
 		$this->assertSame( $sentinel, $this->fetch_all()->get_data() );
+
+		$queries_before = get_num_queries();
+
+		$this->assertSame( $sentinel, $this->fetch_all()->get_data() );
+		$this->assertSame( 0, get_num_queries() - $queries_before, 'A warm cache must be served without any database queries.' );
+	}
+
+	/**
+	 * The result set is bounded by the se_ticket_products_all_limit filter.
+	 *
+	 * @return void
+	 */
+	public function test_limit_filter_bounds_the_result_set() {
+		$this->create_ticket_product( 'Ticket One' );
+		$this->create_ticket_product( 'Ticket Two' );
+
+		$limit_to_one = static function () {
+			return 1;
+		};
+
+		add_filter( 'se_ticket_products_all_limit', $limit_to_one );
+		$this->login_as_contributor();
+
+		$this->assertCount( 1, $this->fetch_all()->get_data() );
+
+		remove_filter( 'se_ticket_products_all_limit', $limit_to_one );
 	}
 
 	/**
@@ -291,6 +333,49 @@ class TicketProductsAllRouteTest extends WP_UnitTestCase {
 		$this->fetch_all();
 		wp_delete_post( $ticket, true );
 		$this->assertFalse( get_transient( SE_REST_Ticket_Products_List::CACHE_KEY ), 'Deleting a product must flush the cache.' );
+	}
+
+	/**
+	 * Writing _ticket meta directly (importer, WP-CLI) flushes the cache.
+	 *
+	 * @return void
+	 */
+	public function test_cache_is_flushed_when_ticket_meta_changes() {
+		$product = $this->factory->post->create(
+			array(
+				'post_type'   => 'product',
+				'post_status' => 'publish',
+				'post_title'  => 'Late Ticket',
+			)
+		);
+		$this->login_as_contributor();
+
+		$this->fetch_all();
+		update_post_meta( $product, '_ticket', 'yes' );
+		$this->assertFalse( get_transient( SE_REST_Ticket_Products_List::CACHE_KEY ), 'Adding _ticket meta must flush the cache.' );
+
+		$this->fetch_all();
+		update_post_meta( $product, '_ticket', 'no' );
+		$this->assertFalse( get_transient( SE_REST_Ticket_Products_List::CACHE_KEY ), 'Updating _ticket meta must flush the cache.' );
+
+		$this->fetch_all();
+		delete_post_meta( $product, '_ticket' );
+		$this->assertFalse( get_transient( SE_REST_Ticket_Products_List::CACHE_KEY ), 'Deleting _ticket meta must flush the cache.' );
+	}
+
+	/**
+	 * Unrelated meta writes must NOT flush the cache.
+	 *
+	 * @return void
+	 */
+	public function test_cache_survives_unrelated_meta_writes() {
+		$product = $this->create_ticket_product( 'Meta Ticket' );
+		$this->login_as_contributor();
+		$this->fetch_all();
+
+		update_post_meta( $product, '_price', '9.99' );
+
+		$this->assertNotFalse( get_transient( SE_REST_Ticket_Products_List::CACHE_KEY ), 'Unrelated meta writes must not flush the ticket cache.' );
 	}
 
 	/**
