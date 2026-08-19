@@ -206,11 +206,11 @@ const TicketSelection = ( props ) => {
 											)
 										);
 									} }
-									onReorder={ ( reorderedSelected ) => {
-										setAttributes( {
-											selected: reorderedSelected,
-										} );
-									} }
+									onReorder={ ( reorderedSelected ) =>
+										// Through onChange so local selected
+										// state stays in sync with attributes.
+										onChange( reorderedSelected )
+									}
 									title={ item.name }
 								/>
 							) )
