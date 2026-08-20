@@ -25,5 +25,17 @@ setup( 'authenticate', async ( { requestUtils } ) => {
 		// Non-fatal: the specs will report the real problem if WP is unusable.
 	}
 
+	// The se_e2e_fail_dates option survives an interrupted run (it lives in the
+	// wp-env database) and would 500 the event-dates GET for every editor spec.
+	// Clear it unconditionally; the fetch-failure spec's afterEach is the fast path.
+	try {
+		execSync(
+			"npx wp-env run cli --env-cwd='wp-content/plugins/simple-events' -- wp option delete se_e2e_fail_dates",
+			{ stdio: 'ignore' }
+		);
+	} catch ( e ) {
+		// Non-fatal: the option usually does not exist.
+	}
+
 	await requestUtils.setupRest();
 } );
