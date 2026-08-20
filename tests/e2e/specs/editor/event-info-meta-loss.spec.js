@@ -1,5 +1,5 @@
 const { test, expect } = require( '@playwright/test' );
-const { openNewEvent, setTitle } = require( '../../fixtures' );
+const { canvas, openNewEvent, setTitle } = require( '../../fixtures' );
 
 /**
  * Changing the event timezone must touch `se_event_timezone` and nothing else.
@@ -75,7 +75,7 @@ test( 'changing the timezone changes only se_event_timezone', async ( { page } )
 
 	// The block renders its controls only once the dateManager has resolved —
 	// which is also the point the stale meta snapshot is taken.
-	await page.locator( '.se-add-date-button' ).waitFor();
+	await canvas( page ).locator( '.se-add-date-button' ).waitFor();
 
 	// Select the block and open the Block inspector; the Time Zone combobox lives
 	// in InspectorControls and renders only for the selected block.

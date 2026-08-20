@@ -2,28 +2,43 @@
 /**
  * Plugin Name: SE E2E — fail the event-dates endpoint
  *
- * Test fixture. Fails GET /simple-events/event-dates/{id} with a 500 whenever the
- * request carries the cookie `se_e2e_fail_dates`. A WP_Error and a thrown exception
- * are indistinguishable to the block — apiFetch rejects either way — so this uses
- * the one that doesn't write a stack trace to the debug log on every request.
+ * Test fixture. While the se_e2e_fail_dates option is set, GET
+ * /simple-events/event-dates/{id} returns a 500. Toggled over plain HTTP so a
+ * test (or curl) can flip it server-side:
  *
- * The failure has to be server-side: the editor block fetches its dates while
- * mounting, before any in-page script could patch apiFetch.
+ *   Turn on:  /?se_e2e_fail_dates=true
+ *   Turn off: /?se_e2e_fail_dates=false
  *
- * Switch on from the browser console:
- *   document.cookie = 'se_e2e_fail_dates=1; path=/';
- * Switch off:
- *   document.cookie = 'se_e2e_fail_dates=; path=/; max-age=0';
- *
- * Drop the cookie check below to make it unconditional.
+ * The toggle request prints "on"/"off" and exits. The failure has to be
+ * server-side: the editor block fetches its dates while mounting, before any
+ * in-page script could patch apiFetch.
  *
  * @package Simple_Events
  */
 
+// phpcs:disable WordPress.Security.NonceVerification.Recommended -- test fixture, test env only.
+
+add_action(
+	'init',
+	function () {
+		if ( ! isset( $_GET['se_e2e_fail_dates'] ) ) {
+			return;
+		}
+
+		if ( 'true' === $_GET['se_e2e_fail_dates'] ) {
+			update_option( 'se_e2e_fail_dates', '1' );
+			die( 'on' );
+		}
+
+		delete_option( 'se_e2e_fail_dates' );
+		die( 'off' );
+	}
+);
+
 add_filter(
 	'rest_pre_dispatch',
 	function ( $result, $server, $request ) {
-		if ( empty( $_COOKIE['se_e2e_fail_dates'] ) ) {
+		if ( ! get_option( 'se_e2e_fail_dates' ) ) {
 			return $result;
 		}
 

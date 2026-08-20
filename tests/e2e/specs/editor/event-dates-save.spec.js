@@ -2,6 +2,7 @@ const { test, expect } = require( '@playwright/test' );
 const {
 	openNewEvent,
 	setTitle,
+	canvas,
 	clickAddDate,
 	clickDone,
 	publish,
@@ -46,7 +47,9 @@ test.describe( 'Event dates – first publish from autodraft', () => {
 		await clickDone( page );
 
 		// The yellow in-block banner should appear (dateManager.isDirty=true).
-		await expect( page.locator( '.se-unsaved-changes-message' ) ).toBeVisible();
+		await expect(
+			canvas( page ).locator( '.se-unsaved-changes-message' )
+		).toBeVisible();
 
 		await publish( page );
 
@@ -86,7 +89,9 @@ test.describe( 'Event dates – first publish from autodraft', () => {
 
 		// (5) The yellow in-block banner is gone (dateManager.isDirty cleared
 		// by refreshWithNewDates after /sync response).
-		await expect( page.locator( '.se-unsaved-changes-message' ) ).toBeHidden();
+		await expect(
+			canvas( page ).locator( '.se-unsaved-changes-message' )
+		).toBeHidden();
 
 		// Note on Gutenberg's `isEditedPostDirty()`:
 		// The chrome-agent run (on a hosted WP env) saw this stuck at `true`

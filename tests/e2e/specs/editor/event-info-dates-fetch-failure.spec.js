@@ -1,5 +1,6 @@
 const { test, expect } = require( '@playwright/test' );
 const { execSync } = require( 'child_process' );
+const { canvas } = require( '../../fixtures' );
 
 const BASE_URL = process.env.WP_BASE_URL || 'http://localhost:8888';
 
@@ -25,8 +26,9 @@ const BASE_URL = process.env.WP_BASE_URL || 'http://localhost:8888';
  * view has to be honest about not knowing.
  *
  * The failure is injected server-side by the se-e2e-fail-dates mu-plugin fixture,
- * gated on a cookie. It must be server-side: the block fetches while mounting,
- * before any in-page script could patch apiFetch.
+ * toggled on via /?se_e2e_fail_dates=true before the test and off after. It must
+ * be server-side: the block fetches while mounting, before any in-page script
+ * could patch apiFetch.
  */
 
 test.describe( 'Event info – event-dates GET failure', () => {
@@ -44,9 +46,14 @@ test.describe( 'Event info – event-dates GET failure', () => {
 		eventId = m[ 1 ];
 	} );
 
+	test.afterEach( async ( { request } ) => {
+		const res = await request.get( `${ BASE_URL }/?se_e2e_fail_dates=false` );
+		expect( await res.text() ).toBe( 'off' );
+	} );
+
 	test( 'says the dates could not be loaded instead of showing none', async ( {
 		page,
-		context,
+		request,
 	} ) => {
 		const syncRequests = [];
 		page.on( 'request', ( req ) => {
@@ -58,16 +65,9 @@ test.describe( 'Event info – event-dates GET failure', () => {
 			}
 		} );
 
-		// Tie the cookie to whatever host the suite resolved. A hardcoded
-		// 'localhost' is not sent to 127.0.0.1, so the fixture would never fire
-		// and the failure would look like it came from the block.
-		await context.addCookies( [
-			{
-				name: 'se_e2e_fail_dates',
-				value: '1',
-				url: BASE_URL,
-			},
-		] );
+		// Turn the server-side failure on; afterEach always turns it off.
+		const res = await request.get( `${ BASE_URL }/?se_e2e_fail_dates=true` );
+		expect( await res.text() ).toBe( 'on' );
 
 		await page.goto( `/wp-admin/post.php?post=${ eventId }&action=edit` );
 		await page.waitForFunction(
@@ -111,13 +111,13 @@ test.describe( 'Event info – event-dates GET failure', () => {
 
 		// The block must state that the dates could not be read.
 		await expect(
-			page.locator( '.se-dates-load-error' ),
+			canvas( page ).locator( '.se-dates-load-error' ),
 			'a failed dates load must be reported in the block'
 		).toBeVisible();
 
 		// And must not offer controls that cannot work.
 		await expect(
-			page.locator( '.se-add-date-button' ),
+			canvas( page ).locator( '.se-add-date-button' ),
 			'Add Date must not be offered when the dates are unknown'
 		).toBeHidden();
 
