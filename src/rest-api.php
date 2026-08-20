@@ -24,6 +24,10 @@ function se_register_rest_routes() {
 		$instance->register_routes();
 	}
 
+	// Lightweight ticket list for the Event Tickets block picker; WC-free by design.
+	$ticket_list = new SE_REST_Ticket_Products_List();
+	$ticket_list->register_routes();
+
 	SE_Calendar::get_instance()->register_routes();
 }
 

@@ -101,11 +101,7 @@ class SE_Blocks {
 		$block_settings = array();
 
 		if ( class_exists( 'WooCommerce' ) ) {
-			$product_counts = wp_count_posts( 'product' );
-
-			$block_settings['isWCActive']     = true;
-			$block_settings['isLargeCatalog'] = $product_counts->publish > 200;
-			$block_settings['productCount']   = $product_counts->publish;
+			$block_settings['isWCActive'] = true;
 
 			if ( class_exists( 'WC_Box_Office' ) ) {
 				$block_settings['isBOActive'] = true;

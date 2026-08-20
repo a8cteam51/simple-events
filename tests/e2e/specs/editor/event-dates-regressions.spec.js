@@ -2,6 +2,7 @@ const { test, expect } = require( '@playwright/test' );
 const {
 	openNewEvent,
 	setTitle,
+	canvas,
 	clickAddDate,
 	clickDone,
 	publish,
@@ -79,7 +80,9 @@ test.describe( 'Event dates – regression coverage', () => {
 		await setTitle( page, 'E2E Revert Test' );
 		await clickAddDate( page );
 
-		const revertButton = page.locator( '.se-revert-changes-button' );
+		const revertButton = canvas( page ).locator(
+			'.se-revert-changes-button'
+		);
 		await expect( revertButton ).toBeEnabled();
 		await revertButton.click();
 

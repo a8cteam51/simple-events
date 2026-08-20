@@ -213,6 +213,16 @@ add_filter('se_calendar_export_rendered', function( string $ical_content ) {
 }, 10, 1);
 ```
 
+### Event Tickets Block
+
+#### Limit the ticket product picker list
+The `simple-events/tickets/all` route returns all published ticket products for the block's picker, capped so the cached payload stays a sane size.
+```php
+add_filter('se_ticket_products_all_limit', function( int $limit ) {
+	return 5000; // Default 2000.
+}, 10, 1);
+```
+
 ## Extensions
 
 ### Featured image with Focal Point

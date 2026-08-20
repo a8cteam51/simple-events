@@ -8,6 +8,17 @@
 const NEW_EVENT_PATH = '/wp-admin/post-new.php?post_type=se-event';
 
 /**
+ * Since WP 7.1 the editor canvas is always iframed, so block-rendered DOM
+ * (.se-add-date-button etc.) must be located through the canvas frame.
+ * Admin chrome (publish buttons, sidebar, popovers) stays on `page`.
+ *
+ * @param {import('@playwright/test').Page} page
+ */
+function canvas( page ) {
+	return page.frameLocator( 'iframe[name="editor-canvas"]' );
+}
+
+/**
  * Open a fresh autodraft `se-event` editor and wait until the event-info block
  * has been auto-inserted and the dateManager initialised.
  *
@@ -69,7 +80,7 @@ async function setTitle( page, title ) {
  * @param {import('@playwright/test').Page} page
  */
 async function clickAddDate( page ) {
-	await page.locator( '.se-add-date-button' ).click();
+	await canvas( page ).locator( '.se-add-date-button' ).click();
 }
 
 /**
@@ -78,7 +89,7 @@ async function clickAddDate( page ) {
  * @param {import('@playwright/test').Page} page
  */
 async function clickDone( page ) {
-	await page.locator( '.se__button-done' ).click();
+	await canvas( page ).locator( '.se__button-done' ).click();
 }
 
 /**
@@ -200,6 +211,7 @@ async function fetchChildDates( page, eventId ) {
 }
 
 module.exports = {
+	canvas,
 	openNewEvent,
 	setTitle,
 	clickAddDate,

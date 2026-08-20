@@ -1,4 +1,5 @@
 const { test, expect } = require( '@playwright/test' );
+const { canvas } = require( '../../fixtures' );
 const { execSync } = require( 'child_process' );
 
 const BASE_URL = process.env.WP_BASE_URL || 'http://localhost:8888';
@@ -72,11 +73,13 @@ test.describe( 'Query Loop events – editor/front parity', () => {
 			prefs && prefs.set && prefs.set( 'core/edit-post', 'welcomeGuide', false );
 		} );
 		// Wait for the query preview to resolve some PARITY items.
+		// The editor canvas is iframed (WP 7.1+), so read through the frame.
+		const editorCanvas = canvas( page );
 		await expect
 			.poll(
 				async () =>
 					sequenceFrom(
-						await page
+						await editorCanvas
 							.locator( '.wp-block-query' )
 							.first()
 							.innerText()
@@ -85,7 +88,7 @@ test.describe( 'Query Loop events – editor/front parity', () => {
 				{ timeout: 15000 }
 			)
 			.toBeGreaterThan( 0 );
-		const txt = await page
+		const txt = await editorCanvas
 			.locator( '.wp-block-query' )
 			.first()
 			.innerText();

@@ -1,4 +1,5 @@
 const { test, expect } = require( '@playwright/test' );
+const { canvas } = require( '../../fixtures' );
 const { execSync } = require( 'child_process' );
 
 /**
@@ -94,7 +95,7 @@ test.describe( 'Event info – Revert Changes', () => {
 				.dispatch( 'core/edit-post' )
 				.openGeneralSidebar( 'edit-post/block' );
 		} );
-		await page.locator( '.se-add-date-button' ).waitFor();
+		await canvas( page ).locator( '.se-add-date-button' ).waitFor();
 	}
 
 	/**
@@ -104,7 +105,7 @@ test.describe( 'Event info – Revert Changes', () => {
 	 * @param {import('@playwright/test').Page} page
 	 */
 	async function doneAndReadDates( page ) {
-		await page.locator( '.se__button-done' ).click();
+		await canvas( page ).locator( '.se__button-done' ).click();
 		return page.evaluate( () => {
 			const block = window.wp.data
 				.select( 'core/block-editor' )
@@ -154,7 +155,7 @@ test.describe( 'Event info – Revert Changes', () => {
 
 		// Revert must put both the times and the timezone back.
 		await enterEditMode( page );
-		const revert = page.locator( '.se-revert-changes-button' );
+		const revert = canvas( page ).locator( '.se-revert-changes-button' );
 		await expect( revert ).toBeEnabled();
 		await revert.click();
 		const reverted = await doneAndReadDates( page );
