@@ -193,6 +193,7 @@ const TicketSelection = ( props ) => {
 							getSelectedProducts().map( ( item ) => (
 								<TicketDataControl
 									{ ...props }
+									key={ item.id }
 									editingProduct={ item.id }
 									index={ item.id }
 									onRemove={ () => {
