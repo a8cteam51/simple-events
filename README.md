@@ -234,6 +234,10 @@ Copy the `team51-focal-point` folder to your `mu-plugins` directory.
 
 ## Changelog
 
+### 2.4.0
+
+- **Event Tickets block:** the "Add existing tickets" picker now loads the whole ticket catalogue in a single request to a new lightweight `simple-events/tickets/all` REST route instead of one request per 25 products, and searching filters client-side with no further requests. Results are cached in a transient that is flushed whenever a product is saved, trashed or deleted, so newly created tickets appear in the picker immediately. Also fixes the picker never including tickets already attached to the event.
+
 ### 2.3.0
 
 - **Security:** the `migrate-all-events` REST route, both settings-page ajax handlers and the event-dates sync and read routes now check an appropriate capability, and the ajax handlers check a nonce. Previously they could be reached without one. Sites should update.
