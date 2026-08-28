@@ -110,25 +110,26 @@ class SE_REST_Ticket_Products_List {
 		 */
 		$limit = (int) apply_filters( 'se_ticket_products_all_limit', 2000 );
 
-		$query = new WP_Query(
-			array(
-				'post_type'              => array( 'product', 'product_variation' ),
-				'post_status'            => 'publish',
-				'posts_per_page'         => $limit,
-				'no_found_rows'          => true,
-				'update_post_meta_cache' => false,
-				'update_post_term_cache' => false,
-				'orderby'                => 'title',
-				'order'                  => 'ASC',
-				'meta_query'             => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
-					array(
-						'key'     => '_ticket',
-						'value'   => 'yes',
-						'compare' => '=',
-					),
+		$args = array(
+			'post_type'              => array( 'product', 'product_variation' ),
+			'post_status'            => 'publish',
+			'posts_per_page'         => $limit,
+			'no_found_rows'          => true,
+			'update_post_meta_cache' => false,
+			'update_post_term_cache' => false,
+			'orderby'                => 'title',
+			'order'                  => 'ASC',
+			'meta_query'             => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+				array(
+					'key'     => '_ticket',
+					'value'   => 'yes',
+					'compare' => '=',
 				),
-			)
+			),
 		);
+
+		$query = (array) apply_filters( 'se_ticket_products_all_query_args', $args );
+		$query = new WP_Query( $query );
 
 		return array_map(
 			static function ( $post ) {
