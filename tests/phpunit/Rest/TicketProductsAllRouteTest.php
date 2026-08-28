@@ -254,6 +254,36 @@ class TicketProductsAllRouteTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * The query args filter can modify the query.
+	 *
+	 * @return void
+	 */
+	public function test_query_args_filter_modifies_the_query() {
+		$keep = $this->create_ticket_product( 'Kept Ticket' );
+		$this->create_ticket_product( 'Dropped Ticket' );
+
+		$restrict = static function ( $args ) use ( $keep ) {
+			$args['post__in'] = array( $keep );
+			return $args;
+		};
+
+		add_filter( 'se_ticket_products_all_query_args', $restrict );
+		$this->login_as_contributor();
+		$data = $this->fetch_all()->get_data();
+		remove_filter( 'se_ticket_products_all_query_args', $restrict );
+
+		$this->assertSame(
+			array(
+				array(
+					'id'   => $keep,
+					'name' => 'Kept Ticket',
+				),
+			),
+			$data
+		);
+	}
+
+	/**
 	 * Saving a product flushes the cache, so new products appear immediately.
 	 *
 	 * This is the "newly created products not appearing in the picker" half of
