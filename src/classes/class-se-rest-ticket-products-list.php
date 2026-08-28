@@ -128,6 +128,18 @@ class SE_REST_Ticket_Products_List {
 			),
 		);
 
+		/**
+		 * Narrow which ticket products the block picker offers.
+		 *
+		 * The result is cached site-wide in the self::CACHE_KEY transient for
+		 * self::CACHE_TTL, so a callback returning per-user or per-request
+		 * output will have one editor's list served to all the others.
+		 *
+		 * Overriding posts_per_page here defeats the payload bound that
+		 * se_ticket_products_all_limit exists to enforce.
+		 *
+		 * @param array $args WP_Query arguments.
+		 */
 		$query = (array) apply_filters( 'se_ticket_products_all_query_args', $args );
 		$query = new WP_Query( $query );
 

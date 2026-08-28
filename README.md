@@ -223,6 +223,17 @@ add_filter('se_ticket_products_all_limit', function( int $limit ) {
 }, 10, 1);
 ```
 
+#### Filter the ticket product picker query
+The `WP_Query` arguments behind that route, for sites that need to narrow *which* ticket products the picker offers rather than just how many. Unfiltered, the arguments are unchanged.
+```php
+add_filter('se_ticket_products_all_query_args', function( array $args ) {
+	$args['post__not_in'] = array( 123, 456 );
+
+	return $args;
+}, 10, 1);
+```
+The result is cached site-wide in the `se_ticket_products_all` transient for up to an hour, so a callback whose output varies per user or per request will have one editor's list served to all the others. Overriding `posts_per_page` here defeats the payload bound that `se_ticket_products_all_limit` enforces.
+
 ## Extensions
 
 ### Featured image with Focal Point
