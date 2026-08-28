@@ -245,6 +245,10 @@ Copy the `team51-focal-point` folder to your `mu-plugins` directory.
 
 ## Changelog
 
+### 2.4.1
+
+- **Event Tickets block:** added the `se_ticket_products_all_query_args` filter, so a site can modify the query behind the picker's ticket list and narrow which products are offered rather than only capping how many.
+
 ### 2.4.0
 
 - **Event Tickets block:** the "Add existing tickets" picker now loads the whole ticket catalogue in a single request to a new lightweight `simple-events/tickets/all` REST route instead of one request per 25 products, and searching filters client-side with no further requests. Results are cached in a transient that is flushed whenever a product is saved, trashed or deleted, so newly created tickets appear in the picker immediately. Also fixes the picker never including tickets already attached to the event.
