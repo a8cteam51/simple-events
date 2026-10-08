@@ -245,6 +245,10 @@ Copy the `team51-focal-point` folder to your `mu-plugins` directory.
 
 ## Changelog
 
+### 2.4.2
+
+- **Calendar block:** fixed month navigation re-binding its click listeners after a failed request, which doubled the number of requests sent by every further click and stopped day selection working on mobile until the page was reloaded. Each click now sends a single request, however many requests have failed.
+
 ### 2.4.1
 
 - **Event Tickets block:** added the `se_ticket_products_all_query_args` filter, so a site can modify the query behind the picker's ticket list and narrow which products are offered rather than only capping how many.
