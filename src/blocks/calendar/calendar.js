@@ -65,6 +65,13 @@ export default class Calendar {
 
 		if ( calendarDays.length ) {
 			calendarDays.forEach( ( item ) => {
+				// initListeners() runs again after every request, and a failed
+				// request leaves the same elements in place, so bind only once.
+				if ( item.dataset.seDayBound ) {
+					return;
+				}
+				item.dataset.seDayBound = '1';
+
 				item.addEventListener( 'click', ( event ) => {
 					if ( ! this.isMobile() ) {
 						return;
@@ -116,6 +123,13 @@ export default class Calendar {
 
 		if ( navigation.length ) {
 			navigation.forEach( ( item ) => {
+				// initListeners() runs again after every request, and a failed
+				// request leaves the same elements in place, so bind only once.
+				if ( item.dataset.seNavBound ) {
+					return;
+				}
+				item.dataset.seNavBound = '1';
+
 				item.addEventListener( 'click', ( event ) => {
 					event.preventDefault();
 
