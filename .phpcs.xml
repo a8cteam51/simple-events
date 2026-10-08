@@ -17,19 +17,15 @@
 		</properties>
 	</rule>
 
-	<!-- Check that the proper prefix is used everywhere. -->
+	<!--
+	  WPCS 3.2.0+ requires global prefixes to be at least 4 characters and silently
+	  discards shorter ones, so the plugin's `se_` prefix can no longer be registered.
+	  Renaming every `se_` function, hook, class and constant would break the documented
+	  extension API, so the prefix sniff is disabled. The `se_` / `simple_events_`
+	  convention is still enforced in code review (see AGENTS.md).
+	-->
 	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
-		<properties>
-			<property name="prefixes" type="array">
-				<element value="simple_events_" />
-				<element value="se_" />
-			</property>
-		</properties>
-	</rule>
-
-	<!-- Exclude test files from prefix requirements. -->
-	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
-		<exclude-pattern>tests/</exclude-pattern>
+		<exclude name="WordPress.NamingConventions.PrefixAllGlobals" />
 	</rule>
 
 	<!-- Add any other custom rules here. -->
